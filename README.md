@@ -27,6 +27,7 @@ The peptide alignments along bread wheat genome are publicly available from the 
 ---
 
 ## Repository Structure
+```text
 Python-wheat-proteogenomics_2026/
 │
 ├── README.md
@@ -61,6 +62,7 @@ Python-wheat-proteogenomics_2026/
 │   └── tables/
 │
 └── example_data/
+```
 
 ---
 
