@@ -1,0 +1,11 @@
+.ipynb_checkpoints/
+*.tmp
+*.log
+*.rar
+*.mzML
+*.RAW
+*.raw
+*.d
+*.mzXML
+*.tsv.gz
+__pycache__/

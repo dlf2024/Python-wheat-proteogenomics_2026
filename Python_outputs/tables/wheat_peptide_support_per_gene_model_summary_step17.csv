@@ -1,0 +1,9 @@
+Annotation_confidence,Peptide_support_bin,Gene_model_count,Median_unique_peptides,Mean_unique_peptides,Max_unique_peptides,Total_gene_models_with_peptide_support,Percent_within_confidence_class
+HC,1 peptide,4088,1,1,1,104576,3.9091
+HC,2-4 peptides,17236,3,3.0386980737990252,4,104576,16.4818
+HC,5-9 peptides,26541,7,6.8684299762631404,9,104576,25.3796
+HC,>10 peptides,56711,20,26.219622295498226,318,104576,54.2295
+LC,1 peptide,23596,1,1,1,144506,16.3287
+LC,2-4 peptides,61744,3,2.870400362788287,4,144506,42.7276
+LC,5-9 peptides,39752,6,6.490465888508754,9,144506,27.5089
+LC,>10 peptides,19414,13,16.487792314824354,217,144506,13.4347

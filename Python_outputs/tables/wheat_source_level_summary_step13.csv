@@ -1,0 +1,4 @@
+Source,Projected_peptide_rows,Unique_tissues,Unique_peptides,Unique_proteins_isoforms,Unique_gene_models,Unique_HC_gene_models,Unique_LC_gene_models,Percent_total_gene_models_detected,Percent_HC_gene_models_detected,Percent_LC_gene_models_detected
+MSV000090572,30314,1,9329,17478,14903,9169,5734,5.5868,8.5761,3.5874
+PXD004720,3461176,28,234920,174207,150849,79808,71041,56.5503,74.6469,44.4456
+PXD050500,4799566,3,994270,274010,245338,103930,141408,91.9723,97.209,88.4696

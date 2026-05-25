@@ -1,0 +1,14 @@
+Metric,Value
+Sampling strategy,10% stratified per projection file/source-tissue
+Sample fraction,0.1
+Projection files validated,32
+Projected rows available across files,8291056
+Projected peptide rows validated,829105
+Exact translation matches,807879
+Exact translation match rate (%),97.44
+I/L-normalised translation matches,821474
+I/L-normalised translation match rate (%),99.08
+Multi-block peptide projections tested,110390
+Negative-strand peptide projections tested,423254
+Validation status: validated,821474
+Validation status: translation_mismatch,7631

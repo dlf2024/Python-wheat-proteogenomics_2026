@@ -1,0 +1,33 @@
+﻿Order,First-Author,Source,Species,Tissue-Name,Tissue-Raw-Code,Tissue-Description,Batch,FragPipe-Output-Peptide,FragPipe-Output-Protein
+1,Vincent,MSV000090572,bread wheat,stored_grain,stored_grain,,single,FragPipe_Vincent_MSV000090572_stored-grain_peptide.tsv,FragPipe_Vincent_MSV000090572_stored-grain_protein.tsv
+2,Liu,PXD050500,bread wheat,germ,coleoptile,"The protective, white, tubular sheath that emerges from the embryo and grows upwards toward the surface",single,FragPipe_Liu_PXD050500_coleoptile_peptide.tsv,FragPipe_Liu_PXD050500_coleoptile_protein.tsv
+3,Liu,PXD050500,bread wheat,node,node,"The crown area where the seminal roots, adventitious roots, and the shoot meet",single,FragPipe_Liu_PXD050500_node_peptide.tsv,FragPipe_Liu_PXD050500_node_protein.tsv
+4,Liu,PXD050500,bread wheat,root,radicle,The first primary root that emerges from the seed to grow downward,single,FragPipe_Liu_PXD050500_radicle_peptide.tsv,FragPipe_Liu_PXD050500_radicle_protein.tsv
+5,Duncan,PXD004720,bread wheat,anther,anther,,single,FragPipe_Duncan_PXD004720_anther_peptide.tsv,FragPipe_Duncan_PXD004720_anther_protein.tsv
+6,Duncan,PXD004720,bread wheat,boot,boot,,single,FragPipe_Duncan_PXD004720_boot_peptide.tsv,FragPipe_Duncan_PXD004720_boot_protein.tsv
+7,Duncan,PXD004720,bread wheat,coleoptile,coleoptile,,single,FragPipe_Duncan_PXD004720_coleoptile_peptide.tsv,FragPipe_Duncan_PXD004720_coleoptile_protein.tsv
+8,Duncan,PXD004720,bread wheat,embryo,embryo,,single,FragPipe_Duncan_PXD004720_embryo_peptide.tsv,FragPipe_Duncan_PXD004720_embryo_protein.tsv
+9,Duncan,PXD004720,bread wheat,endosperm,endosperm,"The largest part of the wheat grain, serving as the primary food store. It consists of a protein matrix and starch granules that provide the energy necessary for the seedling to grow before it can perform photosynthesis",single,FragPipe_Duncan_PXD004720_endosperm_peptide.tsv,FragPipe_Duncan_PXD004720_endosperm_protein.tsv
+10,Duncan,PXD004720,bread wheat,glume,glume,,single,FragPipe_Duncan_PXD004720_glume_peptide.tsv,FragPipe_Duncan_PXD004720_glume_protein.tsv
+11,Duncan,PXD004720,bread wheat,grain_zadoks_70,grain-zadoks-70,,single,FragPipe_Duncan_PXD004720_grain-zadoks-70_peptide.tsv,FragPipe_Duncan_PXD004720_grain-zadoks-70_protein.tsv
+12,Duncan,PXD004720,bread wheat,grain_zadoks_71,grain-zadoks-71,,single,FragPipe_Duncan_PXD004720_grain-zadoks-71_peptide.tsv,FragPipe_Duncan_PXD004720_grain-zadoks-71_protein.tsv
+13,Duncan,PXD004720,bread wheat,grain_zadoks_75,grain-zadoks-75,,single,FragPipe_Duncan_PXD004720_grain-zadoks-75_peptide.tsv,FragPipe_Duncan_PXD004720_grain-zadoks-75_protein.tsv
+14,Duncan,PXD004720,bread wheat,grain_zadoks_83,grain-zadoks-83,,single,FragPipe_Duncan_PXD004720_grain-zadoks-83_peptide.tsv,FragPipe_Duncan_PXD004720_grain-zadoks-83_protein.tsv
+15,Duncan,PXD004720,bread wheat,grain_zadoks_87,grain-zadoks-87,,single,FragPipe_Duncan_PXD004720_grain-zadoks-87_peptide.tsv,FragPipe_Duncan_PXD004720_grain-zadoks-87_protein.tsv
+16,Duncan,PXD004720,bread wheat,mature_flag_leaf,leaf-flag-mature,,single,FragPipe_Duncan_PXD004720_leaf-flag-mature_peptide.tsv,FragPipe_Duncan_PXD004720_leaf-flag-mature_protein.tsv
+17,Duncan,PXD004720,bread wheat,senescing_leaf,leaf-flag-senescing,,single,FragPipe_Duncan_PXD004720_leaf-flag-senescing_peptide.tsv,FragPipe_Duncan_PXD004720_leaf-flag-senescing_protein.tsv
+18,Duncan,PXD004720,bread wheat,young_flag_leaf,leaf-flag-young,,single,FragPipe_Duncan_PXD004720_leaf-flag-young_peptide.tsv,FragPipe_Duncan_PXD004720_leaf-flag-young_protein.tsv
+19,Duncan,PXD004720,bread wheat,lemma,lemma,,single,FragPipe_Duncan_PXD004720_lemma_peptide.tsv,FragPipe_Duncan_PXD004720_lemma_protein.tsv
+20,Duncan,PXD004720,bread wheat,node,node,,single,FragPipe_Duncan_PXD004720_node_peptide.tsv,FragPipe_Duncan_PXD004720_node_protein.tsv
+21,Duncan,PXD004720,bread wheat,node_secretion,node_secretion,,single,FragPipe_Duncan_PXD004720_node-secretion_peptide.tsv,FragPipe_Duncan_PXD004720_node-secretion_protein.tsv
+22,Duncan,PXD004720,bread wheat,palea,palea,,single,FragPipe_Duncan_PXD004720_palea_peptide.tsv,FragPipe_Duncan_PXD004720_palea_protein.tsv
+23,Duncan,PXD004720,bread wheat,pericarp,pericarp,,single,FragPipe_Duncan_PXD004720_pericarp_peptide.tsv,FragPipe_Duncan_PXD004720_pericarp_protein.tsv
+24,Duncan,PXD004720,bread wheat,pollen,pollen,,single,FragPipe_Duncan_PXD004720_pollen_peptide.tsv,FragPipe_Duncan_PXD004720_pollen_protein.tsv
+25,Duncan,PXD004720,bread wheat,rachilla,rachilla,,single,FragPipe_Duncan_PXD004720_rachilla_peptide.tsv,FragPipe_Duncan_PXD004720_rachilla_protein.tsv
+26,Duncan,PXD004720,bread wheat,seedling_root,radicle,,single,FragPipe_Duncan_PXD004720_radicle_peptide.tsv,FragPipe_Duncan_PXD004720_radicle_protein.tsv
+27,Duncan,PXD004720,bread wheat,mature_root,root-mature,,single,FragPipe_Duncan_PXD004720_root-mature_peptide.tsv,FragPipe_Duncan_PXD004720_root-mature_protein.tsv
+28,Duncan,PXD004720,bread wheat,root_secretion,root-secretion,,single,FragPipe_Duncan_PXD004720_root-secretion_peptide.tsv,FragPipe_Duncan_PXD004720_root-secretion_protein.tsv
+29,Duncan,PXD004720,bread wheat,root_tip,root-tip,,single,FragPipe_Duncan_PXD004720_root-tip_peptide.tsv,FragPipe_Duncan_PXD004720_root-tip_protein.tsv
+30,Duncan,PXD004720,bread wheat,root_vasculature,root-vasculature,,single,FragPipe_Duncan_PXD004720_root-vasculature_peptide.tsv,FragPipe_Duncan_PXD004720_root-vasculature_protein.tsv
+31,Duncan,PXD004720,bread wheat,immature_spike,spike-immature,,single,FragPipe_Duncan_PXD004720_spike-immature_peptide.tsv,FragPipe_Duncan_PXD004720_spike-immature_protein.tsv
+32,Duncan,PXD004720,bread wheat,stem,stem,,single,FragPipe_Duncan_PXD004720_stem_peptide.tsv,FragPipe_Duncan_PXD004720_stem_protein.tsv

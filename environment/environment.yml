@@ -1,0 +1,48 @@
+name: wheat_proteogenomics
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python=3.11
+
+  # Core scientific stack
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - statsmodels
+
+  # Visualisation
+  - matplotlib
+  - seaborn
+  - plotly
+  - upsetplot
+
+  # Notebook environment
+  - jupyterlab
+  - notebook
+  - ipykernel
+
+  # Bioinformatics
+  - biopython
+  - pysam
+  - pybedtools
+  - gffutils
+  - blast
+
+  # File handling
+  - openpyxl
+  - xlsxwriter
+
+  # Utilities
+  - tqdm
+  - requests
+
+  # Optional
+  - pip
+
+  - pip:
+      - kaleido
