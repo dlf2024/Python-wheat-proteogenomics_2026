@@ -1,5 +1,5 @@
 # Community Resource: A Genome-Guided Extension of Large-Scale Wheat Proteogenomics
-![Graphical Abstract](workflow_figures/graphical_abstract.png)
+![Graphical Abstract](workflow_figures/Vincent_wheat-proteogenomics_technical-note_2026-05-18_graphical-abstract.png)
 ## Author   
 Dr Delphine Vincent  
 _website:_ https://dlf2024.github.io/  
