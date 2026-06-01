@@ -47,6 +47,9 @@ Python-wheat-proteogenomics_2026/
 │   ├── graphical_abstract.png
 │   └── Vincent_wheat-proteogenomics_technical-note_2026-05-18_figures.pdf
 │
+├── protein_database/
+│   ├── iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
+│
 ├── FragPipe_results_example/
 │   ├── FragPipe workflow and MSFragger search parameters.txt
 │   ├── wheat_tissues_FragPipe-result-manifest.csv
@@ -136,7 +139,6 @@ conda activate wheat_proteogenomics
 - 21: EDA: Circular Tissue-Level Peptide Genome Map (this notebook)
 - 22: EDA: Circular Confidence-Level Peptide Genome Map (this notebook)
 - 23: Combine Python workflow Summary Tables at Source/Tissue Level (this notebook)
-- 24: Compare this annotation-based alignment with the tblastn one from the 2024 study (this notebook)
 - 25: Sanity Checks for Annotation-Guided Peptide Genome Projections (this notebook)
 - 26: Generate Sanity-Validated BED Files for Apollo/JBrowse Upload (this notebook)
 - 27: Create Non-Redundant Combined Validated BED Tracks (this notebook)
