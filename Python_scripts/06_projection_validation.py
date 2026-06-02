@@ -1,6 +1,5 @@
 # ============================================================
 # Step 10 — Validate peptide genome projections by translation
-# Stratified 10% per tissue/source, memory-light version
 # ============================================================
 
 import pandas as pd
@@ -14,13 +13,13 @@ import re
 tables_dir = Path("python_outputs/tables")
 genome_fasta = Path("genome_annotation/iwgsc_refseqv2.1_assembly.fa")
 
-sample_fraction = 0.10
-chunk_size = 25_000
+sample_fraction = 1 # to test on a portion of the data, lower this number (e.g. 0.1 for 10% of the data)
+chunk_size = 30_000 # reduce this for low performance computer
 random_seed = 42
 
-validation_out = tables_dir / "wheat_projection_validation_stratified10percent_step10.csv"
-summary_out = tables_dir / "wheat_projection_validation_summary_step10.csv"
-tissue_summary_out = tables_dir / "wheat_projection_validation_tissue_summary_step10.csv"
+validation_out = tables_dir / "wheat_projection_validation_stratified100percent_step10.csv"
+summary_out = tables_dir / "wheat_projection_validation_100%_summary_step10.csv"
+tissue_summary_out = tables_dir / "wheat_projection_validation_100%_tissue_summary_step10.csv"
 
 # Clear previous output if rerunning
 if validation_out.exists():
@@ -206,6 +205,7 @@ required_cols = [
     "ProteinID",
     "TranscriptID",
     "GeneModel",
+    "GeneID",
     "Annotation_confidence",
     "Chromosome",
     "Strand",
@@ -216,7 +216,11 @@ required_cols = [
     "BED_block_count",
     "BED_block_sizes",
     "BED_block_starts",
-    "Projection_status"
+    "Projection_status",
+    "Probability",
+    "Peptide_intron_gapped",
+    "Peptide_intron_gapped_compact",
+    "Tissues_count"
 ]
 
 # -----------------------------
@@ -230,7 +234,7 @@ genome = Fasta(str(genome_fasta), rebuild=False)
 print(f"Genome sequences available: {len(genome.keys()):,}")
 
 # -----------------------------
-# 7. Validate stratified 10% per projection file
+# 7. Validate stratified 100% per projection file
 # -----------------------------
 rng = np.random.default_rng(random_seed)
 
@@ -238,7 +242,7 @@ overall_records = []
 tissue_summary_records = []
 header_written = False
 
-print("\nValidating stratified 10% sample per tissue/source...")
+print("\nValidating stratified 100% sample per tissue/source...")
 
 for file_i, projection_file in enumerate(projection_files, start=1):
 
@@ -275,7 +279,7 @@ for file_i, projection_file in enumerate(projection_files, start=1):
 
         file_total_projected += len(chunk)
 
-        # Stratified 10% sample within this file/chunk
+        # Stratified 100% sample within this file/chunk
         sampled = chunk.sample(
             frac=sample_fraction,
             random_state=random_seed + file_i + chunk_i
@@ -348,7 +352,7 @@ total_multiblock = int(tissue_summary["Multi_block_peptide_projections_tested"].
 total_negative = int(tissue_summary["Negative_strand_peptide_projections_tested"].sum())
 
 summary_records = [
-    {"Metric": "Sampling strategy", "Value": "10% stratified per projection file/source-tissue"},
+    {"Metric": "Sampling strategy", "Value": "100% stratified per projection file/source-tissue"},
     {"Metric": "Sample fraction", "Value": sample_fraction},
     {"Metric": "Projection files validated", "Value": len(tissue_summary)},
     {"Metric": "Projected rows available across files", "Value": int(tissue_summary["Projected_rows_available"].sum())},
