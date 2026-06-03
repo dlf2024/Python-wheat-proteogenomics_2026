@@ -1,5 +1,5 @@
 # ============================================================
-# Step 17 — EDA: Peptide distribution by confidence level (boxplot & histogram)
+# Step 18 — EDA: distributions of peptide support per gene model
 # ============================================================
 
 import pandas as pd
@@ -13,11 +13,11 @@ tables_dir = Path("python_outputs/tables")
 figures_dir = Path("python_outputs/figures")
 figures_dir.mkdir(parents=True, exist_ok=True)
 
-gene_summary_file = tables_dir / "wheat_gene_model_summary_step13.csv"
+gene_summary_file = tables_dir / "wheat_gene_model_summary_step15.csv"
 
-histogram_out = figures_dir / "step17_peptide_support_per_gene_model_histogram.png"
-boxplot_out = figures_dir / "step17_peptide_support_per_gene_model_HC_LC_boxplot.png"
-step17_summary_out = tables_dir / "wheat_peptide_support_per_gene_model_summary_step17.csv"
+histogram_out = figures_dir / "step18_validated_peptide_support_per_gene_model_histogram.png"
+boxplot_out = figures_dir / "step18_validated_peptide_support_per_gene_model_HC_LC_boxplot.png"
+step18_summary_out = tables_dir / "wheat_validated_peptide_support_per_gene_model_summary_step18.csv"
 
 # -----------------------------
 # 2. Brand colours
@@ -52,7 +52,7 @@ gene_summary = gene_summary[gene_summary["Unique_peptides"] > 0].copy()
 
 gene_summary[confidence_col] = gene_summary[confidence_col].astype(str).str.upper()
 
-print(f"Gene models with peptide support: {gene_summary[gene_col].nunique():,}")
+print(f"Gene models with validated peptide support: {gene_summary[gene_col].nunique():,}")
 
 # -----------------------------
 # 4. Peptide support bins
@@ -72,7 +72,7 @@ gene_summary["Peptide_support_bin"] = gene_summary["Unique_peptides"].apply(pept
 # -----------------------------
 # 5. Summary table
 # -----------------------------
-step17_summary = (
+step18_summary = (
     gene_summary
     .groupby([confidence_col, "Peptide_support_bin"], dropna=False)
     .agg(
@@ -91,30 +91,30 @@ total_by_confidence = (
     .reset_index(name="Total_gene_models_with_peptide_support")
 )
 
-step17_summary = step17_summary.merge(
+step18_summary = step18_summary.merge(
     total_by_confidence,
     on=confidence_col,
     how="left"
 )
 
-step17_summary["Percent_within_confidence_class"] = (
-    step17_summary["Gene_model_count"] /
-    step17_summary["Total_gene_models_with_peptide_support"] *
+step18_summary["Percent_within_confidence_class"] = (
+    step18_summary["Gene_model_count"] /
+    step18_summary["Total_gene_models_with_peptide_support"] *
     100
 ).round(4)
 
 bin_order = ["1 peptide", "2–4 peptides", "5–9 peptides", "≥10 peptides"]
-step17_summary["Peptide_support_bin"] = pd.Categorical(
-    step17_summary["Peptide_support_bin"],
+step18_summary["Peptide_support_bin"] = pd.Categorical(
+    step18_summary["Peptide_support_bin"],
     categories=bin_order,
     ordered=True
 )
 
-step17_summary = step17_summary.sort_values(
+step18_summary = step18_summary.sort_values(
     [confidence_col, "Peptide_support_bin"]
 )
 
-step17_summary.to_csv(step17_summary_out, index=False)
+step18_summary.to_csv(step18_summary_out, index=False)
 
 # -----------------------------
 # 6. Histogram: unique peptide support per gene model
@@ -137,9 +137,9 @@ for confidence, colour in [("HC", brand_colours["HC"]), ("LC", brand_colours["LC
             color=colour
         )
 
-plt.xlabel("Unique peptides per gene model")
+plt.xlabel("Unique validated peptides per gene model")
 plt.ylabel("Number of gene models")
-plt.title("Distribution of peptide support per wheat gene model")
+plt.title("Distribution of validated peptide support per wheat gene model")
 
 plt.legend(title="Annotation confidence")
 
@@ -186,7 +186,7 @@ for median in box["medians"]:
     median.set_color("white")
     median.set_linewidth(2)
 
-plt.ylabel("Unique peptides per gene model")
+plt.ylabel("Unique validated peptides per gene model")
 plt.xlabel("Annotation confidence")
 
 plt.title("Peptide support per gene model")
@@ -208,5 +208,5 @@ print(f"Boxplot saved: {boxplot_out}")
 # -----------------------------
 # 8. Display summary
 # -----------------------------
-print(f"Step 17 summary saved: {step17_summary_out}")
-display(step17_summary)
+print(f"Step 18 summary saved: {step18_summary_out}")
+display(step18_summary)

@@ -1,5 +1,5 @@
 # ============================================================
-# Step 12 — Export fully validated BED6 and BED12 files for JBrowse
+# Step 12 — Export fully validated BED6 and BED12 files for JBrowse (takes 30 min)
 # Translation-validated + sanity-check-passed projections only
 # ============================================================
 
@@ -88,18 +88,18 @@ def build_bed_name(projected):
     Build informative BED label.
 
     Priority:
-    1. Peptide_intron_gapped_compact, if present
-    2. Peptide_intron_gapped, if present
+    1. Peptide_intron_gapped, if present
+    2. Peptide_intron_gapped_compact, if present
     3. Peptide
 
     Final structure:
     peptide|protein|gene|validated=translation+sanity|tissues=X
     """
 
-    if "Peptide_intron_gapped_compact" in projected.columns:
-        peptide_label = projected["Peptide_intron_gapped_compact"].astype(str)
-    elif "Peptide_intron_gapped" in projected.columns:
+    if "Peptide_intron_gapped" in projected.columns:
         peptide_label = projected["Peptide_intron_gapped"].astype(str)
+    elif "Peptide_intron_gapped_compact" in projected.columns:
+        peptide_label = projected["Peptide_intron_gapped_compact"].astype(str)
     else:
         peptide_label = projected["Peptide"].astype(str)
 
@@ -335,6 +335,11 @@ for projection_filename, info in manifest_lookup.items():
         "Unique_BED_proteins": 0,
         "Unique_BED_gene_models": 0,
         "Multi_block_peptides": 0,
+        "Within_exon_peptides": 0,
+        "Intron_spanning_BED_rows": 0,
+        "Within_exon_BED_rows": 0,
+        "Unique_intron_spanning_peptides": 0,
+        "Unique_within_exon_peptides": 0,
         "BED_labels_with_introns": 0
     }
 
@@ -343,6 +348,8 @@ for projection_filename, info in manifest_lookup.items():
 unique_peptides = {k: set() for k in manifest_lookup}
 unique_proteins = {k: set() for k in manifest_lookup}
 unique_genes = {k: set() for k in manifest_lookup}
+unique_intron_spanning_peptides = {k: set() for k in manifest_lookup}
+unique_within_exon_peptides = {k: set() for k in manifest_lookup}
 
 # Track whether each BED file has already been written to
 bed_file_written = {
@@ -483,10 +490,45 @@ for chunk_i, chunk in enumerate(
                 projected_prepared["GeneID"].dropna().astype(str).unique()
             )
 
-        summary_dict[projection_filename]["Multi_block_peptides"] += int(
-            (pd.to_numeric(projected_prepared["BED_block_count"], errors="coerce") > 1).sum()
+        # Count exon structure of peptide projections
+        block_count = pd.to_numeric(
+            projected_prepared["BED_block_count"],
+            errors="coerce"
         )
-
+        
+        intron_spanning_mask = block_count > 1
+        within_exon_mask = block_count == 1
+        
+        intron_spanning_rows = int(intron_spanning_mask.sum())
+        within_exon_rows = int(within_exon_mask.sum())
+        
+        # Existing legacy-style count retained for continuity
+        summary_dict[projection_filename]["Multi_block_peptides"] += intron_spanning_rows
+        
+        # New clearer paired counts
+        summary_dict[projection_filename]["Within_exon_peptides"] += within_exon_rows
+        summary_dict[projection_filename]["Intron_spanning_BED_rows"] += intron_spanning_rows
+        summary_dict[projection_filename]["Within_exon_BED_rows"] += within_exon_rows
+        
+        # Unique peptide-sequence counts by exon structure
+        if "Peptide" in projected_prepared.columns:
+        
+            unique_intron_spanning_peptides[projection_filename].update(
+                projected_prepared.loc[
+                    intron_spanning_mask,
+                    "Peptide"
+                ].dropna().astype(str).unique()
+            )
+        
+            unique_within_exon_peptides[projection_filename].update(
+                projected_prepared.loc[
+                    within_exon_mask,
+                    "Peptide"
+                ].dropna().astype(str).unique()
+            )
+        
+        # BED labels containing dashes remain useful as a visual proxy,
+        # but BED_block_count is the authoritative exon-structure count.
         summary_dict[projection_filename]["BED_labels_with_introns"] += int(
             projected_prepared["BED_name"]
             .astype(str)
@@ -518,6 +560,14 @@ for projection_filename in summary_dict:
 
     summary_dict[projection_filename]["Unique_BED_gene_models"] = len(
         unique_genes[projection_filename]
+    )
+
+    summary_dict[projection_filename]["Unique_intron_spanning_peptides"] = len(
+        unique_intron_spanning_peptides[projection_filename]
+    )
+
+    summary_dict[projection_filename]["Unique_within_exon_peptides"] = len(
+        unique_within_exon_peptides[projection_filename]
     )
 
 step12_summary = pd.DataFrame(summary_dict.values())

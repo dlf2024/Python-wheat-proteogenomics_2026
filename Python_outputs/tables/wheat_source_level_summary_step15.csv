@@ -1,0 +1,4 @@
+Source,Validated_peptide_rows,Multi_exon_peptide_rows,Within_exon_peptide_rows,Unique_tissues,Unique_peptides,Unique_proteins_isoforms,Unique_gene_models,Unique_HC_gene_models,Unique_LC_gene_models,Percent_total_gene_models_detected,Percent_HC_gene_models_detected,Percent_LC_gene_models_detected
+MSV000090572,29430,3248,26182,1,9070,16819,14263,9017,5246,5.3469,8.4339,3.2821
+PXD004720,3408253,511399,2896854,28,230992,167174,143956,78729,65227,53.9662,73.6377,40.8082
+PXD050500,4699004,576735,4122269,3,971106,263295,234819,102471,132348,88.029,95.8443,82.8013

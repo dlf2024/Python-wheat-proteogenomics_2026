@@ -1,0 +1,3 @@
+Annotation_confidence,Sampled_validated_peptide_rows,Unique_validated_peptides,Mean_peptide_length,Median_peptide_length,Mean_probability,Median_probability
+HC,8569,8086,13.680709534368072,12.0,0.84194285214144,0.9985
+LC,1431,1376,12.86722571628232,11.0,0.5481392732354996,0.5254

@@ -1,5 +1,7 @@
 # ============================================================
-# Step 16 — EDA: Tissue overlap using UpSet plots
+# Step 17 — EDA: Tissue overlap using UpSet plots
+# Fully validated rows only
+# Translation-validated + sanity-check-passed projections
 # ============================================================
 
 import pandas as pd
@@ -7,26 +9,30 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 from upsetplot import UpSet, from_contents
 import warnings
+
 warnings.filterwarnings("ignore", category=FutureWarning, module="upsetplot")
 
 # -----------------------------
 # 1. Paths
 # -----------------------------
-fragpipe_dir = Path("FragPipe_results")
 tables_dir = Path("python_outputs/tables")
 figures_dir = Path("python_outputs/figures")
-
 figures_dir.mkdir(parents=True, exist_ok=True)
 
-manifest_file = fragpipe_dir / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+# Step 11 output: translation-validated rows with sanity-check status
+sanity_file = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
 
-protein_upset_out = figures_dir / "step16_upsetplot_tissue_overlap_proteins.png"
-peptide_upset_out = figures_dir / "step16_upsetplot_tissue_overlap_peptides.png"
-gene_upset_out = figures_dir / "step16_upsetplot_tissue_overlap_gene_models.png"
+protein_upset_out = figures_dir / "step17_upsetplot_tissue_overlap_validated_proteins.png"
+peptide_upset_out = figures_dir / "step17_upsetplot_tissue_overlap_validated_peptides.png"
+gene_upset_out = figures_dir / "step17_upsetplot_tissue_overlap_validated_gene_models.png"
 
-step16_summary_out = tables_dir / "wheat_tissue_overlap_summary_step16.csv"
+step17_summary_out = tables_dir / "wheat_tissue_overlap_validated_summary_step17.csv"
 
-manifest = pd.read_csv(manifest_file, encoding="utf-8-sig")
+if not sanity_file.exists():
+    raise FileNotFoundError(
+        f"Step 11 sanity-check file not found:\n{sanity_file}\n\n"
+        "Please run Step 11 first."
+    )
 
 # -----------------------------
 # 2. Brand colours
@@ -39,64 +45,77 @@ brand_colours = {
 }
 
 # -----------------------------
-# 3. Load projected peptide tables
-# Memory-safe: only load columns required for Step 16
+# 3. Load fully validated peptide projection rows
 # -----------------------------
-projected_tables = []
+print("\nLoading fully validated rows from Step 11...")
+
+header = pd.read_csv(sanity_file, nrows=0)
+
+gene_col = "GeneModel" if "GeneModel" in header.columns else "GeneID"
 
 usecols_needed = [
-    "Projection_status",
+    "Source",
+    "Tissue",
     "ProteinID",
     "Peptide",
-    "GeneModel",
-    "GeneID"
+    gene_col,
+    "Sanity_check_status"
 ]
 
-for _, row in manifest.iterrows():
+missing_cols = [
+    col for col in usecols_needed
+    if col not in header.columns
+]
 
-    projection_filename = row["FragPipe-Output-Peptide"].replace(
-        "_peptide.tsv",
-        "_peptide_genome_projection.csv"
+if missing_cols:
+    raise KeyError(
+        f"Missing required column(s) in Step 11 sanity-check table: {missing_cols}"
     )
 
-    projection_path = tables_dir / projection_filename
+validated_tables = []
+chunk_size = 100_000
 
-    if not projection_path.exists():
-        print(f"Warning: missing projection file, skipped: {projection_path}")
+for chunk_i, chunk in enumerate(
+    pd.read_csv(
+        sanity_file,
+        usecols=usecols_needed,
+        chunksize=chunk_size,
+        low_memory=False
+    ),
+    start=1
+):
+
+    chunk = chunk[
+        chunk["Sanity_check_status"].astype(str) == "passed"
+    ].copy()
+
+    if chunk.empty:
         continue
 
-    data = pd.read_csv(
-        projection_path,
-        usecols=lambda col: col in usecols_needed,
-        low_memory=False
+    chunk["Source_Tissue"] = (
+        chunk["Source"].astype(str) + "_" +
+        chunk["Tissue"].astype(str)
     )
 
-    data = data[data["Projection_status"] == "projected"].copy()
+    validated_tables.append(chunk)
 
-    data["Source"] = row["Source"]
-    data["Species"] = row["Species"]
-    data["Tissue"] = row["Tissue-Raw-Code"]
-    data["Source_Tissue"] = (
-        data["Source"].astype(str) + "_" +
-        data["Tissue"].astype(str)
+if not validated_tables:
+    raise ValueError(
+        "No fully validated peptide rows were loaded from Step 11."
     )
 
-    projected_tables.append(data)
+validated_all = pd.concat(validated_tables, ignore_index=True)
 
-projected_all = pd.concat(projected_tables, ignore_index=True)
-
-print(f"Projected rows loaded: {len(projected_all):,}")
+print(f"Fully validated rows loaded for Step 17: {len(validated_all):,}")
 
 # -----------------------------
 # 4. Build overlap dictionaries
 # -----------------------------
-gene_col = "GeneModel" if "GeneModel" in projected_all.columns else "GeneID"
-
 protein_contents = {}
 peptide_contents = {}
 gene_contents = {}
 
-for tissue, group in projected_all.groupby("Source_Tissue", dropna=False):
+for tissue, group in validated_all.groupby("Source_Tissue", dropna=False):
 
     protein_contents[tissue] = set(
         group["ProteinID"].dropna().astype(str)
@@ -130,7 +149,6 @@ def create_upset_plot(
 ):
     """
     Create a manageable UpSet plot by showing only the largest intersections.
-    This avoids excessively large figures when many tissues are included.
     """
 
     fig = plt.figure(figsize=(16, 8))
@@ -159,13 +177,13 @@ def create_upset_plot(
     plt.close(fig)
 
     print(f"Figure saved: {output_path}")
-    
+
 # -----------------------------
 # 7. Protein overlap UpSet plot
 # -----------------------------
 create_upset_plot(
     upset_data=protein_upset_data,
-    title="Top tissue intersections of projected protein isoforms",
+    title="Top tissue intersections of validated protein isoforms",
     output_path=protein_upset_out,
     facecolor=brand_colours["dark_purple"],
     max_subset_rank=40,
@@ -177,7 +195,7 @@ create_upset_plot(
 # -----------------------------
 create_upset_plot(
     upset_data=peptide_upset_data,
-    title="Top tissue intersections of projected peptide sequences",
+    title="Top tissue intersections of validated peptide sequences",
     output_path=peptide_upset_out,
     facecolor=brand_colours["pink"],
     max_subset_rank=40,
@@ -189,7 +207,7 @@ create_upset_plot(
 # -----------------------------
 create_upset_plot(
     upset_data=gene_upset_data,
-    title="Top tissue intersections of projected gene models",
+    title="Top tissue intersections of validated gene models",
     output_path=gene_upset_out,
     facecolor=brand_colours["gold"],
     max_subset_rank=40,
@@ -201,24 +219,25 @@ create_upset_plot(
 # -----------------------------
 summary_records = []
 
-for tissue, group in projected_all.groupby("Source_Tissue", dropna=False):
+for tissue, group in validated_all.groupby("Source_Tissue", dropna=False):
 
     summary_records.append({
         "Source_Tissue": tissue,
-        "Unique_projected_proteins": group["ProteinID"].nunique(),
-        "Unique_projected_peptides": group["Peptide"].nunique(),
-        "Unique_projected_gene_models": group[gene_col].nunique()
+        "Validated_BED_rows": len(group),
+        "Unique_validated_proteins": group["ProteinID"].nunique(),
+        "Unique_validated_peptides": group["Peptide"].nunique(),
+        "Unique_validated_gene_models": group[gene_col].nunique()
     })
 
-step16_summary = pd.DataFrame(summary_records)
+step17_summary = pd.DataFrame(summary_records)
 
-step16_summary = step16_summary.sort_values(
-    "Unique_projected_gene_models",
+step17_summary = step17_summary.sort_values(
+    "Unique_validated_gene_models",
     ascending=False
 )
 
-step16_summary.to_csv(step16_summary_out, index=False)
+step17_summary.to_csv(step17_summary_out, index=False)
 
-print(f"\nStep 16 summary saved: {step16_summary_out}")
+print(f"\nStep 17 summary saved: {step17_summary_out}")
 
-display(step16_summary)
+display(step17_summary)

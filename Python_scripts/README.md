@@ -42,6 +42,7 @@ notebooks/Vincent_Proteogenomics_wheat_2026-05-18_dlf2024.ipynb
 | `13_EDA-by-tissue_barplot.py` | Tissue-level proteogenomic coverage summaries |
 | `14_EDA-by-tissue_UpSet-plot.py` | Tissue overlap analysis using UpSet plots |
 | `15_EDA-by-confidence_scatterplot-length-vs-count.py` | Explore peptide length and evidence relationships |
+| `16_EDA-by-confidence-exon-spanning_pie-chart.py` | Proportions of within-exon/exon-spanning peptides in HC and LC|
 
 ---
 

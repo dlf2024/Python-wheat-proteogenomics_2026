@@ -1,5 +1,7 @@
 # ============================================================
-# Step 21 — EDA: Circular tissue-level peptide genome map
+# Step 22 — EDA: Circular plot of tissue-level validated peptide genome map
+# Fully validated rows only
+# Translation-validated + sanity-check-passed mapped peptide projections
 # ============================================================
 
 import pandas as pd
@@ -11,18 +13,28 @@ from pycirclize import Circos
 # -----------------------------
 # 1. Paths
 # -----------------------------
-fragpipe_dir = Path("FragPipe_results")
 tables_dir = Path("python_outputs/tables")
 figures_dir = Path("python_outputs/figures")
 figures_dir.mkdir(parents=True, exist_ok=True)
 
-manifest_file = fragpipe_dir / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
 gff3_features_file = tables_dir / "wheat_gff3_parsed_features_HC_LC.csv"
 
-figure_out = figures_dir / "step21_circos_tissue_peptide_tracks.png"
-summary_out = tables_dir / "wheat_circos_tissue_peptide_summary_step21.csv"
+# Step 11 output: translation-validated rows with sanity-check status
+sanity_file = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
 
-manifest = pd.read_csv(manifest_file, encoding="utf-8-sig")
+figure_out = figures_dir / "step22_circos_tissue_validated_peptide_tracks.png"
+summary_out = tables_dir / "wheat_circos_tissue_validated_peptide_summary_step22.csv"
+
+if not sanity_file.exists():
+    raise FileNotFoundError(
+        f"Step 11 sanity-check file not found:\n{sanity_file}\n\n"
+        "Please run Step 11 first."
+    )
+
+if not gff3_features_file.exists():
+    raise FileNotFoundError(
+        f"GFF3 parsed features file not found:\n{gff3_features_file}"
+    )
 
 # -----------------------------
 # 2. Parameters
@@ -56,7 +68,51 @@ def normalise_chromosome_name(value):
 
 
 def clean_tissue_label(value):
-    return str(value).replace("-", "_").replace(" ", "_")
+    return (
+        str(value)
+        .replace("-", "_")
+        .replace(" ", "_")
+        .replace("/", "_")
+    )
+
+
+def source_rank(source):
+    """
+    Track order from innermost to outermost.
+
+    Desired visual order:
+    1. MSV... innermost
+    2. PXD004720 / other PXD intermediate
+    3. PXD050500 outermost
+    """
+
+    source = str(source)
+
+    if source.startswith("MSV"):
+        return 0
+
+    if source == "PXD004720":
+        return 1
+
+    if source == "PXD050500":
+        return 2
+
+    if source.startswith("PXD"):
+        return 3
+
+    return 99
+
+
+def source_tissue_sort_key(source_tissue):
+    """
+    Sort Source_Tissue labels so that MSV tracks are innermost and
+    PXD050500 tracks are outermost.
+    """
+
+    source = str(source_tissue).split("_", 1)[0]
+    tissue = str(source_tissue).split("_", 1)[1] if "_" in str(source_tissue) else ""
+
+    return (source_rank(source), source, tissue)
 
 
 # -----------------------------
@@ -77,7 +133,9 @@ for chunk in pd.read_csv(
     chunk = chunk.dropna(subset=["SeqID", "End"])
 
     for chrom, group in chunk.groupby("SeqID"):
+
         if chrom in chrom_order:
+
             max_end = int(group["End"].max())
             chrom_lengths[chrom] = max(max_end, chrom_lengths.get(chrom, 0))
 
@@ -89,76 +147,138 @@ chrom_lengths = {
 
 print(f"Chromosomes loaded: {len(chrom_lengths)}")
 
+if len(chrom_lengths) == 0:
+    raise ValueError("No chromosome lengths were recovered from the GFF3 feature table.")
+
 # -----------------------------
-# 5. Sample projected peptide positions by tissue and chromosome
+# 5. Sample validated mapped peptide positions by tissue and chromosome
 # -----------------------------
-tissue_positions = defaultdict(lambda: defaultdict(list))
-summary_records = []
+print("\nSampling fully validated mapped peptide positions from Step 11...")
 
-for _, row in manifest.iterrows():
+header = pd.read_csv(sanity_file, nrows=0)
 
-    source = row["Source"]
-    tissue = clean_tissue_label(row["Tissue-Raw-Code"])
-    source_tissue = f"{source}_{tissue}"
+required_cols = [
+    "Source",
+    "Tissue",
+    "Chromosome",
+    "BED_start_0based",
+    "Sanity_check_status"
+]
 
-    projection_filename = row["FragPipe-Output-Peptide"].replace(
-        "_peptide.tsv",
-        "_peptide_genome_projection.csv"
+missing_cols = [
+    col for col in required_cols
+    if col not in header.columns
+]
+
+if missing_cols:
+    raise KeyError(
+        f"Missing required column(s) in Step 11 sanity-check table: {missing_cols}"
     )
 
-    projection_path = tables_dir / projection_filename
+tissue_positions = defaultdict(lambda: defaultdict(list))
+chrom_counts = defaultdict(lambda: defaultdict(int))
 
-    if not projection_path.exists():
-        print(f"Warning: missing projection file, skipped: {projection_path}")
-        continue
+total_rows_read = 0
+total_validated_rows_used = 0
 
-    print(f"Sampling: {source_tissue}")
-
-    chrom_counts = defaultdict(int)
-
-    for chunk in pd.read_csv(
-        projection_path,
-        usecols=lambda col: col in [
-            "Projection_status",
-            "Chromosome",
-            "BED_start_0based"
-        ],
+for chunk_i, chunk in enumerate(
+    pd.read_csv(
+        sanity_file,
+        usecols=required_cols,
         chunksize=chunksize,
         low_memory=False
-    ):
+    ),
+    start=1
+):
 
-        chunk = chunk[chunk["Projection_status"] == "projected"].copy()
+    total_rows_read += len(chunk)
 
-        if chunk.empty:
-            continue
+    # Keep only rows passing both validation layers:
+    # Step 10 translation validation + Step 11 sanity checks
+    chunk = chunk[
+        chunk["Sanity_check_status"].astype(str) == "passed"
+    ].copy()
 
-        chunk["Chromosome"] = chunk["Chromosome"].apply(normalise_chromosome_name)
+    if chunk.empty:
+        print(
+            f"Chunk {chunk_i}: read {chunksize:,} rows | "
+            f"no validated rows"
+        )
+        continue
 
-        chunk = chunk[chunk["Chromosome"].isin(chrom_order)].copy()
+    chunk["Chromosome"] = chunk["Chromosome"].apply(normalise_chromosome_name)
 
-        chunk["BED_start_0based"] = pd.to_numeric(
-            chunk["BED_start_0based"],
-            errors="coerce"
+    chunk = chunk[
+        chunk["Chromosome"].isin(chrom_order)
+    ].copy()
+
+    chunk["BED_start_0based"] = pd.to_numeric(
+        chunk["BED_start_0based"],
+        errors="coerce"
+    )
+
+    chunk = chunk.dropna(
+        subset=[
+            "Source",
+            "Tissue",
+            "Chromosome",
+            "BED_start_0based"
+        ]
+    ).copy()
+
+    if chunk.empty:
+        continue
+
+    total_validated_rows_used += len(chunk)
+
+    chunk["Tissue_clean"] = chunk["Tissue"].apply(clean_tissue_label)
+
+    chunk["Source_Tissue"] = (
+        chunk["Source"].astype(str) + "_" +
+        chunk["Tissue_clean"].astype(str)
+    )
+
+    for (source_tissue, chrom), group in chunk.groupby(["Source_Tissue", "Chromosome"]):
+
+        chrom_counts[source_tissue][chrom] += len(group)
+
+        # Sample a small number per chunk to avoid memory overload
+        n_sample = min(50, len(group))
+
+        tissue_positions[source_tissue][chrom].extend(
+            group["BED_start_0based"]
+            .sample(n=n_sample, random_state=42 + chunk_i)
+            .astype(int)
+            .tolist()
         )
 
-        chunk = chunk.dropna(subset=["Chromosome", "BED_start_0based"])
+    print(
+        f"Chunk {chunk_i}: retained {len(chunk):,} validated mapped rows | "
+        f"cumulative validated rows used {total_validated_rows_used:,}"
+    )
 
-        for chrom, group in chunk.groupby("Chromosome"):
+# -----------------------------
+# 6. Final cap per tissue/chromosome and summary table
+# -----------------------------
+source_tissues = sorted(
+    list(tissue_positions.keys()),
+    key=source_tissue_sort_key
+)
 
-            chrom_counts[chrom] += len(group)
+if len(source_tissues) == 0:
+    raise ValueError(
+        "No validated mapped peptide positions were available for Circos plotting."
+    )
 
-            # Sample small number per chunk to avoid memory overload
-            n_sample = min(50, len(group))
+summary_records = []
 
-            tissue_positions[source_tissue][chrom].extend(
-                group["BED_start_0based"]
-                .sample(n=n_sample, random_state=42)
-                .astype(int)
-                .tolist()
-            )
+for source_tissue in source_tissues:
 
-    # Final cap per tissue/chromosome
+    source = source_tissue.split("_", 1)[0]
+    tissue = source_tissue.split("_", 1)[1] if "_" in source_tissue else source_tissue
+
     for chrom in chrom_order:
+
         positions = tissue_positions[source_tissue][chrom]
 
         if len(positions) > max_points_per_tissue_chrom:
@@ -168,40 +288,45 @@ for _, row in manifest.iterrows():
                 .astype(int)
                 .tolist()
             )
+
             tissue_positions[source_tissue][chrom] = positions
 
         summary_records.append({
+            "Source_Tissue": source_tissue,
+            "Track_order_inner_to_outer": source_tissues.index(source_tissue) + 1,
             "Source": source,
             "Tissue": tissue,
-            "Source_Tissue": source_tissue,
             "Chromosome": chrom,
-            "Total_projected_peptide_rows": chrom_counts.get(chrom, 0),
+            "Total_validated_mapped_peptide_rows": chrom_counts[source_tissue].get(chrom, 0),
             "Sampled_points_plotted": len(tissue_positions[source_tissue][chrom])
         })
 
 summary = pd.DataFrame(summary_records)
 summary.to_csv(summary_out, index=False)
 
-print(f"Summary saved: {summary_out}")
+print(f"\nSummary saved: {summary_out}")
+print("\nTrack order, innermost to outermost:")
+for i, source_tissue in enumerate(source_tissues, start=1):
+    print(f"{i:02d}. {source_tissue}")
 
 # -----------------------------
-# 6. Tissue colours
+# 7. Tissue colours
 # -----------------------------
-source_tissues = list(tissue_positions.keys())
-
 cmap = plt.get_cmap("tab20")
+
 tissue_colours = {
     tissue: cmap(i % 20)
     for i, tissue in enumerate(source_tissues)
 }
 
 # -----------------------------
-# 7. Build Circos plot
+# 8. Build Circos plot
 # -----------------------------
 circos = Circos(chrom_lengths, space=2)
 
 # Outer chromosome track
 for sector in circos.sectors:
+
     outer_track = sector.add_track((96, 100))
     outer_track.axis(fc="#E6CDFF", ec="#3F007E", lw=0.6)
 
@@ -220,6 +345,8 @@ ring_height = (outer_r - inner_r) / n_tissues
 
 for i, source_tissue in enumerate(source_tissues):
 
+    # i = 0 is innermost
+    # final source_tissue is outermost
     r0 = inner_r + i * ring_height
     r1 = r0 + ring_height * 0.85
 
@@ -231,6 +358,7 @@ for i, source_tissue in enumerate(source_tissues):
         track.axis(fc="white", ec="lightgrey", lw=0.15)
 
         chrom = sector.name
+
         positions = tissue_positions[source_tissue].get(chrom, [])
 
         if len(positions) == 0:
@@ -248,31 +376,31 @@ for i, source_tissue in enumerate(source_tissues):
         )
 
 # -----------------------------
-# 8. Plot and legend
+# 9. Plot and legend
 # -----------------------------
 fig = circos.plotfig(figsize=(12, 12))
 
-# Manual legend outside plot
+# Manual legend outside plot, ordered innermost to outermost
 legend_handles = [
     plt.Line2D(
         [0], [0],
         marker="s",
         color="w",
-        label=tissue,
+        label=f"{i + 1}. {tissue}",
         markerfacecolor=tissue_colours[tissue],
         markersize=8
     )
-    for tissue in source_tissues
+    for i, tissue in enumerate(source_tissues)
 ]
 
-fig.legend(
+legend = fig.legend(
     handles=legend_handles,
-    title="Tissue tracks",
+    title="Tissue tracks\n(inner → outer)",
     loc="upper right",
-    bbox_to_anchor=(1.25, 0.95),
+    bbox_to_anchor=(1.30, 0.95),
     frameon=True,
-    fontsize=10,
-    title_fontsize=14
+    fontsize=9,
+    title_fontsize=12
 )
 
 legend.get_title().set_fontweight("bold")
@@ -281,7 +409,7 @@ legend.get_frame().set_linewidth(1)
 legend.get_frame().set_facecolor("white")
 
 fig.suptitle(
-    "Circular map of projected wheat peptides by tissue",
+    "Circular map of validated mapped wheat peptides by tissue",
     fontsize=16,
     fontweight="bold",
     y=1.02

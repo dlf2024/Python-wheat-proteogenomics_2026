@@ -20,12 +20,12 @@ tables_dir.mkdir(parents=True, exist_ok=True)
 # Step 11 output: translation-validated rows with sanity-check results
 sanity_file = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
 
-combined_table_out = tables_dir / "wheat_all_tissues_nonredundant_validated_peptides.csv"
-combined_bed6_out = bed_dir / "wheat_all_tissues_nonredundant_validated_peptides.bed6"
-combined_bed12_out = bed_dir / "wheat_all_tissues_nonredundant_validated_peptides.bed12"
-step13_summary_out = tables_dir / "wheat_combined_validated_bed_summary_step13.csv"
+combined_table_out = tables_dir / "wheat_all_tissues_nonredundant_validated_peptides_step13.csv"
+combined_bed6_out = bed_dir / "FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed6"
+combined_bed12_out = bed_dir / "FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed12"
+step13_summary_out = tables_dir / "wheat_all_tissues_nonredundant_validated_bed_summary_step13.csv"
 
-sqlite_db = tables_dir / "wheat_step13_validated_nonredundant.sqlite"
+sqlite_db = tables_dir / "wheat_validated_nonredundant_step13.sqlite"
 
 chunk_size = 100_000
 
@@ -113,10 +113,10 @@ else:
     gene_label_col = None
 
 # Use best available peptide display label
-if "Peptide_intron_gapped_compact" in header.columns:
-    peptide_label_col = "Peptide_intron_gapped_compact"
-elif "Peptide_intron_gapped" in header.columns:
+if "Peptide_intron_gapped" in header.columns:
     peptide_label_col = "Peptide_intron_gapped"
+elif "Peptide_intron_gapped_compact" in header.columns:
+    peptide_label_col = "Peptide_intron_gapped_compact"
 else:
     peptide_label_col = "Peptide"
 
@@ -343,6 +343,7 @@ unique_proteins = set()
 unique_genes = set()
 unique_chromosomes = set()
 multi_block_count = 0
+within_exon_count = 0
 bed_labels_with_introns = 0
 
 sql_query = """
@@ -460,6 +461,8 @@ for chunk_i, nonredundant in enumerate(
     unique_chromosomes.update(nonredundant["Chromosome"].dropna().astype(str).unique())
 
     multi_block_count += int((nonredundant["BED_block_count"] > 1).sum())
+    
+    within_exon_count += int((nonredundant["BED_block_count"] == 1).sum())
 
     bed_labels_with_introns += int(
         nonredundant["BED_name"]
@@ -486,6 +489,7 @@ step13_summary = pd.DataFrame([{
     "Unique_gene_models": len(unique_genes),
     "Unique_chromosomes": len(unique_chromosomes),
     "Multi_block_peptides": multi_block_count,
+    "Within_exon_peptides": within_exon_count,
     "BED_labels_with_introns": bed_labels_with_introns,
     "Combined_table_file": combined_table_out.name,
     "BED6_file": combined_bed6_out.name,

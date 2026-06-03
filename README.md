@@ -63,8 +63,7 @@ Python-wheat-proteogenomics_2026/
 ├── Python_outputs/
 │   ├── figures/
 │   └── tables/
-│
-└── example_data/
+
 ```
 
 ---
@@ -125,24 +124,22 @@ conda activate wheat_proteogenomics
 - 7: Build non-contaminant peptide–protein evidence tables (this notebook)
 - 8: Map proteins to gene models using the GFF3-derived mapping table (this notebook)
 - 9: Project peptide positions from proteins onto genomic coordinates (this notebook)
-- 10: Positional validation of annotation-guided peptide genome projections (this notebook)
-- 11: Export all tissues BED6/BED12 files for JBrowse (this notebook)
-- 12: Create a single non-redundant combined BED track (this notebook)
-- 13: Generate tissue/protein/gene/isoform summary tables (this notebook)
+- 10: Translation validation of annotation-guided peptide genome projections (this notebook)
+- 11: Sanity Checks for translation-validated peptide Genome Projections (this notebook)
+- 12: Export all tissues BED6/BED12 files for JBrowse (this notebook)
+- 13: Create a single non-redundant combined BED track (this notebook)
 - 14: Prepare BED Files for Apollo/JBrowse Public Upload (this notebook)
-- 15: EDA: HC and LC Proteogenomic Coverage by Tissue (this notebook)
-- 16: EDA: Tissue Overlap Using UpSet Plots (this notebook)
-- 17: EDA: Peptide Support per Gene Model (this notebook)
-- 18: EDA: Peptide Length, Probability, and Charge by Annotation Confidence  (this notebook)
-- 19: EDA: Protein Length versus Peptide Support (this notebook)
-- 20: EDA: Chromosomal Distribution of Peptide Genomic Start Positions (this notebook)
-- 21: EDA: Circular Tissue-Level Peptide Genome Map (this notebook)
-- 22: EDA: Circular Confidence-Level Peptide Genome Map (this notebook)
-- 23: Combine Python workflow Summary Tables at Source/Tissue Level (this notebook)
-- 25: Sanity Checks for Annotation-Guided Peptide Genome Projections (this notebook)
-- 26: Generate Sanity-Validated BED Files for Apollo/JBrowse Upload (this notebook)
-- 27: Create Non-Redundant Combined Validated BED Tracks (this notebook)
-- 28: Prepare manuscript Table 1 summary statistics (this notebook)
+- 15: Generate tissue/protein/gene/isoform summary tables (this notebook)
+- 16: EDA: Barplot of HC and LC Proteogenomic Coverage by Tissue (this notebook)
+- 17: EDA: Tissue Overlap Using UpSet Plots (this notebook)
+- 18: EDA: Distributions of Peptide Support per Gene Model (this notebook)
+- 19: EDA: Scatterplot of Peptide Length and Probability by Annotation Confidence (this notebook)
+- 20: EDA: Scatterplot of Protein Length versus Peptide Support (this notebook)
+- 21: EDA: Violin plot of Chromosomal Distribution of Peptide Genomic Start Positions (this notebook)
+- 22: EDA: Circular plot of Tissue-Level Peptide Genome Map (this notebook)
+- 23: EDA: Pie chart of HC and LC Proteogenomic Coverage with Within-Exon/Exon-spanning Peptides (this notebook)
+- 24: Combine Python workflow Summary Tables at Source/Tissue Level (this notebook)
+- 25: Prepare manuscript Table 1 summary statistics (this notebook)
 
 ---
 
