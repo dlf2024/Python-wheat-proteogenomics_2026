@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r001.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r002.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r003.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r004.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r005.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r006.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r007.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r008.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r009.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r010.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r011.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\glume_run01\interact-GLUMES-r012.pep.xml

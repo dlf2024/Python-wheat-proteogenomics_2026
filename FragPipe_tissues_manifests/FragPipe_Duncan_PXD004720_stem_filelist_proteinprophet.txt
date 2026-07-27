@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM01.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM02.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM03.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM04.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM05.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM06.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM07.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM08.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM09.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM10.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM11.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\stem_run01\interact-STEM12.pep.xml

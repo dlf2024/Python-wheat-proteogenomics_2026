@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_1.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_10.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_11.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_12.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_2.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_3.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_4.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_5.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_6.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_7.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_8.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\youg-leaf-flag_run01\interact-YL_HIPH_9.pep.xml

@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r001.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r002.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r003.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r004.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r005.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r006.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r007.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r008.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r009.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r010.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r011.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\endosperm_run01\interact-ENDO-r012.pep.xml

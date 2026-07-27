@@ -1,0 +1,11 @@
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r001.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r002.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r003.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r004.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r005.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r006.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r007.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r008.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r009.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r010.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\palea_run01\interact-PALEA-r012.pep.xml

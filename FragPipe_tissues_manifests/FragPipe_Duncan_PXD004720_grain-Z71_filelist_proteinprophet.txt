@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_1.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_10.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_11.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_12.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_2.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_3.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_4.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_5.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_6.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_7.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_8.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\grain-Z71_run01\interact-ZADOCKS71_9.pep.xml

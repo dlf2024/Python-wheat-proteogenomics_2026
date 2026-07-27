@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r001.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r002.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r003.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r004.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r005.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r006.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r007.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r008.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r009.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r010.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r011.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\hairy-roots_run01\interact-HAIRY_ROOT-r012.pep.xml

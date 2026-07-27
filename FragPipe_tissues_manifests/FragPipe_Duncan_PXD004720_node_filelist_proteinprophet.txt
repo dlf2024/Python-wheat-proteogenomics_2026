@@ -1,0 +1,12 @@
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE01.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE02.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE03.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE04.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE05.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE06.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE07.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE08.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE09.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE10.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE11.pep.xml
+C:\Users\Delphine_2026\FragPipe_results\node_run01\interact-NODE12.pep.xml
