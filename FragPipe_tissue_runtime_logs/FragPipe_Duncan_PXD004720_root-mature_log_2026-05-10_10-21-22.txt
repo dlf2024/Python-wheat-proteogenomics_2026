@@ -1,0 +1,2846 @@
+System OS: Windows 11, Architecture: AMD64
+Java Info: 17.0.10, OpenJDK 64-Bit Server VM, Eclipse Adoptium
+.NET Core Info: 6.0.36
+
+
+Version info:
+FragPipe version 24.0
+DIA-Umpire version 2.3.3
+diaTracer version N/A
+MSFragger version 4.4.1
+Crystal-C version 1.5.10
+MSBooster version 1.4.14
+Percolator version 3.7.1
+PTMProphet version 6.3.2
+Metaproteomics version 1.0.1
+Philosopher version 5.1.3-RC9
+PTM-Shepherd version 3.0.11
+IonQuant version N/A
+TMT-Integrator version 6.1.3
+FragPipe-SpecLib version 0.1.58
+DIA-NN version 1.8.2 beta 8
+Skyline version N/A
+Pandas version 2.3.3
+Numpy version 1.26.4
+
+
+LCMS files:
+  Experiment/Group: 
+  (if "spectral library generation" is enabled, all files will be analyzed together)
+  - C:\Users\Delphine_2026\RAW\ROOTS10.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS11.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS12.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS1a.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS2.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS3.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS4.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS5.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS6.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS7.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS8.mzML	DDA
+  - C:\Users\Delphine_2026\RAW\ROOTS9.mzML	DDA
+
+
+69 commands to execute:
+CheckCentroid
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -Xmx32G -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;C:\FragPipe\FragPipe-24.0\tools\batmass-io-1.36.5.jar org.nesvilab.fragpipe.util.CheckCentroid C:\Users\Delphine_2026\RAW\ROOTS10.mzML 4
+WorkspaceCleanInit [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --clean --nocheck
+WorkspaceCleanInit [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\a691d290-9748-438b-bac1-b2d0e9960ace
+MSFragger [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\python\python.exe C:\FragPipe\FragPipe-24.0\tools\msfragger_pep_split.py 2 "C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -jar -Dfile.encoding=UTF-8 -Xmx32G" C:\FragPipe\FragPipe-24.0\tools\MSFragger-4.4.1\MSFragger-4.4.1.jar C:\Users\Delphine_2026\FragPipe_results\root_run01\fragger.params C:\Users\Delphine_2026\RAW\ROOTS10.mzML C:\Users\Delphine_2026\RAW\ROOTS11.mzML C:\Users\Delphine_2026\RAW\ROOTS12.mzML C:\Users\Delphine_2026\RAW\ROOTS1a.mzML C:\Users\Delphine_2026\RAW\ROOTS2.mzML C:\Users\Delphine_2026\RAW\ROOTS3.mzML C:\Users\Delphine_2026\RAW\ROOTS4.mzML C:\Users\Delphine_2026\RAW\ROOTS5.mzML C:\Users\Delphine_2026\RAW\ROOTS6.mzML C:\Users\Delphine_2026\RAW\ROOTS7.mzML C:\Users\Delphine_2026\RAW\ROOTS8.mzML C:\Users\Delphine_2026\RAW\ROOTS9.mzML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS10.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS10.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS11.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS11.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS12.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS12.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS1a.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS1a.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS2.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS2.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS3.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS3.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS4.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS4.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS5.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS5.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS6.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS6.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS7.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS7.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS8.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS8.pepXML
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS9.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS9.pepXML
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS10.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\8cd78641-4498-45a3-a19b-ecc30081fbb7
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS11.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\81995be8-0a94-4cc1-bf8d-804b577c922e
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS12.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\10c5b246-3322-4b49-b48a-b8512efb469b
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS1a.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\fb7a39c2-55f9-4643-8218-abe0c751f1c8
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS2.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\abe0867f-1241-4bf5-9784-3ce03922bf19
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS3.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\d1660395-e062-45c7-9db0-b9088663b2da
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS4.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\74e5691f-be0e-46d6-88bd-16c829060bd1
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS5.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\fd6b64e4-3ea6-415c-a24a-3f9204cdc4bf
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS6.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\14d093cc-424c-4922-a977-1b1919aaecff
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS7.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\933da375-c10e-4e4e-b67a-5286de35d24a
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS8.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\26d37f87-f51b-4a72-9b26-1b0f0d47040f
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS9.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\10335429-776e-4934-ab4e-d6b5a17c401d
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS10.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS10.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS11.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS11.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS12.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS12.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS1a.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS1a.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS2.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS2.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS3.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS3.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS4.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS4.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS5.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS5.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS6.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS6.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS7.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS7.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS8.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS8.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS9.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS9.pepXML
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS10.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS11.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS12.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS1a.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS2.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS3.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS4.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS5.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS6.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS7.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS8.pepXML-temp
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS9.pepXML-temp
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml C:\Users\Delphine_2026\RAW\ROOTS12.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml C:\Users\Delphine_2026\RAW\ROOTS3.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml C:\Users\Delphine_2026\RAW\ROOTS2.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml C:\Users\Delphine_2026\RAW\ROOTS1a.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml C:\Users\Delphine_2026\RAW\ROOTS5.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml C:\Users\Delphine_2026\RAW\ROOTS8.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml C:\Users\Delphine_2026\RAW\ROOTS10.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml C:\Users\Delphine_2026\RAW\ROOTS6.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml C:\Users\Delphine_2026\RAW\ROOTS9.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml C:\Users\Delphine_2026\RAW\ROOTS7.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml C:\Users\Delphine_2026\RAW\ROOTS4.mzML
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml C:\Users\Delphine_2026\RAW\ROOTS11.mzML
+ProteinProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe proteinprophet --output combined C:\Users\Delphine_2026\FragPipe_results\root_run01\filelist_proteinprophet.txt
+PhilosopherDbAnnotate [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe database --annotate C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta --prefix decoy_
+PhilosopherFilter [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe filter --sequential --prot 0.01 --tag decoy_ --pepxml C:\Users\Delphine_2026\FragPipe_results\root_run01 --protxml C:\Users\Delphine_2026\FragPipe_results\root_run01\combined.prot.xml --razor
+PhilosopherReport [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe report --removecontam
+WorkspaceClean [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --clean --nocheck
+~~~~~~~~~~~~~~~~~~~~~~
+
+Execution order:
+
+    Cmd: [START], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [CheckCentroid], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [WorkspaceCleanInit], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [MSFragger], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [PeptideProphet], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [ProteinProphet], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [PhilosopherDbAnnotate], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [PhilosopherFilter], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [PhilosopherReport], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+    Cmd: [WorkspaceClean], Work dir: [C:\Users\Delphine_2026\FragPipe_results\root_run01]
+
+~~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~Sample of C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta~~~~~~~
+>TraesCS1A03G0000100LC.1
+>TraesCS1D03G0312600.1
+>TraesCS2B03G0560600LC.1
+>TraesCS3A03G0293000.1
+>TraesCS3D03G0136500.7
+>TraesCS4B03G0307900LC.1
+>TraesCS5A03G1083400.1
+>TraesCS5D03G1054900.3
+>TraesCS6D03G0153200LC.1
+>TraesCS7B03G0504500.1
+>decoy_100092
+>decoy_126735
+>decoy_153377
+>decoy_180018
+>decoy_206660
+>decoy_233301
+>decoy_259945
+>decoy_286587
+>decoy_46800
+>decoy_73442
+>generic|con_RASH_HUMAN|RASH_HUMAN
+~~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~~~~ fragpipe.config ~~~~~~~~~
+# FragPipe v24.0ui state cache
+
+
+# Please edit the following path to point to the correct location.
+# In Windows, please replace single '\' with '\\'
+database.db-path=C\:\\Users\\Delphine_2026\\DB\\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
+
+crystalc.run-crystalc=false
+database.decoy-tag=decoy_
+diann.channel-normalization-strategy=0
+diann.cmd-opts=
+diann.gene-level-report=false
+diann.generate-msstats=true
+diann.heavy=
+diann.library=
+diann.light=
+diann.mbr=false
+diann.medium=
+diann.min-site-prob=0.75
+diann.mod-tag=
+diann.modified-peptide-level-report=true
+diann.peptide-level-report=true
+diann.protein-level-report=false
+diann.q-value=0.01
+diann.quantification-strategy=3
+diann.quantification-strategy-2=2
+diann.redo-protein-inference=false
+diann.run-dia-nn=false
+diann.run-dia-plex=false
+diann.run-specific-protein-q-value=false
+diann.site-level-report=false
+diann.unrelated-runs=false
+diatracer.corr-threshold=0.3
+diatracer.delta-apex-im=0.01
+diatracer.delta-apex-rt=3
+diatracer.mass-defect-filter=true
+diatracer.mass-defect-offset=0.1
+diatracer.rf-max=500
+diatracer.run-diatracer=false
+diatracer.write-intermediate-files=false
+diaumpire.AdjustFragIntensity=false
+diaumpire.BoostComplementaryIon=false
+diaumpire.CorrThreshold=
+diaumpire.DeltaApex=
+diaumpire.ExportPrecursorPeak=false
+diaumpire.Q1=false
+diaumpire.Q2=false
+diaumpire.Q3=false
+diaumpire.RFmax=
+diaumpire.RPmax=
+diaumpire.RTOverlap=
+diaumpire.SE.EstimateBG=false
+diaumpire.SE.IsoPattern=
+diaumpire.SE.MS1PPM=
+diaumpire.SE.MS2PPM=
+diaumpire.SE.MS2SN=
+diaumpire.SE.MassDefectFilter=false
+diaumpire.SE.MassDefectOffset=
+diaumpire.SE.NoMissedScan=
+diaumpire.SE.SN=
+diaumpire.run-diaumpire=false
+fpop.coadaptr.fpop.fpop_masses=
+fpop.coadaptr.fpop.run-fpop-coadaptr=false
+fpop.fragpipe.fpop.fpop-tmt=false
+fpop.fragpipe.fpop.label_control=
+fpop.fragpipe.fpop.label_fpop=
+fpop.fragpipe.fpop.region_size=1
+fpop.fragpipe.fpop.run-fpop=false
+fpop.fragpipe.fpop.subtract-control=false
+fragpipe-config.bin-diann=C\:\\FragPipe\\FragPipe-24.0\\tools\\diann\\1.8.2_beta_8\\windows\\DiaNN.exe
+fragpipe-config.bin-python=C\:\\FragPipe\\FragPipe-24.0\\python\\python.exe
+fragpipe-config.tools-folder=C\:\\FragPipe\\FragPipe-24.0\\tools
+freequant.mz-tol=10
+freequant.rt-tol=0.4
+freequant.run-freequant=true
+ionquant.excludemods=
+ionquant.formula=
+ionquant.heavy=
+ionquant.imtol=0.05
+ionquant.intensitymode=2
+ionquant.ionfdr=0.01
+ionquant.light=
+ionquant.locprob=0.75
+ionquant.maxlfq=1
+ionquant.mbr=1
+ionquant.mbrimtol=0.05
+ionquant.mbrmincorr=0
+ionquant.mbrrttol=1
+ionquant.mbrtoprun=10
+ionquant.medium=
+ionquant.minfreq=0
+ionquant.minions=1
+ionquant.minisotopes=1
+ionquant.minscans=3
+ionquant.mztol=10
+ionquant.normalization=1
+ionquant.peptidefdr=1
+ionquant.proteinfdr=1
+ionquant.requantify=1
+ionquant.rttol=0.4
+ionquant.run-ionquant=false
+ionquant.tp=0
+ionquant.uniqueness=0
+ionquant.use-labeling=false
+ionquant.use-lfq=false
+ionquant.writeindex=0
+mbg.allow_chimeric=false
+mbg.expand_db=2
+mbg.fdr=0.010
+mbg.max_glycan_q=0.01
+mbg.max_skips=0
+mbg.min_glycans=2
+mbg.min_psms=5
+mbg.residues_to_add=
+mbg.run-mbg=false
+metaproteomics.cmd-line-opts=
+metaproteomics.delta-hyperscore=0.0
+metaproteomics.host-name=Homo sapiens
+metaproteomics.iterations=3
+metaproteomics.min-pept-cnt-per-prot=1
+metaproteomics.min-uniq-pept-cnt=3
+metaproteomics.min-uniq-pept-cnt-per-prot=1
+metaproteomics.qvalue=0.01
+metaproteomics.run-metaproteomics=false
+msbooster.find-best-im-model=false
+msbooster.find-best-rt-model=false
+msbooster.find-best-spectra-model=false
+msbooster.fragmentation-type=0
+msbooster.im-model=DIA-NN
+msbooster.koina-url=
+msbooster.predict-im=true
+msbooster.predict-rt=true
+msbooster.predict-spectra=true
+msbooster.rt-model=DIA-NN
+msbooster.run-msbooster=false
+msbooster.spectra-model=DIA-NN
+msbooster.spectral-library-path=
+msfragger.Y_type_masses=
+msfragger.activation_types=all
+msfragger.allowed_missed_cleavage_1=10
+msfragger.allowed_missed_cleavage_2=2
+msfragger.analyzer_types=all
+msfragger.calibrate_mass=0
+msfragger.check_spectral_files=false
+msfragger.clip_nTerm_M=true
+msfragger.deisotope=1
+msfragger.delta_mass_exclude_ranges=(-1.5,3.5)
+msfragger.deneutralloss=1
+msfragger.diagnostic_fragments=
+msfragger.diagnostic_intensity_filter=0
+msfragger.digest-only=false
+msfragger.digest_max_length=100
+msfragger.digest_min_length=6
+msfragger.fragment_ion_series=b,y
+msfragger.fragment_mass_tolerance=0.05
+msfragger.fragment_mass_units=0
+msfragger.group_variable=0
+msfragger.intensity_transform=0
+msfragger.ion_series_definitions=
+msfragger.isotope_error=0/1/2
+msfragger.labile_fragment_ion_series=b,y
+msfragger.labile_search_mode=off
+msfragger.localize_delta_mass=false
+msfragger.mass_diff_to_variable_mod=0
+msfragger.mass_offsets=0
+msfragger.mass_offsets_detailed=
+msfragger.max_fragment_charge=10
+msfragger.max_variable_mods_combinations=5
+msfragger.max_variable_mods_per_peptide=3
+msfragger.min_fragments_modelling=2
+msfragger.min_matched_fragments=4
+msfragger.min_sequence_matches=2
+msfragger.minimum_peaks=15
+msfragger.minimum_ratio=0.01
+msfragger.misc.fragger.clear-mz-hi=0
+msfragger.misc.fragger.clear-mz-lo=0
+msfragger.misc.fragger.digest-mass-hi=10000
+msfragger.misc.fragger.digest-mass-lo=300
+msfragger.misc.fragger.enzyme-dropdown-1=trypsin
+msfragger.misc.fragger.enzyme-dropdown-2=trypsin
+msfragger.misc.fragger.precursor-charge-hi=4
+msfragger.misc.fragger.precursor-charge-lo=1
+msfragger.misc.fragger.remove-precursor-range-hi=1.5
+msfragger.misc.fragger.remove-precursor-range-lo=-1.5
+msfragger.misc.slice-db=2
+msfragger.num_enzyme_termini=2
+msfragger.output_format=pepXML
+msfragger.output_max_expect=50
+msfragger.output_report_topN=1
+msfragger.output_report_topN_dda_plus=5
+msfragger.output_report_topN_dia1=5
+msfragger.override_charge=false
+msfragger.precursor_mass_lower=-10
+msfragger.precursor_mass_mode=selected
+msfragger.precursor_mass_units=1
+msfragger.precursor_mass_upper=10
+msfragger.precursor_true_tolerance=20
+msfragger.precursor_true_units=1
+msfragger.remainder_fragment_masses=
+msfragger.remove_precursor_peak=1
+msfragger.report_alternative_proteins=false
+msfragger.require_precursor=false
+msfragger.restrict_deltamass_to=all
+msfragger.reuse_dia_fragment_peaks=false
+msfragger.run-msfragger=true
+msfragger.search_enzyme_cut_1=KR
+msfragger.search_enzyme_cut_2=
+msfragger.search_enzyme_name_1=Trypsin/P
+msfragger.search_enzyme_name_2=null
+msfragger.search_enzyme_nocut_1=
+msfragger.search_enzyme_nocut_2=
+msfragger.search_enzyme_sense_1=C
+msfragger.search_enzyme_sense_2=C
+msfragger.table.fix-mods=0.0,C-Term Peptide,true,-1; 0.0,N-Term Peptide,true,-1; 0.0,C-Term Protein,true,-1; 0.0,N-Term Protein,true,-1; 0.0,G (glycine),true,-1; 0.0,A (alanine),true,-1; 0.0,S (serine),true,-1; 0.0,P (proline),true,-1; 0.0,V (valine),true,-1; 0.0,T (threonine),true,-1; 57.02146,C (cysteine),true,-1; 0.0,L (leucine),true,-1; 0.0,I (isoleucine),true,-1; 0.0,N (asparagine),true,-1; 0.0,D (aspartic acid),true,-1; 0.0,Q (glutamine),true,-1; 0.0,K (lysine),true,-1; 0.0,E (glutamic acid),true,-1; 0.0,M (methionine),true,-1; 0.0,H (histidine),true,-1; 0.0,F (phenylalanine),true,-1; 0.0,R (arginine),true,-1; 0.0,Y (tyrosine),true,-1; 0.0,W (tryptophan),true,-1; 0.0,B ,true,-1; 0.0,J,true,-1; 0.0,O,true,-1; 0.0,U,true,-1; 0.0,X,true,-1; 0.0,Z,true,-1
+msfragger.table.var-mods=15.9949,M,true,3; 42.0106,[^,true,1; 79.96633,STY,false,3; -17.0265,nQnC,false,1; -18.0106,nE,false,1; 4.025107,K,false,2; 6.020129,KR,false,2; 8.014199,K,false,2; 10.008269,R,false,2; 0.0,site_10,false,1; 0.0,site_11,false,1; 0.0,site_12,false,1; 0.0,site_13,false,1; 0.0,site_14,false,1; 0.0,site_15,false,1; 0.0,site_16,false,1
+msfragger.track_zero_topN=0
+msfragger.use_all_mods_in_first_search=false
+msfragger.use_detailed_offsets=false
+msfragger.use_topN_peaks=150
+msfragger.write_calibrated_mzml=false
+msfragger.zero_bin_accept_expect=0
+msfragger.zero_bin_mult_expect=1
+opair.activation1=HCD
+opair.activation2=HCD
+opair.allowed_sites=
+opair.filterOxonium=true
+opair.glyco_db=
+opair.max_glycans=2
+opair.max_isotope_error=2
+opair.min_isotope_error=0
+opair.ms1_tol=20
+opair.ms2_tol=20
+opair.oxonium_filtering_file=
+opair.oxonium_minimum_intensity=0.05
+opair.reverse_scan_order=false
+opair.run-opair=false
+opair.single_scan_type=false
+peptide-prophet.cmd-opts=
+peptide-prophet.combine-pepxml=false
+peptide-prophet.run-peptide-prophet=true
+percolator.cmd-opts=
+percolator.keep-tsv-files=false
+percolator.min-prob=0.5
+percolator.run-percolator=false
+phi-report.dont-use-prot-proph-file=false
+phi-report.filter=--sequential --prot 0.01
+phi-report.pep-level-summary=true
+phi-report.print-decoys=false
+phi-report.prot-level-summary=true
+phi-report.remove-contaminants=true
+phi-report.run-report=true
+protein-prophet.cmd-opts=
+protein-prophet.run-protein-prophet=true
+ptmprophet.cmdline=NOSTACK KEEPOLD STATIC FRAGPPMTOL\=10 EM\=1 NIONS\=b STY\:79.966331,M\:15.9949 MINPROB\=0.5
+ptmprophet.override-defaults=false
+ptmprophet.run-ptmprophet=false
+ptmshepherd.adv_params=false
+ptmshepherd.annotate_assigned_mods=false
+ptmshepherd.annotation-common=false
+ptmshepherd.annotation-custom=false
+ptmshepherd.annotation-glyco=false
+ptmshepherd.annotation-unimod=true
+ptmshepherd.annotation_file=
+ptmshepherd.annotation_tol=0.01
+ptmshepherd.cap_y_ions=
+ptmshepherd.decoy_type=1
+ptmshepherd.diag_ions=
+ptmshepherd.diagmine_diagMinFoldChange=3.0
+ptmshepherd.diagmine_diagMinSpecDiff=25
+ptmshepherd.diagmine_fragMinFoldChange=3.0
+ptmshepherd.diagmine_fragMinPropensity=12.5
+ptmshepherd.diagmine_fragMinSpecDiff=15
+ptmshepherd.diagmine_minIonsPerSpec=2
+ptmshepherd.diagmine_minPeps=25
+ptmshepherd.diagmine_pepMinFoldChange=3.0
+ptmshepherd.diagmine_pepMinSpecDiff=25
+ptmshepherd.glyco_fdr=0.01
+ptmshepherd.glyco_isotope_max=3
+ptmshepherd.glyco_isotope_min=-1
+ptmshepherd.glyco_lda=false
+ptmshepherd.glyco_lda_features=
+ptmshepherd.glyco_ppm_tol=50
+ptmshepherd.glycodatabase=
+ptmshepherd.histo_smoothbins=2
+ptmshepherd.iontype_a=false
+ptmshepherd.iontype_b=true
+ptmshepherd.iontype_c=false
+ptmshepherd.iontype_x=false
+ptmshepherd.iontype_y=true
+ptmshepherd.iontype_z=false
+ptmshepherd.localization_allowed_res=all
+ptmshepherd.n_glyco=false
+ptmshepherd.normalization-psms=true
+ptmshepherd.normalization-scans=false
+ptmshepherd.output_extended=false
+ptmshepherd.peakpicking_mass_units=0
+ptmshepherd.peakpicking_minPsm=10
+ptmshepherd.peakpicking_promRatio=0.3
+ptmshepherd.peakpicking_width=0.002
+ptmshepherd.precursor_mass_units=0
+ptmshepherd.precursor_tol=0.01
+ptmshepherd.print_decoys=false
+ptmshepherd.print_full_glyco_params=false
+ptmshepherd.prob_mass=0.5
+ptmshepherd.remainder_masses=
+ptmshepherd.remove_glycan_delta_mass=false
+ptmshepherd.run-shepherd=false
+ptmshepherd.run_diagextract_mode=false
+ptmshepherd.run_diagmine_mode=false
+ptmshepherd.run_glyco_mode=false
+ptmshepherd.shuffle_decoy_intensities=false
+ptmshepherd.spectra_condPeaks=150
+ptmshepherd.spectra_condRatio=0.0001
+ptmshepherd.spectra_maxPrecursorCharge=4
+ptmshepherd.spectra_maxfragcharge=2
+ptmshepherd.spectra_ppmtol=20
+ptmshepherd.use_glycan_fragment_probs=false
+ptmshepherd.use_msfragger_localization=false
+ptmshepherd.varmod_masses=
+quantitation.run-label-free-quant=false
+run-psm-validation=true
+run-validation-tab=true
+saintexpress.cmd-opts=
+saintexpress.max-replicates=10
+saintexpress.run-saint-express=false
+saintexpress.virtual-controls=100
+skyline.fdr=1
+skyline.generate-skyline-quant-report=false
+skyline.min-site-prob=0.75
+skyline.mod-tag=
+skyline.run-skyline=false
+skyline.skyline=true
+skyline.skyline-custom=false
+skyline.skyline-custom-path=
+skyline.skyline-daily=false
+skyline.skyline-fragment-tolerance=10
+skyline.skyline-library-product-ions=12
+skyline.skyline-mods-mode=Default
+skyline.skyline-precursor-tolerance=10
+skyline.skyline-rt-tolerance=2
+skyline.use-existing-skyline-document=false
+speclibgen.convert-pepxml=true
+speclibgen.convert-psm=false
+speclibgen.easypqp.extras.max_delta_ppm=15
+speclibgen.easypqp.extras.max_delta_unimod=0.02
+speclibgen.easypqp.extras.max_glycan_qval=1
+speclibgen.easypqp.extras.rt_lowess_fraction=0.01
+speclibgen.easypqp.fragment.a=false
+speclibgen.easypqp.fragment.b=true
+speclibgen.easypqp.fragment.c=false
+speclibgen.easypqp.fragment.x=false
+speclibgen.easypqp.fragment.y=true
+speclibgen.easypqp.fragment.z=false
+speclibgen.easypqp.im-cal=Automatic selection of a run as reference IM
+speclibgen.easypqp.labile_mode=Regular (not glyco)
+speclibgen.easypqp.neutral_loss=false
+speclibgen.easypqp.rt-cal=noiRT
+speclibgen.easypqp.select-file.text=
+speclibgen.easypqp.select-im-file.text=
+speclibgen.keep-intermediate-files=false
+speclibgen.run-speclibgen=false
+tab-run.delete_temp_files=false
+tab-run.export_matched_fragments=false
+tab-run.sub_mzml_prob_threshold=0.5
+tab-run.write_sub_mzml=false
+tmtintegrator.add_Ref=-1
+tmtintegrator.aggregation_method=0
+tmtintegrator.allow_overlabel=true
+tmtintegrator.allow_unlabeled=true
+tmtintegrator.best_psm=true
+tmtintegrator.channel_num=TMT-0
+tmtintegrator.extraction_tool=IonQuant
+tmtintegrator.glyco_qval=-1
+tmtintegrator.groupby=0
+tmtintegrator.log2transformed=true
+tmtintegrator.max_pep_prob_thres=0
+tmtintegrator.min_ntt=0
+tmtintegrator.min_pep_prob=0.9
+tmtintegrator.min_percent=0.05
+tmtintegrator.min_purity=0.5
+tmtintegrator.min_resolution=45000
+tmtintegrator.min_site_prob=-1
+tmtintegrator.min_snr=1000
+tmtintegrator.mod_tag=none
+tmtintegrator.ms1_int=true
+tmtintegrator.outlier_removal=true
+tmtintegrator.philosopher-msstats=false
+tmtintegrator.print_RefInt=false
+tmtintegrator.prot_exclude=none
+tmtintegrator.prot_norm=0
+tmtintegrator.psm_norm=false
+tmtintegrator.quant_level=2
+tmtintegrator.ref_d_tag=Pool
+tmtintegrator.ref_tag=Bridge
+tmtintegrator.run-tmtintegrator=false
+tmtintegrator.tolerance=20
+tmtintegrator.unique_gene=0
+tmtintegrator.unique_pep=false
+tmtintegrator.use_glycan_composition=false
+transfer-learning.credential=
+transfer-learning.instrument=Astral
+transfer-learning.keep-decoys=false
+transfer-learning.max-charge=3
+transfer-learning.min-charge=2
+transfer-learning.model-path=
+transfer-learning.nce=30
+transfer-learning.output-format=speclib
+transfer-learning.peptides-to-predict=Whole FASTA file
+transfer-learning.perform-transfer-learning=true
+transfer-learning.predict-im=true
+transfer-learning.predict-ms2=true
+transfer-learning.predict-rt=true
+transfer-learning.predict-spectral-library=true
+transfer-learning.run-transfer-learning=false
+transfer-learning.spectral-library-path=
+workdir=C\:\\Users\\Delphine_2026\\FragPipe_results\\root_run01
+workflow.input.data-type.im-ms=false
+workflow.input.data-type.regular-ms=true
+workflow.misc.save-sdrf=true
+workflow.misc.sdrf-type=Default
+workflow.ram=32
+workflow.threads=4
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CheckCentroid
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -Xmx32G -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;C:\FragPipe\FragPipe-24.0\tools\batmass-io-1.36.5.jar org.nesvilab.fragpipe.util.CheckCentroid C:\Users\Delphine_2026\RAW\ROOTS10.mzML 4
+Done in 2.8 s.
+Process 'CheckCentroid' finished, exit code: 0
+WorkspaceCleanInit [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --clean --nocheck
+time="09:36:15" level=info msg="Executing Workspace  v5.1.3"
+time="09:36:15" level=info msg="Removing workspace"
+time="09:36:15" level=info msg=Done
+Process 'WorkspaceCleanInit' finished, exit code: 0
+WorkspaceCleanInit [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\a691d290-9748-438b-bac1-b2d0e9960ace
+time="09:36:16" level=info msg="Executing Workspace  v5.1.3"
+time="09:36:16" level=info msg="Creating workspace"
+time="09:36:16" level=info msg=Done
+Process 'WorkspaceCleanInit' finished, exit code: 0
+MSFragger [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\python\python.exe C:\FragPipe\FragPipe-24.0\tools\msfragger_pep_split.py 2 "C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -jar -Dfile.encoding=UTF-8 -Xmx32G" C:\FragPipe\FragPipe-24.0\tools\MSFragger-4.4.1\MSFragger-4.4.1.jar C:\Users\Delphine_2026\FragPipe_results\root_run01\fragger.params C:\Users\Delphine_2026\RAW\ROOTS10.mzML C:\Users\Delphine_2026\RAW\ROOTS11.mzML C:\Users\Delphine_2026\RAW\ROOTS12.mzML C:\Users\Delphine_2026\RAW\ROOTS1a.mzML C:\Users\Delphine_2026\RAW\ROOTS2.mzML C:\Users\Delphine_2026\RAW\ROOTS3.mzML C:\Users\Delphine_2026\RAW\ROOTS4.mzML C:\Users\Delphine_2026\RAW\ROOTS5.mzML C:\Users\Delphine_2026\RAW\ROOTS6.mzML C:\Users\Delphine_2026\RAW\ROOTS7.mzML C:\Users\Delphine_2026\RAW\ROOTS8.mzML C:\Users\Delphine_2026\RAW\ROOTS9.mzML
+STARTED: DB split 1 of 2
+['C:\\FragPipe\\FragPipe-24.0\\jre\\bin\\java.exe', '-jar', '-Dfile.encoding=UTF-8', '-Xmx32G', WindowsPath('C:/FragPipe/FragPipe-24.0/tools/MSFragger-4.4.1/MSFragger-4.4.1.jar'), 'fragger.params', WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS10.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS11.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS12.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS1a.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS2.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS3.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS4.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS5.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS6.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS7.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS8.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS9.mzML'), '--partial', '0']
+MSFragger version MSFragger-4.4.1
+Batmass-IO version 1.36.6
+timsdata library version timsdata-2-21-0-4
+(c) University of Michigan
+RawFileReader reading tool. Copyright (c) 2016 by Thermo Fisher Scientific, Inc. All rights reserved.
+timdTOF .d reading tool. Copyright (c) 2022 by Bruker Daltonics GmbH & Co. KG. All rights reserved.
+System OS: Windows 11, Architecture: AMD64
+Java Info: 17.0.10, OpenJDK 64-Bit Server VM, Eclipse Adoptium
+JVM started with 32 GB memory
+Checking database...
+
+************************************MAIN SEARCH************************************
+Checking database...
+Parameters:
+num_threads = 4
+database_name = iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
+decoy_prefix = decoy_
+keep_decoys = 1
+precursor_mass_lower = -10.0
+precursor_mass_upper = 10.0
+precursor_mass_units = 1
+data_type = 0
+precursor_true_tolerance = 20.0
+precursor_true_units = 1
+fragment_mass_tolerance = 0.05
+fragment_mass_units = 0
+calibrate_mass = 0
+use_all_mods_in_first_search = 0
+write_calibrated_mzml = 0
+write_uncalibrated_mzml = 1
+write_mzbin_all = 0
+isotope_error = 0/1/2
+mass_offsets = 0.0
+use_detailed_offsets = 0
+labile_search_mode = OFF
+restrict_deltamass_to = all
+precursor_mass_mode = SELECTED
+localize_delta_mass = 0
+delta_mass_exclude_ranges = (-1.5,3.5)
+fragment_ion_series = b,y
+ion_series_definitions = 
+search_enzyme_name = Trypsin/P
+search_enzyme_sense_1 = C
+search_enzyme_cut_1 = KR
+search_enzyme_nocut_1 = 
+allowed_missed_cleavage_1 = 10
+num_enzyme_termini = 2
+clip_nTerm_M = 1
+allow_multiple_variable_mods_on_residue = 0
+max_variable_mods_per_peptide = 3
+max_variable_mods_combinations = 5
+output_format = pepxml
+output_report_topN = 1
+output_max_expect = 50.0
+report_alternative_proteins = 0
+override_charge = 0
+precursor_charge_low = 1
+precursor_charge_high = 4
+digest_min_length = 6
+digest_max_length = 100
+digest_mass_range_low = 300.0
+digest_mass_range_high = 10000.0
+max_fragment_charge = 1
+deisotope = 1
+deneutralloss = 1
+track_zero_topN = 0
+zero_bin_accept_expect = 0.0
+zero_bin_mult_expect = 1.0
+minimum_peaks = 15
+use_topN_peaks = 150
+minIonsScoring = 2
+min_matched_fragments = 4
+minimum_ratio = 0.01
+intensity_transform = 0
+activation_types = all
+analyzer_types = all
+group_variable = 0
+require_precursor = 0
+reuse_dia_fragment_peaks = 0
+remove_precursor_peak = 1
+remove_precursor_range = -1.500000,1.500000
+clear_mz_range_low = 0.0
+clear_mz_range_high = 0.0
+excluded_scan_list_file = 
+mass_diff_to_variable_mod = 0
+min_sequence_matches = 2
+check_spectral_files = 0
+variable_mod_01 = 15.9949 M 3
+variable_mod_02 = 42.0106 [^ 1
+add_A_alanine = 0.0
+add_B_user_amino_acid = 0.0
+add_C_cysteine = 57.02146
+add_Cterm_peptide = 0.0
+add_Cterm_protein = 0.0
+add_D_aspartic_acid = 0.0
+add_E_glutamic_acid = 0.0
+add_F_phenylalanine = 0.0
+add_G_glycine = 0.0
+add_H_histidine = 0.0
+add_I_isoleucine = 0.0
+add_J_user_amino_acid = 0.0
+add_K_lysine = 0.0
+add_L_leucine = 0.0
+add_M_methionine = 0.0
+add_N_asparagine = 0.0
+add_Nterm_peptide = 0.0
+add_Nterm_protein = 0.0
+add_O_user_amino_acid = 0.0  # O = pyrrolysine (237.14773 Da)
+add_P_proline = 0.0
+add_Q_glutamine = 0.0
+add_R_arginine = 0.0
+add_S_serine = 0.0
+add_T_threonine = 0.0
+add_U_user_amino_acid = 0.0  # U = selenocysteine (150.95363 Da)
+add_V_valine = 0.0
+add_W_tryptophan = 0.0
+add_X_user_amino_acid = 0.0
+add_Y_tyrosine = 0.0
+add_Z_user_amino_acid = 0.0
+Number of unique peptides
+	of length 6: 483005
+	of length 7: 578482
+	of length 8: 608569
+	of length 9: 619083
+	of length 10: 637695
+	of length 11: 662197
+	of length 12: 676012
+	of length 13: 686313
+	of length 14: 697772
+	of length 15: 704595
+	of length 16: 716782
+	of length 17: 721823
+	of length 18: 733728
+	of length 19: 736861
+	of length 20: 751910
+	of length 21: 759197
+	of length 22: 764392
+	of length 23: 766442
+	of length 24: 767827
+	of length 25: 766562
+	of length 26: 775919
+	of length 27: 781065
+	of length 28: 782414
+	of length 29: 796359
+	of length 30: 796018
+	of length 31: 790735
+	of length 32: 788728
+	of length 33: 787455
+	of length 34: 791962
+	of length 35: 796809
+	of length 36: 785606
+	of length 37: 792911
+	of length 38: 788838
+	of length 39: 784813
+	of length 40: 782605
+	of length 41: 770644
+	of length 42: 768747
+	of length 43: 762293
+	of length 44: 754524
+	of length 45: 756470
+	of length 46: 745684
+	of length 47: 751788
+	of length 48: 749718
+	of length 49: 733362
+	of length 50: 730447
+	of length 51: 721326
+	of length 52: 716834
+	of length 53: 704051
+	of length 54: 689872
+	of length 55: 686635
+	of length 56: 682847
+	of length 57: 673741
+	of length 58: 672978
+	of length 59: 658505
+	of length 60: 646854
+	of length 61: 633878
+	of length 62: 629364
+	of length 63: 619521
+	of length 64: 608547
+	of length 65: 595460
+	of length 66: 587102
+	of length 67: 580624
+	of length 68: 567115
+	of length 69: 557343
+	of length 70: 554912
+	of length 71: 543051
+	of length 72: 527121
+	of length 73: 517049
+	of length 74: 510367
+	of length 75: 495959
+	of length 76: 483314
+	of length 77: 473320
+	of length 78: 458610
+	of length 79: 448903
+	of length 80: 442060
+	of length 81: 426312
+	of length 82: 420521
+	of length 83: 404383
+	of length 84: 392117
+	of length 85: 373683
+	of length 86: 340768
+	of length 87: 311547
+	of length 88: 271250
+	of length 89: 227070
+	of length 90: 185055
+	of length 91: 142725
+	of length 92: 107146
+	of length 93: 77594
+	of length 94: 56897
+	of length 95: 39509
+	of length 96: 26899
+	of length 97: 17778
+	of length 98: 11927
+	of length 99: 7572
+	of length 100: 4914
+In total 54718091 peptides.
+Generated 139383258 modified peptides.
+Number of peptides with more than 5 modification patterns: 6615788
+Selected fragment index width 0.05 Da.
+14116698776 fragments to be searched in 7 slices (131.47 GB total)
+Operating on slice 1 of 7: 
+	Fragment index slice generated in 36.82 s
+	001. ROOTS10.mzML 7.6 s | deisotoping 1.4 s
+		[progress: 15881/15881 (100%) - 2872 spectra/s] 5.5s
+	002. ROOTS11.mzML 6.7 s | deisotoping 1.1 s
+		[progress: 15887/15887 (100%) - 3248 spectra/s] 4.9s
+	003. ROOTS12.mzML 8.2 s | deisotoping 3.3 s
+		[progress: 16217/16217 (100%) - 1654 spectra/s] 9.8s
+	004. ROOTS1a.mzML 6.8 s | deisotoping 1.1 s
+		[progress: 17206/17206 (100%) - 1794 spectra/s] 9.6s
+	005. ROOTS2.mzML 6.5 s | deisotoping 1.0 s
+		[progress: 17473/17473 (100%) - 1932 spectra/s] 9.0s
+	006. ROOTS3.mzML 5.1 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 2377 spectra/s] 7.3s
+	007. ROOTS4.mzML 6.9 s | deisotoping 1.6 s
+		[progress: 17478/17478 (100%) - 1460 spectra/s] 12.0s
+	008. ROOTS5.mzML 6.0 s | deisotoping 1.2 s
+		[progress: 16753/16753 (100%) - 2089 spectra/s] 8.0s
+	009. ROOTS6.mzML 5.2 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 2228 spectra/s] 7.4s
+	010. ROOTS7.mzML 6.1 s | deisotoping 1.1 s
+		[progress: 15466/15466 (100%) - 2193 spectra/s] 7.1s
+	011. ROOTS8.mzML 5.7 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 2650 spectra/s] 5.7s
+	012. ROOTS9.mzML 5.6 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 2947 spectra/s] 5.2s
+Operating on slice 2 of 7: 
+	Fragment index slice generated in 45.86 s
+	001. ROOTS10.mzML 3.1 s | deisotoping 1.0 s
+		[progress: 15881/15881 (100%) - 9803 spectra/s] 1.6s
+	002. ROOTS11.mzML 3.1 s | deisotoping 1.0 s
+		[progress: 15887/15887 (100%) - 9765 spectra/s] 1.6s
+	003. ROOTS12.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 16217/16217 (100%) - 9272 spectra/s] 1.7s
+	004. ROOTS1a.mzML 2.7 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 8819 spectra/s] 2.0s
+	005. ROOTS2.mzML 2.5 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 8915 spectra/s] 2.0s
+	006. ROOTS3.mzML 2.8 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 9384 spectra/s] 1.8s
+	007. ROOTS4.mzML 3.0 s | deisotoping 1.0 s
+		[progress: 17478/17478 (100%) - 8518 spectra/s] 2.1s
+	008. ROOTS5.mzML 3.2 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9017 spectra/s] 1.9s
+	009. ROOTS6.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 8943 spectra/s] 1.8s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 8924 spectra/s] 1.7s
+	011. ROOTS8.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 9138 spectra/s] 1.6s
+	012. ROOTS9.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 9430 spectra/s] 1.6s
+Operating on slice 3 of 7: 
+	Fragment index slice generated in 50.82 s
+	001. ROOTS10.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15881/15881 (100%) - 10476 spectra/s] 1.5s
+	002. ROOTS11.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15887/15887 (100%) - 10397 spectra/s] 1.5s
+	003. ROOTS12.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 16217/16217 (100%) - 9428 spectra/s] 1.7s
+	004. ROOTS1a.mzML 2.8 s | deisotoping 1.3 s
+		[progress: 17206/17206 (100%) - 7999 spectra/s] 2.2s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 8906 spectra/s] 2.0s
+	006. ROOTS3.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 9915 spectra/s] 1.7s
+	007. ROOTS4.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 9463 spectra/s] 1.8s
+	008. ROOTS5.mzML 3.2 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9100 spectra/s] 1.8s
+	009. ROOTS6.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 16508/16508 (100%) - 8967 spectra/s] 1.8s
+	010. ROOTS7.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 10108 spectra/s] 1.5s
+	011. ROOTS8.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 9859 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.9 s | deisotoping 0.9 s
+		[progress: 15408/15408 (100%) - 10117 spectra/s] 1.5s
+Operating on slice 4 of 7: 
+	Fragment index slice generated in 54.88 s
+	001. ROOTS10.mzML 3.1 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 9713 spectra/s] 1.6s
+	002. ROOTS11.mzML 3.2 s | deisotoping 1.1 s
+		[progress: 15887/15887 (100%) - 10363 spectra/s] 1.5s
+	003. ROOTS12.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 16217/16217 (100%) - 9315 spectra/s] 1.7s
+	004. ROOTS1a.mzML 2.7 s | deisotoping 1.1 s
+		[progress: 17206/17206 (100%) - 8344 spectra/s] 2.1s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 8553 spectra/s] 2.0s
+	006. ROOTS3.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 9343 spectra/s] 1.9s
+	007. ROOTS4.mzML 3.1 s | deisotoping 1.2 s
+		[progress: 17478/17478 (100%) - 10080 spectra/s] 1.7s
+	008. ROOTS5.mzML 3.3 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9628 spectra/s] 1.7s
+	009. ROOTS6.mzML 3.0 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 8711 spectra/s] 1.9s
+	010. ROOTS7.mzML 3.2 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 8858 spectra/s] 1.7s
+	011. ROOTS8.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 9795 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10190 spectra/s] 1.5s
+Operating on slice 5 of 7: 
+	Fragment index slice generated in 57.22 s
+	001. ROOTS10.mzML 3.1 s | deisotoping 1.2 s
+		[progress: 15881/15881 (100%) - 8636 spectra/s] 1.8s
+	002. ROOTS11.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15887/15887 (100%) - 9801 spectra/s] 1.6s
+	003. ROOTS12.mzML 3.0 s | deisotoping 1.0 s
+		[progress: 16217/16217 (100%) - 9913 spectra/s] 1.6s
+	004. ROOTS1a.mzML 2.7 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 9860 spectra/s] 1.7s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 9409 spectra/s] 1.9s
+	006. ROOTS3.mzML 2.7 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 9955 spectra/s] 1.7s
+	007. ROOTS4.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 17478/17478 (100%) - 9014 spectra/s] 1.9s
+	008. ROOTS5.mzML 3.3 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9656 spectra/s] 1.7s
+	009. ROOTS6.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 10072 spectra/s] 1.6s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 10168 spectra/s] 1.5s
+	011. ROOTS8.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 9840 spectra/s] 1.5s
+	012. ROOTS9.mzML 3.0 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10137 spectra/s] 1.5s
+Operating on slice 6 of 7: 
+	Fragment index slice generated in 61.73 s
+	001. ROOTS10.mzML 2.8 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 10427 spectra/s] 1.5s
+	002. ROOTS11.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15887/15887 (100%) - 9789 spectra/s] 1.6s
+	003. ROOTS12.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 16217/16217 (100%) - 9937 spectra/s] 1.6s
+	004. ROOTS1a.mzML 2.6 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 9602 spectra/s] 1.8s
+	005. ROOTS2.mzML 2.5 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 9394 spectra/s] 1.9s
+	006. ROOTS3.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 9865 spectra/s] 1.8s
+	007. ROOTS4.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 17478/17478 (100%) - 9448 spectra/s] 1.9s
+	008. ROOTS5.mzML 3.1 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9645 spectra/s] 1.7s
+	009. ROOTS6.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 10090 spectra/s] 1.6s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 9535 spectra/s] 1.6s
+	011. ROOTS8.mzML 2.8 s | deisotoping 0.9 s
+		[progress: 14996/14996 (100%) - 9789 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10110 spectra/s] 1.5s
+Operating on slice 7 of 7: 
+	Fragment index slice generated in 66.43 s
+	001. ROOTS10.mzML 3.1 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 10483 spectra/s] 1.5s
+	002. ROOTS11.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 15887/15887 (100%) - 10397 spectra/s] 1.5s
+	003. ROOTS12.mzML 2.8 s | deisotoping 1.1 s
+		[progress: 16217/16217 (100%) - 9992 spectra/s] 1.6s
+	004. ROOTS1a.mzML 2.6 s | deisotoping 1.1 s
+		[progress: 17206/17206 (100%) - 9969 spectra/s] 1.7s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.8 s
+		[progress: 17473/17473 (100%) - 9430 spectra/s] 1.9s
+	006. ROOTS3.mzML 2.7 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 9887 spectra/s] 1.8s
+	007. ROOTS4.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 10039 spectra/s] 1.7s
+	008. ROOTS5.mzML 3.2 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9579 spectra/s] 1.7s
+	009. ROOTS6.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 10184 spectra/s] 1.6s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 10135 spectra/s] 1.5s
+	011. ROOTS8.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 10501 spectra/s] 1.4s
+	012. ROOTS9.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10124 spectra/s] 1.5s
+postprocessing ROOTS10.mzML 1.5 s
+postprocessing ROOTS11.mzML 0.9 s
+postprocessing ROOTS12.mzML 0.8 s
+postprocessing ROOTS1a.mzML 0.8 s
+postprocessing ROOTS2.mzML 0.8 s
+postprocessing ROOTS3.mzML 0.7 s
+postprocessing ROOTS4.mzML 0.7 s
+postprocessing ROOTS5.mzML 0.7 s
+postprocessing ROOTS6.mzML 0.7 s
+postprocessing ROOTS7.mzML 0.6 s
+postprocessing ROOTS8.mzML 0.6 s
+postprocessing ROOTS9.mzML 0.6 s
+***************************MAIN SEARCH DONE IN 21.968 MIN***************************
+
+*******************************TOTAL TIME 22.006 MIN********************************
+DONE: DB split 1 of 2
+STARTED: DB split 2 of 2
+['C:\\FragPipe\\FragPipe-24.0\\jre\\bin\\java.exe', '-jar', '-Dfile.encoding=UTF-8', '-Xmx32G', WindowsPath('C:/FragPipe/FragPipe-24.0/tools/MSFragger-4.4.1/MSFragger-4.4.1.jar'), 'fragger.params', WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS10.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS11.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS12.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS1a.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS2.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS3.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS4.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS5.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS6.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS7.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS8.mzML'), WindowsPath('C:/Users/Delphine_2026/RAW/ROOTS9.mzML'), '--partial', '1']
+MSFragger version MSFragger-4.4.1
+Batmass-IO version 1.36.6
+timsdata library version timsdata-2-21-0-4
+(c) University of Michigan
+RawFileReader reading tool. Copyright (c) 2016 by Thermo Fisher Scientific, Inc. All rights reserved.
+timdTOF .d reading tool. Copyright (c) 2022 by Bruker Daltonics GmbH & Co. KG. All rights reserved.
+System OS: Windows 11, Architecture: AMD64
+Java Info: 17.0.10, OpenJDK 64-Bit Server VM, Eclipse Adoptium
+JVM started with 32 GB memory
+Checking database...
+
+************************************MAIN SEARCH************************************
+Checking database...
+Parameters:
+num_threads = 4
+database_name = iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
+decoy_prefix = decoy_
+keep_decoys = 1
+precursor_mass_lower = -10.0
+precursor_mass_upper = 10.0
+precursor_mass_units = 1
+data_type = 0
+precursor_true_tolerance = 20.0
+precursor_true_units = 1
+fragment_mass_tolerance = 0.05
+fragment_mass_units = 0
+calibrate_mass = 0
+use_all_mods_in_first_search = 0
+write_calibrated_mzml = 0
+write_uncalibrated_mzml = 1
+write_mzbin_all = 0
+isotope_error = 0/1/2
+mass_offsets = 0.0
+use_detailed_offsets = 0
+labile_search_mode = OFF
+restrict_deltamass_to = all
+precursor_mass_mode = SELECTED
+localize_delta_mass = 0
+delta_mass_exclude_ranges = (-1.5,3.5)
+fragment_ion_series = b,y
+ion_series_definitions = 
+search_enzyme_name = Trypsin/P
+search_enzyme_sense_1 = C
+search_enzyme_cut_1 = KR
+search_enzyme_nocut_1 = 
+allowed_missed_cleavage_1 = 10
+num_enzyme_termini = 2
+clip_nTerm_M = 1
+allow_multiple_variable_mods_on_residue = 0
+max_variable_mods_per_peptide = 3
+max_variable_mods_combinations = 5
+output_format = pepxml
+output_report_topN = 1
+output_max_expect = 50.0
+report_alternative_proteins = 0
+override_charge = 0
+precursor_charge_low = 1
+precursor_charge_high = 4
+digest_min_length = 6
+digest_max_length = 100
+digest_mass_range_low = 300.0
+digest_mass_range_high = 10000.0
+max_fragment_charge = 1
+deisotope = 1
+deneutralloss = 1
+track_zero_topN = 0
+zero_bin_accept_expect = 0.0
+zero_bin_mult_expect = 1.0
+minimum_peaks = 15
+use_topN_peaks = 150
+minIonsScoring = 2
+min_matched_fragments = 4
+minimum_ratio = 0.01
+intensity_transform = 0
+activation_types = all
+analyzer_types = all
+group_variable = 0
+require_precursor = 0
+reuse_dia_fragment_peaks = 0
+remove_precursor_peak = 1
+remove_precursor_range = -1.500000,1.500000
+clear_mz_range_low = 0.0
+clear_mz_range_high = 0.0
+excluded_scan_list_file = 
+mass_diff_to_variable_mod = 0
+min_sequence_matches = 2
+check_spectral_files = 0
+variable_mod_01 = 15.9949 M 3
+variable_mod_02 = 42.0106 [^ 1
+add_A_alanine = 0.0
+add_B_user_amino_acid = 0.0
+add_C_cysteine = 57.02146
+add_Cterm_peptide = 0.0
+add_Cterm_protein = 0.0
+add_D_aspartic_acid = 0.0
+add_E_glutamic_acid = 0.0
+add_F_phenylalanine = 0.0
+add_G_glycine = 0.0
+add_H_histidine = 0.0
+add_I_isoleucine = 0.0
+add_J_user_amino_acid = 0.0
+add_K_lysine = 0.0
+add_L_leucine = 0.0
+add_M_methionine = 0.0
+add_N_asparagine = 0.0
+add_Nterm_peptide = 0.0
+add_Nterm_protein = 0.0
+add_O_user_amino_acid = 0.0  # O = pyrrolysine (237.14773 Da)
+add_P_proline = 0.0
+add_Q_glutamine = 0.0
+add_R_arginine = 0.0
+add_S_serine = 0.0
+add_T_threonine = 0.0
+add_U_user_amino_acid = 0.0  # U = selenocysteine (150.95363 Da)
+add_V_valine = 0.0
+add_W_tryptophan = 0.0
+add_X_user_amino_acid = 0.0
+add_Y_tyrosine = 0.0
+add_Z_user_amino_acid = 0.0
+Number of unique peptides
+	of length 6: 469436
+	of length 7: 563703
+	of length 8: 593019
+	of length 9: 602459
+	of length 10: 622868
+	of length 11: 645985
+	of length 12: 659982
+	of length 13: 669031
+	of length 14: 680544
+	of length 15: 686835
+	of length 16: 699549
+	of length 17: 704180
+	of length 18: 715592
+	of length 19: 717560
+	of length 20: 732852
+	of length 21: 738487
+	of length 22: 745896
+	of length 23: 746284
+	of length 24: 748207
+	of length 25: 744485
+	of length 26: 755985
+	of length 27: 759831
+	of length 28: 762339
+	of length 29: 773810
+	of length 30: 774846
+	of length 31: 770190
+	of length 32: 767439
+	of length 33: 765767
+	of length 34: 770748
+	of length 35: 774419
+	of length 36: 765011
+	of length 37: 769802
+	of length 38: 764660
+	of length 39: 764324
+	of length 40: 759844
+	of length 41: 748479
+	of length 42: 746846
+	of length 43: 739935
+	of length 44: 733489
+	of length 45: 733469
+	of length 46: 723755
+	of length 47: 731333
+	of length 48: 727087
+	of length 49: 711882
+	of length 50: 708839
+	of length 51: 699905
+	of length 52: 695410
+	of length 53: 683467
+	of length 54: 669688
+	of length 55: 665460
+	of length 56: 662396
+	of length 57: 653942
+	of length 58: 650788
+	of length 59: 639017
+	of length 60: 627460
+	of length 61: 615197
+	of length 62: 610401
+	of length 63: 599811
+	of length 64: 588783
+	of length 65: 576344
+	of length 66: 568713
+	of length 67: 561327
+	of length 68: 550773
+	of length 69: 540620
+	of length 70: 537430
+	of length 71: 526043
+	of length 72: 509757
+	of length 73: 500705
+	of length 74: 495674
+	of length 75: 479882
+	of length 76: 467880
+	of length 77: 457619
+	of length 78: 443931
+	of length 79: 435261
+	of length 80: 427992
+	of length 81: 412658
+	of length 82: 407149
+	of length 83: 391257
+	of length 84: 379977
+	of length 85: 361292
+	of length 86: 329753
+	of length 87: 300921
+	of length 88: 262029
+	of length 89: 219160
+	of length 90: 177786
+	of length 91: 136213
+	of length 92: 102557
+	of length 93: 73515
+	of length 94: 53874
+	of length 95: 36909
+	of length 96: 25052
+	of length 97: 16448
+	of length 98: 11042
+	of length 99: 6967
+	of length 100: 4541
+In total 53141859 peptides.
+Generated 133956268 modified peptides.
+Number of peptides with more than 5 modification patterns: 6506424
+Selected fragment index width 0.05 Da.
+13570354824 fragments to be searched in 6 slices (126.38 GB total)
+Operating on slice 1 of 6: 
+	Fragment index slice generated in 45.82 s
+	001. ROOTS10.mzML 7.9 s | deisotoping 1.4 s
+		[progress: 15881/15881 (100%) - 3162 spectra/s] 5.0s
+	002. ROOTS11.mzML 7.4 s | deisotoping 1.1 s
+		[progress: 15887/15887 (100%) - 3481 spectra/s] 4.6s
+	003. ROOTS12.mzML 5.9 s | deisotoping 1.1 s
+		[progress: 16217/16217 (100%) - 3386 spectra/s] 4.8s
+	004. ROOTS1a.mzML 5.4 s | deisotoping 1.1 s
+		[progress: 17206/17206 (100%) - 3364 spectra/s] 5.1s
+	005. ROOTS2.mzML 9.4 s | deisotoping 3.2 s
+		[progress: 17473/17473 (100%) - 1447 spectra/s] 12.1s
+	006. ROOTS3.mzML 7.7 s | deisotoping 1.1 s
+		[progress: 17332/17332 (100%) - 1832 spectra/s] 9.5s
+	007. ROOTS4.mzML 7.1 s | deisotoping 1.3 s
+		[progress: 17478/17478 (100%) - 2087 spectra/s] 8.4s
+	008. ROOTS5.mzML 6.6 s | deisotoping 1.2 s
+		[progress: 16753/16753 (100%) - 1606 spectra/s] 10.4s
+	009. ROOTS6.mzML 5.5 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 2306 spectra/s] 7.2s
+	010. ROOTS7.mzML 13.4 s | deisotoping 1.2 s
+		[progress: 15466/15466 (100%) - 2254 spectra/s] 6.9s
+	011. ROOTS8.mzML 5.9 s | deisotoping 1.1 s
+		[progress: 14996/14996 (100%) - 2499 spectra/s] 6.0s
+	012. ROOTS9.mzML 5.6 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 2833 spectra/s] 5.4s
+Operating on slice 2 of 6: 
+	Fragment index slice generated in 54.35 s
+	001. ROOTS10.mzML 3.0 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 9749 spectra/s] 1.6s
+	002. ROOTS11.mzML 3.1 s | deisotoping 1.2 s
+		[progress: 15887/15887 (100%) - 9711 spectra/s] 1.6s
+	003. ROOTS12.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 16217/16217 (100%) - 9369 spectra/s] 1.7s
+	004. ROOTS1a.mzML 3.0 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 8361 spectra/s] 2.1s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 8856 spectra/s] 2.0s
+	006. ROOTS3.mzML 2.7 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 8414 spectra/s] 2.1s
+	007. ROOTS4.mzML 3.0 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 8443 spectra/s] 2.1s
+	008. ROOTS5.mzML 3.6 s | deisotoping 1.4 s
+		[progress: 16753/16753 (100%) - 9125 spectra/s] 1.8s
+	009. ROOTS6.mzML 3.1 s | deisotoping 1.1 s
+		[progress: 16508/16508 (100%) - 8972 spectra/s] 1.8s
+	010. ROOTS7.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 15466/15466 (100%) - 9430 spectra/s] 1.6s
+	011. ROOTS8.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 9795 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10084 spectra/s] 1.5s
+Operating on slice 3 of 6: 
+	Fragment index slice generated in 58.80 s
+	001. ROOTS10.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15881/15881 (100%) - 9666 spectra/s] 1.6s
+	002. ROOTS11.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 15887/15887 (100%) - 9670 spectra/s] 1.6s
+	003. ROOTS12.mzML 3.2 s | deisotoping 1.0 s
+		[progress: 16217/16217 (100%) - 9943 spectra/s] 1.6s
+	004. ROOTS1a.mzML 3.5 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 9251 spectra/s] 1.9s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 9435 spectra/s] 1.9s
+	006. ROOTS3.mzML 2.7 s | deisotoping 1.0 s
+		[progress: 17332/17332 (100%) - 9949 spectra/s] 1.7s
+	007. ROOTS4.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 10016 spectra/s] 1.7s
+	008. ROOTS5.mzML 3.3 s | deisotoping 1.2 s
+		[progress: 16753/16753 (100%) - 9085 spectra/s] 1.8s
+	009. ROOTS6.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 16508/16508 (100%) - 10084 spectra/s] 1.6s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 10115 spectra/s] 1.5s
+	011. ROOTS8.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 14996/14996 (100%) - 9846 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10097 spectra/s] 1.5s
+Operating on slice 4 of 6: 
+	Fragment index slice generated in 63.84 s
+	001. ROOTS10.mzML 3.1 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 10448 spectra/s] 1.5s
+	002. ROOTS11.mzML 3.0 s | deisotoping 1.0 s
+		[progress: 15887/15887 (100%) - 10404 spectra/s] 1.5s
+	003. ROOTS12.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 16217/16217 (100%) - 9907 spectra/s] 1.6s
+	004. ROOTS1a.mzML 2.7 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 9917 spectra/s] 1.7s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 9430 spectra/s] 1.9s
+	006. ROOTS3.mzML 2.7 s | deisotoping 1.0 s
+		[progress: 17332/17332 (100%) - 9955 spectra/s] 1.7s
+	007. ROOTS4.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 10056 spectra/s] 1.7s
+	008. ROOTS5.mzML 3.2 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9535 spectra/s] 1.8s
+	009. ROOTS6.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 16508/16508 (100%) - 10084 spectra/s] 1.6s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 10102 spectra/s] 1.5s
+	011. ROOTS8.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 14996/14996 (100%) - 9821 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10051 spectra/s] 1.5s
+Operating on slice 5 of 6: 
+	Fragment index slice generated in 67.85 s
+	001. ROOTS10.mzML 3.0 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 10387 spectra/s] 1.5s
+	002. ROOTS11.mzML 3.1 s | deisotoping 1.2 s
+		[progress: 15887/15887 (100%) - 9699 spectra/s] 1.6s
+	003. ROOTS12.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 16217/16217 (100%) - 9961 spectra/s] 1.6s
+	004. ROOTS1a.mzML 2.8 s | deisotoping 1.1 s
+		[progress: 17206/17206 (100%) - 9906 spectra/s] 1.7s
+	005. ROOTS2.mzML 2.6 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 9460 spectra/s] 1.8s
+	006. ROOTS3.mzML 2.7 s | deisotoping 0.9 s
+		[progress: 17332/17332 (100%) - 10007 spectra/s] 1.7s
+	007. ROOTS4.mzML 3.0 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 9468 spectra/s] 1.8s
+	008. ROOTS5.mzML 3.3 s | deisotoping 1.2 s
+		[progress: 16753/16753 (100%) - 8105 spectra/s] 2.1s
+	009. ROOTS6.mzML 5.1 s | deisotoping 1.1 s
+		[progress: 16508/16508 (100%) - 2807 spectra/s] 5.9s
+	010. ROOTS7.mzML 4.5 s | deisotoping 1.2 s
+		[progress: 15466/15466 (100%) - 6172 spectra/s] 2.5s
+	011. ROOTS8.mzML 4.7 s | deisotoping 1.2 s
+		[progress: 14996/14996 (100%) - 7234 spectra/s] 2.1s
+	012. ROOTS9.mzML 3.7 s | deisotoping 1.2 s
+		[progress: 15408/15408 (100%) - 8338 spectra/s] 1.8s
+Operating on slice 6 of 6: 
+	Fragment index slice generated in 78.07 s
+	001. ROOTS10.mzML 3.0 s | deisotoping 1.1 s
+		[progress: 15881/15881 (100%) - 9779 spectra/s] 1.6s
+	002. ROOTS11.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 15887/15887 (100%) - 10486 spectra/s] 1.5s
+	003. ROOTS12.mzML 2.8 s | deisotoping 1.1 s
+		[progress: 16217/16217 (100%) - 10641 spectra/s] 1.5s
+	004. ROOTS1a.mzML 2.7 s | deisotoping 1.0 s
+		[progress: 17206/17206 (100%) - 10504 spectra/s] 1.6s
+	005. ROOTS2.mzML 2.5 s | deisotoping 0.9 s
+		[progress: 17473/17473 (100%) - 9414 spectra/s] 1.9s
+	006. ROOTS3.mzML 2.9 s | deisotoping 1.0 s
+		[progress: 17332/17332 (100%) - 9364 spectra/s] 1.9s
+	007. ROOTS4.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 17478/17478 (100%) - 9494 spectra/s] 1.8s
+	008. ROOTS5.mzML 3.3 s | deisotoping 1.1 s
+		[progress: 16753/16753 (100%) - 9606 spectra/s] 1.7s
+	009. ROOTS6.mzML 2.9 s | deisotoping 1.1 s
+		[progress: 16508/16508 (100%) - 9504 spectra/s] 1.7s
+	010. ROOTS7.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15466/15466 (100%) - 10202 spectra/s] 1.5s
+	011. ROOTS8.mzML 2.8 s | deisotoping 1.1 s
+		[progress: 14996/14996 (100%) - 9795 spectra/s] 1.5s
+	012. ROOTS9.mzML 2.8 s | deisotoping 1.0 s
+		[progress: 15408/15408 (100%) - 10904 spectra/s] 1.4s
+postprocessing ROOTS10.mzML 1.4 s
+postprocessing ROOTS11.mzML 0.8 s
+postprocessing ROOTS12.mzML 0.8 s
+postprocessing ROOTS1a.mzML 0.8 s
+postprocessing ROOTS2.mzML 0.7 s
+postprocessing ROOTS3.mzML 0.8 s
+postprocessing ROOTS4.mzML 0.7 s
+postprocessing ROOTS5.mzML 0.7 s
+postprocessing ROOTS6.mzML 0.7 s
+postprocessing ROOTS7.mzML 0.6 s
+postprocessing ROOTS8.mzML 0.6 s
+postprocessing ROOTS9.mzML 0.6 s
+***************************MAIN SEARCH DONE IN 20.558 MIN***************************
+
+*******************************TOTAL TIME 20.596 MIN********************************
+DONE: DB split 2 of 2
+['C:\\FragPipe\\FragPipe-24.0\\jre\\bin\\java.exe', '-jar', '-Dfile.encoding=UTF-8', '-Xmx32G', WindowsPath('C:/FragPipe/FragPipe-24.0/tools/MSFragger-4.4.1/MSFragger-4.4.1.jar'), '--generate_expect_functions', 'ROOTS10_scores_histogram.tsv', 'ROOTS11_scores_histogram.tsv', 'ROOTS12_scores_histogram.tsv', 'ROOTS1a_scores_histogram.tsv', 'ROOTS2_scores_histogram.tsv', 'ROOTS3_scores_histogram.tsv', 'ROOTS4_scores_histogram.tsv', 'ROOTS5_scores_histogram.tsv', 'ROOTS6_scores_histogram.tsv', 'ROOTS7_scores_histogram.tsv', 'ROOTS8_scores_histogram.tsv', 'ROOTS9_scores_histogram.tsv']
+MSFragger version MSFragger-4.4.1
+Batmass-IO version 1.36.6
+timsdata library version timsdata-2-21-0-4
+(c) University of Michigan
+RawFileReader reading tool. Copyright (c) 2016 by Thermo Fisher Scientific, Inc. All rights reserved.
+timdTOF .d reading tool. Copyright (c) 2022 by Bruker Daltonics GmbH & Co. KG. All rights reserved.
+System OS: Windows 11, Architecture: AMD64
+Java Info: 17.0.10, OpenJDK 64-Bit Server VM, Eclipse Adoptium
+Writing: ROOTS10	spectrum: 0
+Writing: ROOTS12	spectrum: 0
+Writing: ROOTS11	spectrum: 0
+Writing: ROOTS7	spectrum: 0
+Writing: ROOTS8	spectrum: 0
+Writing: ROOTS9	spectrum: 0
+Writing: ROOTS6	spectrum: 0
+Writing: ROOTS5	spectrum: 0
+Writing: ROOTS4	spectrum: 0
+Writing: ROOTS3	spectrum: 0
+Writing: ROOTS2	spectrum: 0
+Writing: ROOTS1a	spectrum: 0
+Writing: ROOTS6	spectrum: 16384
+Writing: ROOTS5	spectrum: 16384
+Writing: ROOTS2	spectrum: 16384
+Writing: ROOTS1a	spectrum: 16384
+Writing: ROOTS4	spectrum: 16384
+Writing: ROOTS3	spectrum: 16384
+Process 'MSFragger' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS10.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS10.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS11.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS11.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS12.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS12.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS1a.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS1a.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS2.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS2.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS3.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS3.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS4.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS4.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS5.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS5.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS6.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS6.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS7.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS7.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS8.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS8.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+MSFragger move pepxml
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar;/C:/FragPipe/FragPipe-24.0/lib/batmass-io-1.36.5.jar org.nesvilab.utils.FileMove --no-err C:\Users\Delphine_2026\RAW\ROOTS9.pepXML C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS9.pepXML
+Process 'MSFragger move pepxml' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS10.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\8cd78641-4498-45a3-a19b-ecc30081fbb7
+time="10:19:33" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:33" level=info msg="Creating workspace"
+time="10:19:33" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS11.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\81995be8-0a94-4cc1-bf8d-804b577c922e
+time="10:19:33" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:33" level=info msg="Creating workspace"
+time="10:19:33" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS12.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\10c5b246-3322-4b49-b48a-b8512efb469b
+time="10:19:34" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:34" level=info msg="Creating workspace"
+time="10:19:34" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS1a.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\fb7a39c2-55f9-4643-8218-abe0c751f1c8
+time="10:19:34" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:34" level=info msg="Creating workspace"
+time="10:19:34" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS2.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\abe0867f-1241-4bf5-9784-3ce03922bf19
+time="10:19:34" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:34" level=info msg="Creating workspace"
+time="10:19:34" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS3.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\d1660395-e062-45c7-9db0-b9088663b2da
+time="10:19:34" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:34" level=info msg="Creating workspace"
+time="10:19:34" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS4.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\74e5691f-be0e-46d6-88bd-16c829060bd1
+time="10:19:35" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:35" level=info msg="Creating workspace"
+time="10:19:35" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS5.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\fd6b64e4-3ea6-415c-a24a-3f9204cdc4bf
+time="10:19:35" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:35" level=info msg="Creating workspace"
+time="10:19:35" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS6.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\14d093cc-424c-4922-a977-1b1919aaecff
+time="10:19:35" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:35" level=info msg="Creating workspace"
+time="10:19:35" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS7.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\933da375-c10e-4e4e-b67a-5286de35d24a
+time="10:19:36" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:36" level=info msg="Creating workspace"
+time="10:19:36" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS8.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\26d37f87-f51b-4a72-9b26-1b0f0d47040f
+time="10:19:36" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:36" level=info msg="Creating workspace"
+time="10:19:36" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet workspace init [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS9.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --init --nocheck --temp C:\Users\Admin\AppData\Local\Temp\10335429-776e-4934-ab4e-d6b5a17c401d
+time="10:19:36" level=info msg="Executing Workspace  v5.1.3"
+time="10:19:36" level=info msg="Creating workspace"
+time="10:19:36" level=info msg=Done
+Process 'PeptideProphet workspace init' finished, exit code: 0
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS10.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS10.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS12.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS12.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS1a.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS1a.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS11.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS11.pepXML
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+time="10:19:37" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS10.pepXML
+ processed altogether 15777 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7866 2+, 5294 3+, 1353 4+, 403 5+, 100 6+, and 10 7+ spectra.
+Found 5455 Decoys, and 9571 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.........20.WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+....
+model complete after 26 iterations
+time="10:19:56" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:19:37" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS11.pepXML
+ processed altogether 15772 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7873 2+, 5052 3+, 1400 4+, 506 5+, 146 6+, and 16 7+ spectra.
+Found 5390 Decoys, and 9603 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.....WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+....20.....
+model complete after 26 iterations
+time="10:19:57" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:19:37" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS12.pepXML
+ processed altogether 16062 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7766 2+, 5228 3+, 1651 4+, 524 5+, 139 6+, and 28 7+ spectra.
+Found 5471 Decoys, and 9865 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10....WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+.....20.....
+model complete after 26 iterations
+time="10:19:57" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:19:37" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS1a.pepXML
+ processed altogether 17040 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 8068 2+, 5360 3+, 1846 4+, 706 5+, 363 6+, and 32 7+ spectra.
+Found 5349 Decoys, and 11026 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10...WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+......20....
+model complete after 25 iterations
+time="10:19:58" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS2.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS2.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS4.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS4.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS5.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS5.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS3.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS3.pepXML
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+time="10:19:58" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS3.pepXML
+ processed altogether 17102 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 8132 2+, 5524 3+, 1802 4+, 557 5+, 149 6+, and 26 7+ spectra.
+Found 5214 Decoys, and 10976 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.........20..WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+..
+model complete after 25 iterations
+time="10:20:18" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:19:58" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS5.pepXML
+ processed altogether 16494 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 8195 2+, 4968 3+, 1585 4+, 723 5+, 209 6+, and 50 7+ spectra.
+Found 5344 Decoys, and 10386 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.........WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+20.....
+model complete after 26 iterations
+time="10:20:18" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:19:58" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS4.pepXML
+ processed altogether 17243 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7928 2+, 5493 3+, 2018 4+, 696 5+, 277 6+, and 34 7+ spectra.
+Found 5511 Decoys, and 10935 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10...WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+......20.....
+model complete after 26 iterations
+time="10:20:19" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:19:58" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS2.pepXML
+ processed altogether 17294 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7976 2+, 5707 3+, 1927 4+, 658 5+, 196 6+, and 52 7+ spectra.
+Found 4797 Decoys, and 11719 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.....WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+....20.....
+model complete after 26 iterations
+time="10:20:20" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS6.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS6.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS8.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS8.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS9.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS9.pepXML
+PeptideProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS7.pepXML-temp]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe peptideprophet --decoy decoy_ --database C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta ..\ROOTS7.pepXML
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+Please wait. PeptideProphet is running. It can take a long time.
+time="10:20:21" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS9.pepXML
+ processed altogether 15281 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7656 2+, 4991 3+, 1307 4+, 425 5+, 129 6+, and 20 7+ spectra.
+Found 5369 Decoys, and 9159 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10..WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+.......20....
+model complete after 25 iterations
+time="10:20:39" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:20:20" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS6.pepXML
+ processed altogether 16325 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7710 2+, 5098 3+, 1666 4+, 740 5+, 236 6+, and 49 7+ spectra.
+Found 5195 Decoys, and 10304 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.........20..WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+...
+model complete after 26 iterations
+time="10:20:40" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:20:21" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS7.pepXML
+ processed altogether 15331 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7253 2+, 4606 3+, 1602 4+, 758 5+, 256 6+, and 83 7+ spectra.
+Found 4580 Decoys, and 9978 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.......WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+..20.....
+model complete after 26 iterations
+time="10:20:41" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+time="10:20:21" level=info msg="Executing PeptideProphet  v5.1.3"
+ file 1: C:\Users\Delphine_2026\FragPipe_results\root_run01\ROOTS8.pepXML
+ processed altogether 14864 results
+INFO: Results written to file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml
+
+  - C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml
+  - Building Commentz-Walter keyword tree...
+  - Searching the tree...
+  - Linking duplicate entries...
+  - Printing results...
+
+Using Decoy Label "decoy_".
+ (X! Tandem)
+using search_offsets in mass mixture distr: 0.0
+init with X! Tandem stricttrypsin 
+ PeptideProphet  (TPP v5.2.1-dev Flammagenitus, Build 201906281613-exported (Windows_NT-x86_64)) AKeller@ISB
+ read in 0 1+, 7315 2+, 4547 3+, 1372 4+, 562 5+, 176 6+, and 63 7+ spectra.
+Found 5002 Decoys, and 9033 Non-Decoys
+MS Instrument info: Manufacturer: UNKNOWN, Model: UNKNOWN, Ionization: UNKNOWN, Analyzer: UNKNOWN, Detector: UNKNOWN
+
+INFO: Processing standard MixtureModel ... 
+Initialising statistical models ...
+Iterations: .........10.........20WARNING: Mixture model quality test failed for charge (6+).
+WARNING: Mixture model quality test failed for charge (7+).
+.....
+model complete after 26 iterations
+time="10:20:41" level=info msg=Done
+Process 'PeptideProphet' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS10.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS11.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS12.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS1a.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS2.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS3.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS4.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS5.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS6.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS7.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS8.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+PeptideProphet delete temp
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib\fragpipe-24.0.jar org.nesvilab.utils.FileDelete C:\Users\Delphine_2026\FragPipe_results\root_run01\fragpipe-ROOTS9.pepXML-temp
+Process 'PeptideProphet delete temp' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml C:\Users\Delphine_2026\RAW\ROOTS12.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml6410819962203215652.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml6410819962203215652.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml C:\Users\Delphine_2026\RAW\ROOTS3.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml5012263892319091093.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml5012263892319091093.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml C:\Users\Delphine_2026\RAW\ROOTS2.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml8377761235908851789.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml8377761235908851789.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml C:\Users\Delphine_2026\RAW\ROOTS1a.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml15853372038942682574.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml15853372038942682574.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml C:\Users\Delphine_2026\RAW\ROOTS5.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml13245562375693739612.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml13245562375693739612.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml C:\Users\Delphine_2026\RAW\ROOTS8.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml13593802669806476653.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml13593802669806476653.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml C:\Users\Delphine_2026\RAW\ROOTS10.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml13799223961930465469.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml13799223961930465469.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml C:\Users\Delphine_2026\RAW\ROOTS6.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml5487621625571590491.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml5487621625571590491.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml C:\Users\Delphine_2026\RAW\ROOTS9.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml15425774641922322356.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml15425774641922322356.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml C:\Users\Delphine_2026\RAW\ROOTS7.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml4475933373017121335.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml4475933373017121335.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml C:\Users\Delphine_2026\RAW\ROOTS4.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml8338576259489390534.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml8338576259489390534.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+Rewrite pepxml [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\jre\bin\java.exe -cp C:\FragPipe\FragPipe-24.0\lib/* org.nesvilab.fragpipe.util.RewritePepxml C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml C:\Users\Delphine_2026\RAW\ROOTS11.mzML
+Fixing pepxml: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml
+Writing output to: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml2338335118939021841.temp-rewrite
+Deleting file: C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml
+Moving rewritten file to original location: [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml2338335118939021841.temp-rewrite] -> [C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml]
+Process 'Rewrite pepxml' finished, exit code: 0
+ProteinProphet [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe proteinprophet --output combined C:\Users\Delphine_2026\FragPipe_results\root_run01\filelist_proteinprophet.txt
+time="10:20:51" level=info msg="Executing ProteinProphet  v5.1.3"
+ProteinProphet (C++) by Insilicos LLC and LabKey Software, after the original Perl by A. Keller (TPP v6.0.0-rc15 Noctilucent, Build 202105101442-exported (Windows_NT-x86_64))
+ (no FPKM) (no groups) (using degen pep info)
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS10.pep.xml...
+...read in 0 1+, 2351 2+, 1332 3+, 225 4+, 23 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS11.pep.xml...
+...read in 0 1+, 2457 2+, 1274 3+, 249 4+, 46 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS12.pep.xml...
+...read in 0 1+, 2449 2+, 1299 3+, 372 4+, 85 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS1a.pep.xml...
+...read in 0 1+, 2946 2+, 1911 3+, 533 4+, 119 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS2.pep.xml...
+...read in 0 1+, 3471 2+, 2487 3+, 704 4+, 217 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS3.pep.xml...
+...read in 0 1+, 3103 2+, 1965 3+, 516 4+, 123 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS4.pep.xml...
+...read in 0 1+, 2984 2+, 1896 3+, 552 4+, 113 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS5.pep.xml...
+...read in 0 1+, 2868 2+, 1546 3+, 374 4+, 94 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS6.pep.xml...
+...read in 0 1+, 2965 2+, 1701 3+, 366 4+, 83 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS7.pep.xml...
+...read in 0 1+, 2882 2+, 1776 3+, 444 4+, 85 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS8.pep.xml...
+...read in 0 1+, 2255 2+, 1258 3+, 277 4+, 41 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Reading in C:\Users\Delphine_2026\FragPipe_results\root_run01\interact-ROOTS9.pep.xml...
+...read in 0 1+, 2329 2+, 1193 3+, 269 4+, 29 5+, 0 6+, 0 7+ spectra with min prob 0.05
+
+Initializing 25355 peptide weights: 0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+Calculating protein lengths and molecular weights from database c:/Users/Delphine_2026/DB/iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........1000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........2000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........3000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........4000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........5000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........6000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........7000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........8000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........9000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........10000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........11000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........12000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........13000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........14000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........15000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........16000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........17000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........18000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........19000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........20000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........21000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........22000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........23000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........24000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........25000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........26000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........27000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........28000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........29000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........30000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........31000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........32000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........33000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........34000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........35000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........36000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........37000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........38000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........39000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........40000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........41000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........42000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........43000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........44000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........45000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........46000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........47000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........48000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........49000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........50000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........51000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........52000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........53000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........54000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........55000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........56000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........57000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........58000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........59000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........60000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........61000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........62000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........63000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........64000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........65000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........66000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........67000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........68000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........69000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........70000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........71000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........72000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........73000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........74000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........75000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........76000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........77000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........78000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........79000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........80000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........81000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........82000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........83000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........84000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........85000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........86000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........87000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........88000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........89000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........90000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........91000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........92000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........93000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........94000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........95000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........96000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........97000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........98000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........99000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........100000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........101000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........102000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........103000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........104000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........105000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........106000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........107000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........108000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........109000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........110000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........111000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........112000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........113000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........114000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........115000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........116000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........117000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........118000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........119000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........120000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........121000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........122000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........123000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........124000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........125000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........126000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........127000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........128000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........129000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........130000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........131000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........132000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........133000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........134000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........135000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........136000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........137000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........138000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........139000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........140000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........141000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........142000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........143000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........144000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........145000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........146000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........147000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........148000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........149000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........150000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........151000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........152000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........153000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........154000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........155000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........156000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........157000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........158000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........159000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........160000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........161000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........162000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........163000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........164000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........165000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........166000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........167000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........168000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........169000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........170000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........171000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........172000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........173000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........174000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........175000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........176000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........177000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........178000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........179000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........180000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........181000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........182000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........183000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........184000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........185000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........186000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........187000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........188000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........189000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........190000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........191000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........192000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........193000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........194000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........195000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........196000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........197000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........198000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........199000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........200000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........201000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........202000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........203000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........204000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........205000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........206000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........207000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........208000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........209000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........210000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........211000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........212000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........213000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........214000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........215000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........216000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........217000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........218000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........219000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........220000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........221000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........222000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........223000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........224000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........225000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........226000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........227000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........228000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........229000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........230000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........231000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........232000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........233000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........234000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........235000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........236000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........237000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........238000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........239000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........240000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........241000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........242000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........243000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........244000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........245000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........246000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........247000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........248000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........249000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........250000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........251000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........252000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........253000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........254000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........255000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........256000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........257000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........258000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........259000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........260000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........261000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........262000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........263000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........264000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........265000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........266000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........267000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........268000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........269000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........270000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........271000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........272000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........273000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........274000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........275000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........276000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........277000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........278000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........279000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........280000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........281000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........282000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........283000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........284000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........285000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........286000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........287000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........288000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........289000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........290000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........291000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........292000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........293000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........294000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........295000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........296000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........297000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........298000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........299000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........300000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........301000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........302000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........303000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........304000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........305000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........306000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........307000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........308000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........309000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........310000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........311000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........312000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........313000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........314000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........315000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........316000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........317000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........318000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........319000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........320000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........321000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........322000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........323000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........324000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........325000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........326000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........327000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........328000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........329000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........330000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........331000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........332000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........333000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........334000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........335000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........336000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........337000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........338000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........339000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........340000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........341000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........342000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........343000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........344000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........345000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........346000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........347000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........348000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........349000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........350000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........351000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........352000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........353000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........354000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........355000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........356000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........357000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........358000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........359000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........360000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........361000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........362000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........363000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........364000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........365000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........366000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........367000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........368000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........369000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........370000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........371000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........372000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........373000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........374000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........375000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........376000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........377000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........378000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........379000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........380000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........381000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........382000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........383000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........384000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........385000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........386000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........387000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........388000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........389000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........390000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........391000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........392000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........393000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........394000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........395000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........396000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........397000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........398000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........399000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........400000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........401000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........402000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........403000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........404000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........405000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........406000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........407000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........408000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........409000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........410000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........411000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........412000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........413000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........414000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........415000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........416000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........417000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........418000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........419000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........420000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........421000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........422000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........423000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........424000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........425000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........426000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........427000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........428000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........429000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........430000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........431000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........432000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........433000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........434000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........435000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........436000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........437000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........438000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........439000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........440000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........441000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........442000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........443000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........444000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........445000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........446000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........447000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........448000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........449000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........450000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........451000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........452000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........453000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........454000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........455000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........456000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........457000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........458000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........459000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........460000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........461000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........462000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........463000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........464000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........465000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........466000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........467000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........468000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........469000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........470000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........471000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........472000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........473000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........474000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........475000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........476000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........477000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........478000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........479000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........480000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........481000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........482000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........483000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........484000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........485000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........486000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........487000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........488000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........489000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........490000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........491000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........492000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........493000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........494000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........495000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........496000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........497000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........498000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........499000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........500000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........501000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........502000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........503000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........504000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........505000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........506000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........507000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........508000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........509000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........510000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........511000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........512000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........513000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........514000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........515000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........516000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........517000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........518000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........519000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........520000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........521000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........522000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........523000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........524000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........525000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........526000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........527000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........528000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........529000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........530000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........531000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........532000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........533000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........534000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........535000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........536000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........537000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........538000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........539000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........540000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........541000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........542000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........543000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........544000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........545000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........546000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........547000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........548000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........549000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........550000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........551000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........552000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........553000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........554000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........555000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........556000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........557000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........558000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........559000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........560000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........561000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........562000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........563000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........564000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........565000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........566000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........567000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........568000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........569000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........570000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........571000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........572000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........573000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........574000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........575000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........576000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........577000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........578000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........579000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........580000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........581000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........582000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........583000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........584000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........585000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........586000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........587000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........588000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........589000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........590000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........591000
+.........:.........:.........:.........:.........:.........:.........:.........:.........:.........592000
+......  Total: 592060
+Computing degenerate peptides for 41757 proteins: 0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Computing probabilities for 49132 proteins.  Loop 1: 0%...20%...40%...60%...80%...100%  Loop 2: 0%...20%...40%...60%...80%...100%
+Calculating sensitivity...and error tables...
+INFO: mu=2.88118e-05, db_size=366815461
+Computing MU for 49132 proteins: 0%...10%...20%...30%...40%...50%...60%...70%...80%...90%...100%
+time="10:21:07" level=info msg=Done
+Process 'ProteinProphet' finished, exit code: 0
+PhilosopherDbAnnotate [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe database --annotate C:\Users\Delphine_2026\DB\iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta --prefix decoy_
+time="10:21:07" level=info msg="Executing Database  v5.1.3"
+time="10:21:07" level=info msg="Annotating the database"
+time="10:21:08" level=info msg=Done
+Process 'PhilosopherDbAnnotate' finished, exit code: 0
+PhilosopherFilter [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe filter --sequential --prot 0.01 --tag decoy_ --pepxml C:\Users\Delphine_2026\FragPipe_results\root_run01 --protxml C:\Users\Delphine_2026\FragPipe_results\root_run01\combined.prot.xml --razor
+time="10:21:08" level=info msg="Executing Filter  v5.1.3"
+time="10:21:08" level=info msg="Processing peptide identification files"
+time="10:21:08" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS9.pep.xml"
+time="10:21:08" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS10.pep.xml"
+time="10:21:08" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS11.pep.xml"
+time="10:21:08" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS12.pep.xml"
+time="10:21:09" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS4.pep.xml"
+time="10:21:09" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS1a.pep.xml"
+time="10:21:09" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS2.pep.xml"
+time="10:21:09" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS3.pep.xml"
+time="10:21:09" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS6.pep.xml"
+time="10:21:09" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS7.pep.xml"
+time="10:21:10" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS8.pep.xml"
+time="10:21:10" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\root_run01\\interact-ROOTS5.pep.xml"
+time="10:21:11" level=info msg="1+ Charge profile" decoy=0 target=0
+time="10:21:11" level=info msg="2+ Charge profile" decoy=0 target=33066
+time="10:21:11" level=info msg="3+ Charge profile" decoy=0 target=19640
+time="10:21:11" level=info msg="4+ Charge profile" decoy=0 target=4881
+time="10:21:11" level=info msg="5+ Charge profile" decoy=0 target=1058
+time="10:21:11" level=info msg="6+ Charge profile" decoy=0 target=0
+time="10:21:11" level=info msg="Database search results" ions=25309 peptides=21867 psms=58645
+time="10:21:11" level=info msg="Converged to 0.00 % FDR with 58645 PSMs" decoy=0 threshold=0.05 total=58645
+time="10:21:11" level=info msg="Converged to 0.00 % FDR with 21867 Peptides" decoy=0 threshold=0.05 total=21867
+time="10:21:12" level=info msg="Converged to 0.00 % FDR with 25309 Ions" decoy=0 threshold=0.05 total=25309
+time="10:21:12" level=info msg="Protein inference results" decoy=422 target=16019
+time="10:21:12" level=info msg="Converged to 0.23 % FDR with 12214 Proteins" decoy=33 threshold=0 total=12247
+time="10:21:12" level=info msg="Applying sequential FDR estimation" ions=24858 peptides=21423 psms=58144
+time="10:21:12" level=info msg="58144 PSMs" decoy=0 threshold=0.05 total=58144
+time="10:21:12" level=info msg="21423 Peptides" decoy=0 threshold=0.0501 total=21423
+time="10:21:12" level=info msg="24857 Ions" decoy=0 threshold=0.0501 total=24857
+time="10:21:12" level=info msg="Post processing identifications"
+time="10:21:13" level=info msg="Assigning protein identifications to layers"
+time="10:21:18" level=info msg="Processing protein inference"
+time="10:21:19" level=info msg="Synchronizing PSMs and proteins"
+time="10:21:19" level=info msg="Final report numbers after FDR filtering, and post-processing" ions=24824 peptides=21390 proteins=12214 psms=58093
+time="10:21:19" level=info msg=Saving
+time="10:21:19" level=info msg=Done
+Process 'PhilosopherFilter' finished, exit code: 0
+PhilosopherReport [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe report --removecontam
+time="10:21:20" level=info msg="Executing Report  v5.1.3"
+time="10:21:20" level=info msg="Creating reports"
+time="10:21:21" level=info msg=Done
+Process 'PhilosopherReport' finished, exit code: 0
+WorkspaceClean [Work dir: C:\Users\Delphine_2026\FragPipe_results\root_run01]
+C:\FragPipe\FragPipe-24.0\tools\Philosopher\philosopher-v5.1.3-RC9.exe workspace --clean --nocheck
+time="10:21:21" level=info msg="Executing Workspace  v5.1.3"
+time="10:21:21" level=info msg="Removing workspace"
+time="10:21:21" level=info msg=Done
+Process 'WorkspaceClean' finished, exit code: 0
+
+Please cite:
+(Any searches) MSFragger: ultrafast and comprehensive peptide identification in mass spectrometry–based proteomics. Nat Methods. 14:513 (2017)
+(Any searches) Fast deisotoping algorithm and its implementation in the MSFragger search engine. J Proteome Res. 20:498 (2021)
+(timsTOF ddaPASEF) Fast quantitative analysis of timsTOF PASEF data with MSFragger and IonQuant. Mol Cell Proteomics. 19:1575 (2020)
+(Open search) Identification of modified peptides using localization-aware open search. Nat Commun. 11:4065 (2020)
+(Glyco search) Fast and comprehensive N- and O-glycoproteomics analysis with MSFragger-Glyco. Nat Methods. 17:1125 (2020)
+(Labile search) MSFragger-Labile: A Flexible Method to Improve Labile PTM Analysis in Proteomics. Mol Cell Proteomics. 22:100538 (2023)
+(DDA+ search) MSFragger-DDA+ enhances peptide identification sensitivity with full isolation window search. Nat Commun. 16:3329 (2025)
+(PSM validation with PeptideProphet)Empirical statistical model to estimate the accuracy of peptide identifications made by MS/MS and database search. Anal Chem. 74:5383 (2002)
+(Protein inference with ProteinProphet)A statistical model for identifying proteins by tandem mass spectrometry. Anal Chem. 75:4646 (2003)
+(FDR filtering and reporting) Philosopher: a versatile toolkit for shotgun proteomics data analysis. Nat Methods. 17:869 (2020)
+(Visualization with FragPipe-PDV) PDV: an integrative proteomics data viewer. Bioinformatics. 35(7):1249 (2019)
+
+Task Runtimes:
+  CheckCentroid: 0.05 minutes
+  WorkspaceCleanInit: 0.01 minutes
+  MSFragger: 43.24 minutes
+  MSFragger move pepxml: 0.04 minutes
+  PeptideProphet workspace init: 0.06 minutes
+  PeptideProphet: 1.08 minutes
+  PeptideProphet delete temp: 0.04 minutes
+  Rewrite pepxml: 0.13 minutes
+  ProteinProphet: 0.27 minutes
+  PhilosopherDbAnnotate: 0.01 minutes
+  PhilosopherFilter: 0.19 minutes
+  PhilosopherReport: 0.02 minutes
+  WorkspaceClean: 0.00 minutes
+  Finalizer Task: 0.01 minutes
+
+=============================================================ALL JOBS DONE IN 45.2 MINUTES=============================================================
