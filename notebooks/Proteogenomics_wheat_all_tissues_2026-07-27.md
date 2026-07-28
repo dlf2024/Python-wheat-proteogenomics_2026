@@ -1,4 +1,4 @@
-# Community Resource: A Genome-Guided Extension of Large-Scale Wheat Proteogenomics
+# Community Resource: A Genome-Based Extension of Large-Scale Wheat Proteogenomics
 
 ---
 
@@ -6,7 +6,7 @@
 Dr Delphine Vincent  
 _website:_ https://dlf2024.github.io/  
 _github:_ https://github.com/dlf2024      
-_Date:_ 02/06/2026
+_Date:_ 27/07/2026
 
 ---
 
@@ -43,6 +43,7 @@ The peptide alignments along bread wheat genome are publicly available from the 
 - 23: EDA: Pie chart of HC and LC Proteogenomic Coverage with Within-Exon/Exon-spanning Peptides (this notebook)
 - 24: Combine Python workflow Summary Tables at Source/Tissue Level (this notebook)
 - 25: Prepare manuscript Table 1 summary statistics (this notebook)
+- 26: Compare this annotation-based alignment with the tblastn one from the 2024 study (this notebook)
 
 ---
 
@@ -136,6 +137,10 @@ project/
 ├── genome_annotation/    
 ├── protein_database/    
 ├── fragpipe_results/    
+├── fragpipe_tissue_reports/    
+├── fragpipe_tissue_runtime_logs/    
+├── fragpipe_tissue_filter_logs/   
+├── fragpipe_tissues_manifests/      
 ├── tblastn_results/  
 ├── python_outputs/    
 │      ├── bed/    
@@ -552,6 +557,17 @@ iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
 
 ---
 
+## Protein DB entry counts
+
+- HC wheat protein entries:       132,624
+- LC wheat protein entries:       163,290
+- cRAP contaminant entries:           116
+- Total target entries:           296,030
+- Reversed decoy entries:         296,030
+- Final database entries:         592,060
+
+---
+
 ## Notes
 
 - HC = high-confidence gene models.
@@ -763,6 +779,1790 @@ These files were subsequently imported into Python for annotation, contaminant f
 - The workflow was optimised for peptide/protein identification rather than label-free quantification.
 - Matched fragment export was disabled to reduce output size and improve run stability.
 - Output files are captured in a file manifest "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+
+---
+
+## Empirical evaluation of permissive digestion and peptide-size limits
+
+To determine whether the permissive search limits recovered peptide classes that would have been excluded under more conventional settings, the final tissue-specific FragPipe `peptide.tsv` reports were examined across all 32 analyses.
+
+For each filtered peptide identification:
+
+- peptide length was obtained from the FragPipe `Peptide Length` field;
+- missed cleavages were calculated from the peptide sequence as the number of   internal lysine or arginine residues, excluding the C-terminal residue, under   the fully enzymatic Trypsin/P search definition;
+- decoy and contaminant entries were excluded where present.
+
+Distributions were summarised both across the complete peptide resource and within individual tissues. Particular attention was given to peptides with more than two missed cleavages and peptides longer than 50 amino acids, because these would commonly be excluded by narrower digestion and peptide-length limits.
+
+Both unique-peptide counts and spectral-count-weighted summaries were exported.
+The supplementary figure uses unique-peptide counts to avoid disproportionately weighting peptides repeatedly observed across spectra.
+
+
+```python
+# ============================================================
+# Step 4 — Evaluate use of permissive missed-cleavage and
+# peptide-length search limits across all FragPipe peptide reports
+# ============================================================
+
+from pathlib import Path
+import re
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.ticker import StrMethodFormatter
+
+
+# ------------------------------------------------------------
+# 1. Input and output folders
+# ------------------------------------------------------------
+
+fragpipe_dir = Path("FragPipe_results")
+
+tables_dir = Path("python_outputs/tables")
+figures_dir = Path("python_outputs/figures")
+
+tables_dir.mkdir(parents=True, exist_ok=True)
+figures_dir.mkdir(parents=True, exist_ok=True)
+
+
+# ------------------------------------------------------------
+# 2. Locate tissue-level peptide reports
+# ------------------------------------------------------------
+
+peptide_files = sorted(
+    path for path in fragpipe_dir.glob("*_peptide.tsv")
+    if "combined" not in path.name.lower()
+)
+
+if not peptide_files:
+    raise FileNotFoundError(
+        f"No '*_peptide.tsv' files were found in: {fragpipe_dir.resolve()}"
+    )
+
+print(f"Peptide reports found: {len(peptide_files):,}")
+
+for path in peptide_files[:5]:
+    print(f"  {path.name}")
+
+if len(peptide_files) > 5:
+    print("  ...")
+
+
+# ------------------------------------------------------------
+# 3. Helper functions
+# ------------------------------------------------------------
+
+def derive_source_tissue_labels(filename):
+    """
+    Derive source, tissue and source–tissue labels from a standard
+    FragPipe peptide filename.
+
+    Example
+    -------
+    FragPipe_Duncan_PXD004720_radicle_peptide.tsv
+
+    Source:
+        PXD004720
+
+    Tissue:
+        radicle
+
+    Source_tissue:
+        PXD004720 | radicle
+    """
+    stem = filename.replace("_peptide.tsv", "")
+    parts = stem.split("_")
+
+    # Expected structure:
+    # FragPipe_FirstAuthor_Source_Tissue
+    if len(parts) >= 4 and parts[0].lower() == "fragpipe":
+        source = parts[2]
+        tissue = "_".join(parts[3:])
+        source_tissue = f"{source} | {tissue}"
+
+        return source, tissue, source_tissue
+
+    # Fallback for an unexpected filename
+    return "unknown", stem, f"unknown | {stem}"
+
+
+def clean_peptide_sequence(sequence):
+    """
+    Retain uppercase amino-acid letters only.
+
+    This allows the function to remain robust if a peptide field contains
+    flanking residues or modification notation, although standard FragPipe
+    peptide.tsv files normally contain the unmodified peptide sequence.
+    """
+    if pd.isna(sequence):
+        return ""
+
+    return "".join(
+        re.findall(r"[A-Z]", str(sequence).upper())
+    )
+
+
+def count_trypsin_p_missed_cleavages(sequence):
+    """
+    Count missed Trypsin/P cleavage sites in a fully enzymatic peptide.
+
+    Trypsin/P cleavage was defined after K or R, including before proline.
+    For a fully tryptic peptide, every internal K or R represents a missed
+    cleavage. A terminal K or R is the expected peptide terminus and is
+    therefore excluded from the count.
+    """
+    peptide = clean_peptide_sequence(sequence)
+
+    if len(peptide) <= 1:
+        return 0
+
+    return sum(residue in {"K", "R"} for residue in peptide[:-1])
+
+
+# ------------------------------------------------------------
+# 4. Read and summarise every peptide.tsv file
+# ------------------------------------------------------------
+
+all_peptides = []
+file_summary_records = []
+
+required_columns = {"Peptide"}
+
+for file_number, peptide_file in enumerate(peptide_files, start=1):
+
+    print(
+        f"[{file_number:02d}/{len(peptide_files):02d}] "
+        f"Reading {peptide_file.name}"
+    )
+
+    peptide_data = pd.read_csv(
+        peptide_file,
+        sep="\t",
+        low_memory=False
+    )
+
+    missing = required_columns.difference(peptide_data.columns)
+
+    if missing:
+        raise KeyError(
+            f"{peptide_file.name} is missing required column(s): "
+            f"{sorted(missing)}"
+        )
+
+    source, tissue, source_tissue = derive_source_tissue_labels(
+        peptide_file.name
+    )
+
+    # --------------------------------------------------------
+    # Exclude decoys and contaminants where columns are present
+    # --------------------------------------------------------
+
+    starting_rows = len(peptide_data)
+
+    if "Is Decoy" in peptide_data.columns:
+        peptide_data = peptide_data[
+            ~peptide_data["Is Decoy"].fillna(False).astype(bool)
+        ].copy()
+
+    if "Is Contaminant" in peptide_data.columns:
+        peptide_data = peptide_data[
+            ~peptide_data["Is Contaminant"].fillna(False).astype(bool)
+        ].copy()
+
+    # --------------------------------------------------------
+    # Standardise peptide sequence and length
+    # --------------------------------------------------------
+
+    peptide_data["Peptide_clean"] = (
+        peptide_data["Peptide"]
+        .map(clean_peptide_sequence)
+    )
+
+    peptide_data = peptide_data[
+        peptide_data["Peptide_clean"].str.len() > 0
+    ].copy()
+
+    if "Peptide Length" in peptide_data.columns:
+        peptide_data["Peptide_length"] = pd.to_numeric(
+            peptide_data["Peptide Length"],
+            errors="coerce"
+        )
+    else:
+        peptide_data["Peptide_length"] = (
+            peptide_data["Peptide_clean"].str.len()
+        )
+
+    # Replace missing reported lengths with sequence-derived lengths
+    missing_length = peptide_data["Peptide_length"].isna()
+
+    peptide_data.loc[
+        missing_length,
+        "Peptide_length"
+    ] = peptide_data.loc[
+        missing_length,
+        "Peptide_clean"
+    ].str.len()
+
+    peptide_data["Peptide_length"] = (
+        peptide_data["Peptide_length"]
+        .astype(int)
+    )
+
+    # Confirm reported and sequence-derived lengths agree
+    peptide_data["Sequence_length"] = (
+        peptide_data["Peptide_clean"].str.len()
+    )
+
+    length_disagreement = (
+        peptide_data["Peptide_length"]
+        != peptide_data["Sequence_length"]
+    )
+
+    if length_disagreement.any():
+        disagreement_count = int(length_disagreement.sum())
+
+        print(
+            f"  Warning: {disagreement_count:,} row(s) had a reported "
+            "Peptide Length different from the cleaned sequence length. "
+            "The reported FragPipe value was retained."
+        )
+
+    # --------------------------------------------------------
+    # Calculate missed cleavages
+    # --------------------------------------------------------
+
+    peptide_data["Missed_cleavages"] = (
+        peptide_data["Peptide_clean"]
+        .map(count_trypsin_p_missed_cleavages)
+        .astype(int)
+    )
+
+    # --------------------------------------------------------
+    # Spectral-count field
+    # --------------------------------------------------------
+
+    if "Spectral Count" in peptide_data.columns:
+        peptide_data["Spectral_count"] = (
+            pd.to_numeric(
+                peptide_data["Spectral Count"],
+                errors="coerce"
+            )
+            .fillna(0)
+        )
+    else:
+        peptide_data["Spectral_count"] = 1
+
+    # --------------------------------------------------------
+    # Add traceability metadata
+    # --------------------------------------------------------
+
+    peptide_data["Source"] = source
+    peptide_data["Tissue"] = tissue
+    peptide_data["Source_tissue"] = source_tissue
+    peptide_data["Source_file"] = peptide_file.name
+
+    # Threshold flags of direct relevance to reviewer comment
+    peptide_data["More_than_2_missed_cleavages"] = (
+        peptide_data["Missed_cleavages"] > 2
+    )
+
+    peptide_data["Longer_than_50_AA"] = (
+        peptide_data["Peptide_length"] > 50
+    )
+
+    peptide_data["More_than_2_MC_and_longer_than_50_AA"] = (
+        peptide_data["More_than_2_missed_cleavages"]
+        & peptide_data["Longer_than_50_AA"]
+    )
+
+    # --------------------------------------------------------
+    # Tissue summary
+    # --------------------------------------------------------
+
+    retained_rows = len(peptide_data)
+
+    mc_gt2 = int(
+        peptide_data["More_than_2_missed_cleavages"].sum()
+    )
+
+    length_gt50 = int(
+        peptide_data["Longer_than_50_AA"].sum()
+    )
+
+    both = int(
+        peptide_data[
+            "More_than_2_MC_and_longer_than_50_AA"
+        ].sum()
+    )
+
+    file_summary_records.append({
+        "Source": source,
+        "Tissue": tissue,
+        "Source_tissue": source_tissue,
+        "Source_file": peptide_file.name,
+        "Input_rows": starting_rows,
+        "Retained_nondecoy_noncontaminant_peptides": retained_rows,
+        "Peptides_with_more_than_2_missed_cleavages": mc_gt2,
+        "Percent_with_more_than_2_missed_cleavages": (
+            100 * mc_gt2 / retained_rows if retained_rows else np.nan
+        ),
+        "Peptides_longer_than_50_AA": length_gt50,
+        "Percent_longer_than_50_AA": (
+            100 * length_gt50 / retained_rows if retained_rows else np.nan
+        ),
+        "Peptides_satisfying_both_criteria": both,
+        "Percent_satisfying_both_criteria": (
+            100 * both / retained_rows if retained_rows else np.nan
+        ),
+        "Maximum_missed_cleavages": (
+            int(peptide_data["Missed_cleavages"].max())
+            if retained_rows else np.nan
+        ),
+        "Maximum_peptide_length_AA": (
+            int(peptide_data["Peptide_length"].max())
+            if retained_rows else np.nan
+        ),
+        "Total_spectral_count": peptide_data["Spectral_count"].sum()
+    })
+
+    keep_columns = [
+        "Source",
+        "Tissue",
+        "Source_tissue",
+        "Source_file",
+        "Peptide",
+        "Peptide_clean",
+        "Peptide_length",
+        "Missed_cleavages",
+        "Spectral_count",
+        "More_than_2_missed_cleavages",
+        "Longer_than_50_AA",
+        "More_than_2_MC_and_longer_than_50_AA"
+    ]
+
+    for optional_column in [
+        "Probability",
+        "Qvalue",
+        "Protein",
+        "Mapped Proteins"
+    ]:
+        if optional_column in peptide_data.columns:
+            keep_columns.append(optional_column)
+
+    all_peptides.append(
+        peptide_data[keep_columns].copy()
+    )
+
+
+# ------------------------------------------------------------
+# 5. Combine all tissues
+# ------------------------------------------------------------
+
+combined_peptides = pd.concat(
+    all_peptides,
+    ignore_index=True
+)
+
+tissue_summary = pd.DataFrame(
+    file_summary_records
+)
+
+print("\n===== COMBINED PEPTIDE SUMMARY =====")
+print(
+    "Source–tissue analyses: "
+    f"{combined_peptides['Source_tissue'].nunique():,}"
+)
+if combined_peptides["Source_tissue"].nunique() != len(peptide_files):
+    raise ValueError(
+        "The number of unique source–tissue labels does not match "
+        "the number of peptide.tsv files."
+    )
+print(f"Filtered peptide rows: {len(combined_peptides):,}")
+print(
+    "Peptides with >2 missed cleavages: "
+    f"{combined_peptides['More_than_2_missed_cleavages'].sum():,}"
+)
+print(
+    "Peptides longer than 50 AA: "
+    f"{combined_peptides['Longer_than_50_AA'].sum():,}"
+)
+print(
+    "Peptides satisfying both criteria: "
+    f"{combined_peptides['More_than_2_MC_and_longer_than_50_AA'].sum():,}"
+)
+print(
+    "Maximum missed cleavages observed: "
+    f"{combined_peptides['Missed_cleavages'].max():,}"
+)
+print(
+    "Maximum peptide length observed: "
+    f"{combined_peptides['Peptide_length'].max():,} AA"
+)
+
+
+# ------------------------------------------------------------
+# 6. Aggregate distributions
+# ------------------------------------------------------------
+
+missed_cleavage_distribution = (
+    combined_peptides
+    .groupby("Missed_cleavages", as_index=False)
+    .agg(
+        Unique_peptide_rows=("Peptide_clean", "size"),
+        Spectral_count=("Spectral_count", "sum"),
+        Source_tissue_analyses_with_at_least_one_peptide=(
+            "Source_tissue",
+            "nunique"
+        )
+    )
+    .sort_values("Missed_cleavages")
+)
+
+# Ensure all categories 0–10 are represented
+missed_cleavage_distribution = (
+    missed_cleavage_distribution
+    .set_index("Missed_cleavages")
+    .reindex(range(0, 11), fill_value=0)
+    .rename_axis("Missed_cleavages")
+    .reset_index()
+)
+
+peptide_length_distribution = (
+    combined_peptides
+    .groupby("Peptide_length", as_index=False)
+    .agg(
+        Unique_peptide_rows=("Peptide_clean", "size"),
+        Spectral_count=("Spectral_count", "sum"),
+        Source_tissue_analyses_with_at_least_one_peptide=(
+            "Source_tissue",
+            "nunique"
+        )
+    )
+    .sort_values("Peptide_length")
+)
+
+
+# ------------------------------------------------------------
+# 7. Export tables
+# ------------------------------------------------------------
+
+combined_out = (
+    tables_dir
+    / "wheat_fragpipe_peptide_length_missed_cleavage_all_tissues_step4.csv"
+)
+
+tissue_summary_out = (
+    tables_dir
+    / "wheat_fragpipe_peptide_length_missed_cleavage_tissue_summary_step4.csv"
+)
+
+mc_distribution_out = (
+    tables_dir
+    / "wheat_fragpipe_missed_cleavage_distribution_step4.csv"
+)
+
+length_distribution_out = (
+    tables_dir
+    / "wheat_fragpipe_peptide_length_distribution_step4.csv"
+)
+
+threshold_peptides_out = (
+    tables_dir
+    / "wheat_fragpipe_peptides_exceeding_conventional_limits_step4.csv"
+)
+
+combined_peptides.to_csv(
+    combined_out,
+    index=False
+)
+
+tissue_summary.to_csv(
+    tissue_summary_out,
+    index=False
+)
+
+missed_cleavage_distribution.to_csv(
+    mc_distribution_out,
+    index=False
+)
+
+peptide_length_distribution.to_csv(
+    length_distribution_out,
+    index=False
+)
+
+combined_peptides.loc[
+    combined_peptides["More_than_2_missed_cleavages"]
+    | combined_peptides["Longer_than_50_AA"]
+].to_csv(
+    threshold_peptides_out,
+    index=False
+)
+
+print("\nExported:")
+print(f"  {combined_out}")
+print(f"  {tissue_summary_out}")
+print(f"  {mc_distribution_out}")
+print(f"  {length_distribution_out}")
+print(f"  {threshold_peptides_out}")
+
+
+# ------------------------------------------------------------
+# 8. Prepare independent tissue ordering for Panels B and D
+# ------------------------------------------------------------
+
+# Panel B: ascending order places the largest horizontal bar at the top
+tissue_plot_mc = tissue_summary.sort_values(
+    "Peptides_with_more_than_2_missed_cleavages",
+    ascending=True
+).reset_index(drop=True)
+
+# Panel D: independently sort by number of peptides longer than 50 AA
+tissue_plot_length = tissue_summary.sort_values(
+    "Peptides_longer_than_50_AA",
+    ascending=True
+).reset_index(drop=True)
+
+# ------------------------------------------------------------
+# Brand colours
+# ------------------------------------------------------------
+
+DARK_PURPLE = "#3F007E"
+PINK = "#FF3399"
+GOLD = "#FFC000"
+LIGHT_PURPLE = "#E6CDFF"
+
+# ------------------------------------------------------------
+# 9. Create four-panel supplementary figure
+# ------------------------------------------------------------
+
+fig, axes = plt.subplots(
+    2,
+    2,
+    figsize=(17, 14)
+)
+
+# Panel A — aggregate missed-cleavage distribution
+axes[0, 0].bar(
+    missed_cleavage_distribution["Missed_cleavages"],
+    missed_cleavage_distribution["Unique_peptide_rows"],
+    color=DARK_PURPLE,
+    edgecolor="black",
+    linewidth=0.4
+)
+
+axes[0, 0].axvline(
+    2.5,
+    color=PINK,
+    linestyle="--",
+    linewidth=1.5
+)
+
+axes[0, 0].set_xlabel("Number of missed Trypsin/P cleavages")
+axes[0, 0].set_ylabel("Filtered peptide identifications")
+axes[0, 0].set_title(
+    "A. Missed-cleavage distribution across all source-tissue analyses",
+    loc="left",
+    fontweight="bold"
+)
+
+axes[0, 0].set_xticks(range(0, 11))
+
+# Log scale allows low-frequency high-cleavage categories to remain visible
+axes[0, 0].set_yscale("log")
+
+axes[0, 0].text(
+    0.98,
+    0.95,
+    ">2 missed cleavages shown right of dashed line",
+    transform=axes[0, 0].transAxes,
+    horizontalalignment="right",
+    verticalalignment="top",
+    fontsize=9
+)
+
+
+# Panel B — tissue-level count with >2 missed cleavages
+axes[0, 1].barh(
+    tissue_plot_mc["Source_tissue"],
+    tissue_plot_mc["Peptides_with_more_than_2_missed_cleavages"],
+    color=PINK,
+    edgecolor="black",
+    linewidth=0.3
+)
+
+axes[0, 1].set_xlabel(
+    "Filtered peptides with >2 missed cleavages"
+)
+
+axes[0, 1].set_ylabel("Source | tissue")
+
+axes[0, 1].set_title(
+    "B. Peptides with >2 missed cleavages",
+    loc="left",
+    fontweight="bold"
+)
+
+axes[0, 1].tick_params(
+    axis="y",
+    labelsize=7
+)
+
+axes[0, 1].ticklabel_format(
+    axis="x",
+    style="plain"
+)
+
+axes[0, 1].xaxis.set_major_formatter(
+    StrMethodFormatter("{x:,.0f}")
+)
+
+# Panel C — aggregate peptide-length distribution
+axes[1, 0].bar(
+    peptide_length_distribution["Peptide_length"],
+    peptide_length_distribution["Unique_peptide_rows"],
+    width=0.9,
+    color=GOLD,
+    edgecolor="black",
+    linewidth=0.3
+)
+
+axes[1, 0].axvline(
+    50.5,
+    color=PINK,
+    linestyle="--",
+    linewidth=1.5
+)
+
+axes[1, 0].set_xlabel("Peptide length (amino acids)")
+axes[1, 0].set_ylabel("Filtered peptide identifications")
+
+axes[1, 0].set_title(
+    "C. Peptide-length distribution across all source–tissue analyses",
+    loc="left",
+    fontweight="bold"
+)
+
+axes[1, 0].set_yscale("log")
+
+axes[1, 0].text(
+    0.98,
+    0.95,
+    ">50 AA shown right of dashed line",
+    transform=axes[1, 0].transAxes,
+    horizontalalignment="right",
+    verticalalignment="top",
+    fontsize=9
+)
+
+
+# Panel D — tissue-level count longer than 50 AA
+axes[1, 1].barh(
+    tissue_plot_length["Source_tissue"],
+    tissue_plot_length["Peptides_longer_than_50_AA"],
+    color=LIGHT_PURPLE,
+    edgecolor="black",
+    linewidth=0.3
+)
+
+axes[1, 1].set_xlabel(
+    "Filtered peptides longer than 50 AA"
+)
+
+axes[1, 1].set_ylabel("Source | tissue")
+
+axes[1, 1].set_title(
+    "D. Peptides longer than 50 amino acids",
+    loc="left",
+    fontweight="bold"
+)
+
+axes[1, 1].tick_params(
+    axis="y",
+    labelsize=7
+)
+
+axes[1, 1].ticklabel_format(
+    axis="x",
+    style="plain"
+)
+
+axes[1, 1].xaxis.set_major_formatter(
+    StrMethodFormatter("{x:,.0f}")
+)
+
+
+# General figure formatting
+for axis in axes.flat:
+    axis.spines["top"].set_visible(False)
+    axis.spines["right"].set_visible(False)
+
+fig.suptitle(
+    "Empirical recovery of peptides enabled by permissive "
+    "FragPipe digestion and peptide-length limits",
+    fontsize=16,
+    fontweight="bold",
+    y=0.995
+)
+
+fig.tight_layout(
+    rect=[0, 0, 1, 0.975]
+)
+
+
+# ------------------------------------------------------------
+# 10. Save publication-quality figure
+# ------------------------------------------------------------
+
+figure_png = (
+    figures_dir
+    / "step4_FragPipe_missed-cleavage_peptide-length_distributions.png"
+)
+
+figure_pdf = (
+    figures_dir
+    / "step4_FragPipe_missed-cleavage_peptide-length_distributions.pdf"
+)
+
+fig.savefig(
+    figure_png,
+    dpi=600,
+    bbox_inches="tight"
+)
+
+fig.savefig(
+    figure_pdf,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+print("\nFigure exported:")
+print(f"  {figure_png}")
+print(f"  {figure_pdf}")
+
+
+# ------------------------------------------------------------
+# 11. Display key summary tables
+# ------------------------------------------------------------
+
+display(
+    tissue_summary.sort_values(
+        "Peptides_with_more_than_2_missed_cleavages",
+        ascending=False
+    )
+)
+
+display(
+    missed_cleavage_distribution
+)
+
+display(
+    peptide_length_distribution.tail(25)
+)
+```
+
+    Peptide reports found: 32
+      FragPipe_Duncan_PXD004720_anther_peptide.tsv
+      FragPipe_Duncan_PXD004720_boot_peptide.tsv
+      FragPipe_Duncan_PXD004720_coleoptile_peptide.tsv
+      FragPipe_Duncan_PXD004720_embryo_peptide.tsv
+      FragPipe_Duncan_PXD004720_endosperm_peptide.tsv
+      ...
+    [01/32] Reading FragPipe_Duncan_PXD004720_anther_peptide.tsv
+    [02/32] Reading FragPipe_Duncan_PXD004720_boot_peptide.tsv
+    [03/32] Reading FragPipe_Duncan_PXD004720_coleoptile_peptide.tsv
+    [04/32] Reading FragPipe_Duncan_PXD004720_embryo_peptide.tsv
+    [05/32] Reading FragPipe_Duncan_PXD004720_endosperm_peptide.tsv
+    [06/32] Reading FragPipe_Duncan_PXD004720_glume_peptide.tsv
+    [07/32] Reading FragPipe_Duncan_PXD004720_grain-zadoks-70_peptide.tsv
+    [08/32] Reading FragPipe_Duncan_PXD004720_grain-zadoks-71_peptide.tsv
+    [09/32] Reading FragPipe_Duncan_PXD004720_grain-zadoks-75_peptide.tsv
+    [10/32] Reading FragPipe_Duncan_PXD004720_grain-zadoks-83_peptide.tsv
+    [11/32] Reading FragPipe_Duncan_PXD004720_grain-zadoks-87_peptide.tsv
+    [12/32] Reading FragPipe_Duncan_PXD004720_leaf-flag-mature_peptide.tsv
+    [13/32] Reading FragPipe_Duncan_PXD004720_leaf-flag-senescing_peptide.tsv
+    [14/32] Reading FragPipe_Duncan_PXD004720_leaf-flag-young_peptide.tsv
+    [15/32] Reading FragPipe_Duncan_PXD004720_lemma_peptide.tsv
+    [16/32] Reading FragPipe_Duncan_PXD004720_node-secretion_peptide.tsv
+    [17/32] Reading FragPipe_Duncan_PXD004720_node_peptide.tsv
+    [18/32] Reading FragPipe_Duncan_PXD004720_palea_peptide.tsv
+    [19/32] Reading FragPipe_Duncan_PXD004720_pericarp_peptide.tsv
+    [20/32] Reading FragPipe_Duncan_PXD004720_pollen_peptide.tsv
+    [21/32] Reading FragPipe_Duncan_PXD004720_rachilla_peptide.tsv
+    [22/32] Reading FragPipe_Duncan_PXD004720_radicle_peptide.tsv
+    [23/32] Reading FragPipe_Duncan_PXD004720_root-mature_peptide.tsv
+    [24/32] Reading FragPipe_Duncan_PXD004720_root-secretion_peptide.tsv
+    [25/32] Reading FragPipe_Duncan_PXD004720_root-tip_peptide.tsv
+    [26/32] Reading FragPipe_Duncan_PXD004720_root-vasculature_peptide.tsv
+    [27/32] Reading FragPipe_Duncan_PXD004720_spike-immature_peptide.tsv
+    [28/32] Reading FragPipe_Duncan_PXD004720_stem_peptide.tsv
+    [29/32] Reading FragPipe_Liu_PXD050500_coleoptile_peptide.tsv
+    [30/32] Reading FragPipe_Liu_PXD050500_node_peptide.tsv
+    [31/32] Reading FragPipe_Liu_PXD050500_radicle_peptide.tsv
+    [32/32] Reading FragPipe_Vincent_MSV000090572_stored-grain_peptide.tsv
+    
+    ===== COMBINED PEPTIDE SUMMARY =====
+    Source–tissue analyses: 32
+    Filtered peptide rows: 2,229,724
+    Peptides with >2 missed cleavages: 61,546
+    Peptides longer than 50 AA: 1,431
+    Peptides satisfying both criteria: 773
+    Maximum missed cleavages observed: 10
+    Maximum peptide length observed: 87 AA
+    
+    Exported:
+      python_outputs\tables\wheat_fragpipe_peptide_length_missed_cleavage_all_tissues_step4.csv
+      python_outputs\tables\wheat_fragpipe_peptide_length_missed_cleavage_tissue_summary_step4.csv
+      python_outputs\tables\wheat_fragpipe_missed_cleavage_distribution_step4.csv
+      python_outputs\tables\wheat_fragpipe_peptide_length_distribution_step4.csv
+      python_outputs\tables\wheat_fragpipe_peptides_exceeding_conventional_limits_step4.csv
+    
+
+
+    
+![png](output_5_1.png)
+    
+
+
+    
+    Figure exported:
+      python_outputs\figures\step4_FragPipe_missed-cleavage_peptide-length_distributions.png
+      python_outputs\figures\step4_FragPipe_missed-cleavage_peptide-length_distributions.pdf
+    
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Source</th>
+      <th>Tissue</th>
+      <th>Source_tissue</th>
+      <th>Source_file</th>
+      <th>Input_rows</th>
+      <th>Retained_nondecoy_noncontaminant_peptides</th>
+      <th>Peptides_with_more_than_2_missed_cleavages</th>
+      <th>Percent_with_more_than_2_missed_cleavages</th>
+      <th>Peptides_longer_than_50_AA</th>
+      <th>Percent_longer_than_50_AA</th>
+      <th>Peptides_satisfying_both_criteria</th>
+      <th>Percent_satisfying_both_criteria</th>
+      <th>Maximum_missed_cleavages</th>
+      <th>Maximum_peptide_length_AA</th>
+      <th>Total_spectral_count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>29</th>
+      <td>PXD050500</td>
+      <td>node</td>
+      <td>PXD050500 | node</td>
+      <td>FragPipe_Liu_PXD050500_node_peptide.tsv</td>
+      <td>596437</td>
+      <td>596437</td>
+      <td>15804</td>
+      <td>2.649735</td>
+      <td>301</td>
+      <td>0.050466</td>
+      <td>137</td>
+      <td>0.022970</td>
+      <td>10</td>
+      <td>73</td>
+      <td>3839535</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>PXD050500</td>
+      <td>coleoptile</td>
+      <td>PXD050500 | coleoptile</td>
+      <td>FragPipe_Liu_PXD050500_coleoptile_peptide.tsv</td>
+      <td>583184</td>
+      <td>583184</td>
+      <td>14721</td>
+      <td>2.524246</td>
+      <td>165</td>
+      <td>0.028293</td>
+      <td>64</td>
+      <td>0.010974</td>
+      <td>10</td>
+      <td>74</td>
+      <td>4407357</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>PXD050500</td>
+      <td>radicle</td>
+      <td>PXD050500 | radicle</td>
+      <td>FragPipe_Liu_PXD050500_radicle_peptide.tsv</td>
+      <td>333400</td>
+      <td>333400</td>
+      <td>5371</td>
+      <td>1.610978</td>
+      <td>142</td>
+      <td>0.042591</td>
+      <td>59</td>
+      <td>0.017696</td>
+      <td>10</td>
+      <td>75</td>
+      <td>2245698</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>PXD004720</td>
+      <td>spike-immature</td>
+      <td>PXD004720 | spike-immature</td>
+      <td>FragPipe_Duncan_PXD004720_spike-immature_pepti...</td>
+      <td>36414</td>
+      <td>36414</td>
+      <td>3108</td>
+      <td>8.535179</td>
+      <td>83</td>
+      <td>0.227934</td>
+      <td>61</td>
+      <td>0.167518</td>
+      <td>10</td>
+      <td>74</td>
+      <td>157490</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>PXD004720</td>
+      <td>anther</td>
+      <td>PXD004720 | anther</td>
+      <td>FragPipe_Duncan_PXD004720_anther_peptide.tsv</td>
+      <td>34203</td>
+      <td>34203</td>
+      <td>2368</td>
+      <td>6.923369</td>
+      <td>65</td>
+      <td>0.190042</td>
+      <td>50</td>
+      <td>0.146186</td>
+      <td>10</td>
+      <td>67</td>
+      <td>164443</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>PXD004720</td>
+      <td>palea</td>
+      <td>PXD004720 | palea</td>
+      <td>FragPipe_Duncan_PXD004720_palea_peptide.tsv</td>
+      <td>21774</td>
+      <td>21774</td>
+      <td>2186</td>
+      <td>10.039497</td>
+      <td>72</td>
+      <td>0.330670</td>
+      <td>51</td>
+      <td>0.234224</td>
+      <td>10</td>
+      <td>77</td>
+      <td>106814</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>MSV000090572</td>
+      <td>stored-grain</td>
+      <td>MSV000090572 | stored-grain</td>
+      <td>FragPipe_Vincent_MSV000090572_stored-grain_pep...</td>
+      <td>9343</td>
+      <td>9343</td>
+      <td>1801</td>
+      <td>19.276464</td>
+      <td>62</td>
+      <td>0.663598</td>
+      <td>47</td>
+      <td>0.503050</td>
+      <td>10</td>
+      <td>65</td>
+      <td>33273</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>PXD004720</td>
+      <td>root-secretion</td>
+      <td>PXD004720 | root-secretion</td>
+      <td>FragPipe_Duncan_PXD004720_root-secretion_pepti...</td>
+      <td>21329</td>
+      <td>21329</td>
+      <td>1757</td>
+      <td>8.237611</td>
+      <td>26</td>
+      <td>0.121900</td>
+      <td>20</td>
+      <td>0.093769</td>
+      <td>10</td>
+      <td>64</td>
+      <td>37901</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>PXD004720</td>
+      <td>rachilla</td>
+      <td>PXD004720 | rachilla</td>
+      <td>FragPipe_Duncan_PXD004720_rachilla_peptide.tsv</td>
+      <td>31213</td>
+      <td>31213</td>
+      <td>1659</td>
+      <td>5.315093</td>
+      <td>53</td>
+      <td>0.169801</td>
+      <td>34</td>
+      <td>0.108929</td>
+      <td>10</td>
+      <td>81</td>
+      <td>147229</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>PXD004720</td>
+      <td>radicle</td>
+      <td>PXD004720 | radicle</td>
+      <td>FragPipe_Duncan_PXD004720_radicle_peptide.tsv</td>
+      <td>39704</td>
+      <td>39704</td>
+      <td>1486</td>
+      <td>3.742696</td>
+      <td>39</td>
+      <td>0.098227</td>
+      <td>18</td>
+      <td>0.045335</td>
+      <td>9</td>
+      <td>66</td>
+      <td>152610</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>PXD004720</td>
+      <td>root-mature</td>
+      <td>PXD004720 | root-mature</td>
+      <td>FragPipe_Duncan_PXD004720_root-mature_peptide.tsv</td>
+      <td>21390</td>
+      <td>21390</td>
+      <td>1434</td>
+      <td>6.704067</td>
+      <td>12</td>
+      <td>0.056101</td>
+      <td>8</td>
+      <td>0.037401</td>
+      <td>10</td>
+      <td>61</td>
+      <td>57758</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>PXD004720</td>
+      <td>root-tip</td>
+      <td>PXD004720 | root-tip</td>
+      <td>FragPipe_Duncan_PXD004720_root-tip_peptide.tsv</td>
+      <td>38681</td>
+      <td>38681</td>
+      <td>1351</td>
+      <td>3.492671</td>
+      <td>47</td>
+      <td>0.121507</td>
+      <td>29</td>
+      <td>0.074972</td>
+      <td>10</td>
+      <td>68</td>
+      <td>152978</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>PXD004720</td>
+      <td>glume</td>
+      <td>PXD004720 | glume</td>
+      <td>FragPipe_Duncan_PXD004720_glume_peptide.tsv</td>
+      <td>28683</td>
+      <td>28683</td>
+      <td>1275</td>
+      <td>4.445142</td>
+      <td>77</td>
+      <td>0.268452</td>
+      <td>50</td>
+      <td>0.174319</td>
+      <td>10</td>
+      <td>78</td>
+      <td>147049</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>PXD004720</td>
+      <td>pericarp</td>
+      <td>PXD004720 | pericarp</td>
+      <td>FragPipe_Duncan_PXD004720_pericarp_peptide.tsv</td>
+      <td>28448</td>
+      <td>28448</td>
+      <td>1081</td>
+      <td>3.799916</td>
+      <td>70</td>
+      <td>0.246063</td>
+      <td>35</td>
+      <td>0.123031</td>
+      <td>10</td>
+      <td>74</td>
+      <td>122800</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>PXD004720</td>
+      <td>coleoptile</td>
+      <td>PXD004720 | coleoptile</td>
+      <td>FragPipe_Duncan_PXD004720_coleoptile_peptide.tsv</td>
+      <td>41126</td>
+      <td>41126</td>
+      <td>885</td>
+      <td>2.151923</td>
+      <td>30</td>
+      <td>0.072947</td>
+      <td>18</td>
+      <td>0.043768</td>
+      <td>9</td>
+      <td>65</td>
+      <td>159353</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>PXD004720</td>
+      <td>root-vasculature</td>
+      <td>PXD004720 | root-vasculature</td>
+      <td>FragPipe_Duncan_PXD004720_root-vasculature_pep...</td>
+      <td>20911</td>
+      <td>20911</td>
+      <td>737</td>
+      <td>3.524461</td>
+      <td>7</td>
+      <td>0.033475</td>
+      <td>1</td>
+      <td>0.004782</td>
+      <td>9</td>
+      <td>62</td>
+      <td>80342</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>PXD004720</td>
+      <td>lemma</td>
+      <td>PXD004720 | lemma</td>
+      <td>FragPipe_Duncan_PXD004720_lemma_peptide.tsv</td>
+      <td>29842</td>
+      <td>29842</td>
+      <td>594</td>
+      <td>1.990483</td>
+      <td>26</td>
+      <td>0.087126</td>
+      <td>18</td>
+      <td>0.060318</td>
+      <td>10</td>
+      <td>71</td>
+      <td>131599</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>PXD004720</td>
+      <td>node</td>
+      <td>PXD004720 | node</td>
+      <td>FragPipe_Duncan_PXD004720_node_peptide.tsv</td>
+      <td>21508</td>
+      <td>21508</td>
+      <td>462</td>
+      <td>2.148038</td>
+      <td>4</td>
+      <td>0.018598</td>
+      <td>2</td>
+      <td>0.009299</td>
+      <td>8</td>
+      <td>63</td>
+      <td>69197</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>PXD004720</td>
+      <td>boot</td>
+      <td>PXD004720 | boot</td>
+      <td>FragPipe_Duncan_PXD004720_boot_peptide.tsv</td>
+      <td>3644</td>
+      <td>3644</td>
+      <td>326</td>
+      <td>8.946213</td>
+      <td>19</td>
+      <td>0.521405</td>
+      <td>11</td>
+      <td>0.301866</td>
+      <td>9</td>
+      <td>78</td>
+      <td>6071</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>PXD004720</td>
+      <td>grain-zadoks-71</td>
+      <td>PXD004720 | grain-zadoks-71</td>
+      <td>FragPipe_Duncan_PXD004720_grain-zadoks-71_pept...</td>
+      <td>35990</td>
+      <td>35990</td>
+      <td>315</td>
+      <td>0.875243</td>
+      <td>3</td>
+      <td>0.008336</td>
+      <td>1</td>
+      <td>0.002779</td>
+      <td>8</td>
+      <td>57</td>
+      <td>133472</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>PXD004720</td>
+      <td>grain-zadoks-70</td>
+      <td>PXD004720 | grain-zadoks-70</td>
+      <td>FragPipe_Duncan_PXD004720_grain-zadoks-70_pept...</td>
+      <td>26229</td>
+      <td>26229</td>
+      <td>290</td>
+      <td>1.105646</td>
+      <td>27</td>
+      <td>0.102939</td>
+      <td>14</td>
+      <td>0.053376</td>
+      <td>9</td>
+      <td>70</td>
+      <td>104545</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>PXD004720</td>
+      <td>endosperm</td>
+      <td>PXD004720 | endosperm</td>
+      <td>FragPipe_Duncan_PXD004720_endosperm_peptide.tsv</td>
+      <td>20174</td>
+      <td>20174</td>
+      <td>284</td>
+      <td>1.407753</td>
+      <td>27</td>
+      <td>0.133836</td>
+      <td>10</td>
+      <td>0.049569</td>
+      <td>10</td>
+      <td>87</td>
+      <td>77601</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>PXD004720</td>
+      <td>stem</td>
+      <td>PXD004720 | stem</td>
+      <td>FragPipe_Duncan_PXD004720_stem_peptide.tsv</td>
+      <td>14389</td>
+      <td>14389</td>
+      <td>277</td>
+      <td>1.925082</td>
+      <td>2</td>
+      <td>0.013900</td>
+      <td>2</td>
+      <td>0.013900</td>
+      <td>10</td>
+      <td>64</td>
+      <td>37757</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>PXD004720</td>
+      <td>grain-zadoks-87</td>
+      <td>PXD004720 | grain-zadoks-87</td>
+      <td>FragPipe_Duncan_PXD004720_grain-zadoks-87_pept...</td>
+      <td>24674</td>
+      <td>24674</td>
+      <td>275</td>
+      <td>1.114534</td>
+      <td>13</td>
+      <td>0.052687</td>
+      <td>3</td>
+      <td>0.012159</td>
+      <td>10</td>
+      <td>66</td>
+      <td>91205</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>PXD004720</td>
+      <td>pollen</td>
+      <td>PXD004720 | pollen</td>
+      <td>FragPipe_Duncan_PXD004720_pollen_peptide.tsv</td>
+      <td>13593</td>
+      <td>13593</td>
+      <td>259</td>
+      <td>1.905392</td>
+      <td>27</td>
+      <td>0.198632</td>
+      <td>9</td>
+      <td>0.066211</td>
+      <td>10</td>
+      <td>78</td>
+      <td>61206</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>PXD004720</td>
+      <td>node-secretion</td>
+      <td>PXD004720 | node-secretion</td>
+      <td>FragPipe_Duncan_PXD004720_node-secretion_pepti...</td>
+      <td>34194</td>
+      <td>34194</td>
+      <td>242</td>
+      <td>0.707727</td>
+      <td>4</td>
+      <td>0.011698</td>
+      <td>2</td>
+      <td>0.005849</td>
+      <td>9</td>
+      <td>79</td>
+      <td>85168</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>PXD004720</td>
+      <td>leaf-flag-senescing</td>
+      <td>PXD004720 | leaf-flag-senescing</td>
+      <td>FragPipe_Duncan_PXD004720_leaf-flag-senescing_...</td>
+      <td>11394</td>
+      <td>11394</td>
+      <td>239</td>
+      <td>2.097595</td>
+      <td>1</td>
+      <td>0.008777</td>
+      <td>1</td>
+      <td>0.008777</td>
+      <td>7</td>
+      <td>56</td>
+      <td>29276</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>PXD004720</td>
+      <td>leaf-flag-mature</td>
+      <td>PXD004720 | leaf-flag-mature</td>
+      <td>FragPipe_Duncan_PXD004720_leaf-flag-mature_pep...</td>
+      <td>29941</td>
+      <td>29941</td>
+      <td>218</td>
+      <td>0.728099</td>
+      <td>3</td>
+      <td>0.010020</td>
+      <td>2</td>
+      <td>0.006680</td>
+      <td>7</td>
+      <td>66</td>
+      <td>79872</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>PXD004720</td>
+      <td>embryo</td>
+      <td>PXD004720 | embryo</td>
+      <td>FragPipe_Duncan_PXD004720_embryo_peptide.tsv</td>
+      <td>2868</td>
+      <td>2868</td>
+      <td>202</td>
+      <td>7.043236</td>
+      <td>9</td>
+      <td>0.313808</td>
+      <td>5</td>
+      <td>0.174338</td>
+      <td>8</td>
+      <td>62</td>
+      <td>4603</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>PXD004720</td>
+      <td>leaf-flag-young</td>
+      <td>PXD004720 | leaf-flag-young</td>
+      <td>FragPipe_Duncan_PXD004720_leaf-flag-young_pept...</td>
+      <td>23441</td>
+      <td>23441</td>
+      <td>195</td>
+      <td>0.831876</td>
+      <td>6</td>
+      <td>0.025596</td>
+      <td>6</td>
+      <td>0.025596</td>
+      <td>8</td>
+      <td>77</td>
+      <td>60972</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>PXD004720</td>
+      <td>grain-zadoks-83</td>
+      <td>PXD004720 | grain-zadoks-83</td>
+      <td>FragPipe_Duncan_PXD004720_grain-zadoks-83_pept...</td>
+      <td>24051</td>
+      <td>24051</td>
+      <td>184</td>
+      <td>0.765041</td>
+      <td>8</td>
+      <td>0.033263</td>
+      <td>5</td>
+      <td>0.020789</td>
+      <td>9</td>
+      <td>73</td>
+      <td>86569</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>PXD004720</td>
+      <td>grain-zadoks-75</td>
+      <td>PXD004720 | grain-zadoks-75</td>
+      <td>FragPipe_Duncan_PXD004720_grain-zadoks-75_pept...</td>
+      <td>27552</td>
+      <td>27552</td>
+      <td>160</td>
+      <td>0.580720</td>
+      <td>1</td>
+      <td>0.003630</td>
+      <td>0</td>
+      <td>0.000000</td>
+      <td>9</td>
+      <td>51</td>
+      <td>93099</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Missed_cleavages</th>
+      <th>Unique_peptide_rows</th>
+      <th>Spectral_count</th>
+      <th>Source_tissue_analyses_with_at_least_one_peptide</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>1428412</td>
+      <td>9559050</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>572901</td>
+      <td>2955097</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>166865</td>
+      <td>507672</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>43528</td>
+      <td>106296</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>11362</td>
+      <td>26547</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>5</td>
+      <td>3649</td>
+      <td>6552</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6</td>
+      <td>1486</td>
+      <td>1926</td>
+      <td>32</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>7</td>
+      <td>730</td>
+      <td>852</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>8</td>
+      <td>435</td>
+      <td>474</td>
+      <td>29</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>9</td>
+      <td>215</td>
+      <td>224</td>
+      <td>26</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>10</td>
+      <td>141</td>
+      <td>152</td>
+      <td>18</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Peptide_length</th>
+      <th>Unique_peptide_rows</th>
+      <th>Spectral_count</th>
+      <th>Source_tissue_analyses_with_at_least_one_peptide</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>50</th>
+      <td>57</td>
+      <td>85</td>
+      <td>290</td>
+      <td>21</td>
+    </tr>
+    <tr>
+      <th>51</th>
+      <td>58</td>
+      <td>59</td>
+      <td>270</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <th>52</th>
+      <td>59</td>
+      <td>47</td>
+      <td>97</td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>60</td>
+      <td>42</td>
+      <td>98</td>
+      <td>18</td>
+    </tr>
+    <tr>
+      <th>54</th>
+      <td>61</td>
+      <td>54</td>
+      <td>1366</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>62</td>
+      <td>41</td>
+      <td>386</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <th>56</th>
+      <td>63</td>
+      <td>27</td>
+      <td>130</td>
+      <td>15</td>
+    </tr>
+    <tr>
+      <th>57</th>
+      <td>64</td>
+      <td>41</td>
+      <td>206</td>
+      <td>17</td>
+    </tr>
+    <tr>
+      <th>58</th>
+      <td>65</td>
+      <td>14</td>
+      <td>18</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <th>59</th>
+      <td>66</td>
+      <td>28</td>
+      <td>166</td>
+      <td>17</td>
+    </tr>
+    <tr>
+      <th>60</th>
+      <td>67</td>
+      <td>3</td>
+      <td>6</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>61</th>
+      <td>68</td>
+      <td>6</td>
+      <td>6</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>62</th>
+      <td>69</td>
+      <td>5</td>
+      <td>5</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>63</th>
+      <td>70</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>64</th>
+      <td>71</td>
+      <td>3</td>
+      <td>9</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>65</th>
+      <td>72</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>66</th>
+      <td>73</td>
+      <td>4</td>
+      <td>26</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>67</th>
+      <td>74</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>68</th>
+      <td>75</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>69</th>
+      <td>76</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>70</th>
+      <td>77</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>71</th>
+      <td>78</td>
+      <td>3</td>
+      <td>6</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>72</th>
+      <td>79</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>73</th>
+      <td>81</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>74</th>
+      <td>87</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 
 # Step 5 — Build a protein-to-gene mapping table
 _inputs:_   
@@ -16073,7 +17873,7 @@ display(coverage)
 
 
     
-![png](output_32_2.png)
+![png](output_33_2.png)
     
 
 
@@ -16082,7 +17882,7 @@ display(coverage)
 
 
     
-![png](output_32_4.png)
+![png](output_33_4.png)
     
 
 
@@ -17295,7 +19095,7 @@ display(step17_summary)
 
 
     
-![png](output_34_1.png)
+![png](output_35_1.png)
     
 
 
@@ -17304,7 +19104,7 @@ display(step17_summary)
 
 
     
-![png](output_34_3.png)
+![png](output_35_3.png)
     
 
 
@@ -17313,7 +19113,7 @@ display(step17_summary)
 
 
     
-![png](output_34_5.png)
+![png](output_35_5.png)
     
 
 
@@ -17931,7 +19731,7 @@ display(step18_summary)
 
 
     
-![png](output_36_1.png)
+![png](output_37_1.png)
     
 
 
@@ -17940,7 +19740,7 @@ display(step18_summary)
 
 
     
-![png](output_36_3.png)
+![png](output_37_3.png)
     
 
 
@@ -18398,7 +20198,7 @@ display(step19_summary)
 
 
     
-![png](output_38_1.png)
+![png](output_39_1.png)
     
 
 
@@ -18854,7 +20654,7 @@ display(step20_summary)
 
 
     
-![png](output_40_1.png)
+![png](output_41_1.png)
     
 
 
@@ -19525,7 +21325,7 @@ display(summary)
 
 
     
-![png](output_42_1.png)
+![png](output_43_1.png)
     
 
 
@@ -20818,7 +22618,7 @@ display(summary.head())
 
 
     
-![png](output_45_1.png)
+![png](output_46_1.png)
     
 
 
@@ -21616,7 +23416,7 @@ print(f"Figure saved: {figure_out}")
 
 
     
-![png](output_47_6.png)
+![png](output_48_6.png)
     
 
 
@@ -24377,6 +26177,858 @@ display(display_table)
 </table>
 </div>
 
+
+# Step 26 — Compare 2024 tblastn-Based Peptide Alignments with 2026 Annotation-Guided Projections
+
+This step compares the peptide genome coordinates generated in the 2024 `tblastn`-based proteogenomics study with the current 2026 annotation-guided peptide projection workflow.
+
+The purpose is to determine how much of the previously reported peptide-to-genome evidence is recovered by the new exon-aware projection strategy, and to identify differences attributable to the change in mapping approach.
+
+---
+
+Only datasets included in the 2024 study are used for this comparison:
+
+- `MSV000090572`
+- `PXD004720`
+
+---
+
+The comparison is performed at three levels:
+
+1. **Peptide sequence overlap**  
+   Determines whether the same peptide sequences are present in both the 2024 and 2026 datasets, regardless of genomic position.
+
+2. **Exact coordinate overlap**  
+   Identifies peptide alignments with identical chromosome, start coordinate, end coordinate, strand, and peptide sequence.
+
+3. **Locus-level interval overlap**  
+   Identifies peptide mappings where the same peptide sequence maps to the same chromosome and strand with overlapping genomic intervals, allowing minor coordinate differences between `tblastn` alignments and annotation-guided projections.
+
+The current workflow first combines all BED6 files from the two shared sources into a non-redundant BED6 table. This combined 2026 BED6 table is then compared with the 2024 BED6 file.
+
+---
+
+The outputs include:
+
+- a non-redundant 2026 BED6 file restricted to the 2024 source datasets,
+- a comparison summary table,
+- peptide-level overlap tables,
+- a bar plot summarising overlap categories.
+
+---
+
+This step provides a direct computational bridge between the previous `tblastn`-based workflow and the current annotation-guided projection workflow.
+
+
+```python
+# # Install Python library
+# !pip install matplotlib-venn
+```
+
+
+```python
+# ============================================================
+# Step 26 — Compare 2024 tblastn BED6 alignments with 2026 GFF3-based BED6 projections
+# Coordinate-based feature comparison only
+# ============================================================
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from pathlib import Path
+from collections import defaultdict
+
+# -----------------------------
+# 1. Input / output paths
+# -----------------------------
+bed_dir = Path("python_outputs/bed_validated")
+tables_dir = Path("python_outputs/tables")
+figures_dir = Path("python_outputs/figures")
+
+tables_dir.mkdir(parents=True, exist_ok=True)
+figures_dir.mkdir(parents=True, exist_ok=True)
+
+bed_2024_file = Path(
+    "tblastn-results/Vincent-Appels_wheat-all-tissues_projected-peptides_tblastn-proteogenomics_20240520.BED"
+)
+
+current_sources = ["MSV000090572", "PXD004720"]
+
+coordinate_tolerance_nt = 4
+
+current_nonredundant_bed_out = bed_dir / (
+    "Vincent_2026_MSV000090572_PXD004720_nonredundant_validated_projected_features_annotation_proteogenomics_step26.bed6"
+)
+
+summary_out = tables_dir / "wheat_2024_vs_2026_genome_feature_comparison_summary_step26.csv"
+feature_match_out = tables_dir / "wheat_2024_vs_2026_tolerant_coordinate_feature_matches_step26.csv"
+feature_cluster_out = tables_dir / "wheat_2024_vs_2026_genome_feature_cluster_classes_step26.csv"
+
+barplot_out = figures_dir / f"step26_2024_vs_2026_genome_feature_barplot_tolerance_{coordinate_tolerance_nt}nt.png"
+venn_out = figures_dir / f"step26_2024_vs_2026_genome_feature_venn_tolerance_{coordinate_tolerance_nt}nt.png"
+
+# -----------------------------
+# 2. Helper functions
+# -----------------------------
+bed_cols = ["Chromosome", "Start", "End", "Name", "Score", "Strand"]
+
+
+def read_bed6(path):
+    """
+    Read a BED6 file safely.
+    """
+    data = pd.read_csv(
+        path,
+        sep="\t",
+        header=None,
+        names=bed_cols,
+        comment="#",
+        low_memory=False
+    )
+
+    data["Start"] = pd.to_numeric(data["Start"], errors="coerce")
+    data["End"] = pd.to_numeric(data["End"], errors="coerce")
+
+    data = data.dropna(
+        subset=["Chromosome", "Start", "End", "Name", "Strand"]
+    ).copy()
+
+    data["Start"] = data["Start"].astype(int)
+    data["End"] = data["End"].astype(int)
+    data["Chromosome"] = data["Chromosome"].astype(str)
+    data["Name"] = data["Name"].astype(str)
+    data["Strand"] = data["Strand"].astype(str)
+
+    return data
+
+
+def find_current_bed6_files(bed_dir, sources):
+    """
+    Find current 2026 validated BED6 files from selected sources only.
+
+    Only individual validated BED6 files are used.
+    Combined all-author/all-source BED6 files and Step 26 outputs are excluded.
+    """
+
+    all_bed_files = list(bed_dir.glob("*_validated_peptides.bed6"))
+
+    selected = []
+
+    for path in all_bed_files:
+
+        name = path.name
+
+        if "step26" in name.lower():
+            continue
+
+        if "allauthors" in name.lower() or "allsources" in name.lower():
+            continue
+
+        if any(source in name for source in sources):
+            selected.append(path)
+
+    return sorted(set(selected))
+
+
+class UnionFind:
+    """
+    Minimal union-find structure used to collapse matched 2024/2026
+    coordinate features into shared genome-aligned feature clusters.
+    """
+    def __init__(self):
+        self.parent = {}
+
+    def find(self, x):
+        if x not in self.parent:
+            self.parent[x] = x
+
+        while self.parent[x] != x:
+            self.parent[x] = self.parent[self.parent[x]]
+            x = self.parent[x]
+
+        return x
+
+    def union(self, a, b):
+        root_a = self.find(a)
+        root_b = self.find(b)
+
+        if root_a != root_b:
+            self.parent[root_b] = root_a
+
+
+# -----------------------------
+# 3. Load 2024 tblastn BED6 file
+# -----------------------------
+if not bed_2024_file.exists():
+    raise FileNotFoundError(
+        f"2024 BED file not found:\n{bed_2024_file}\n\n"
+        "Check that the file is located in the tblastn-results folder."
+    )
+
+bed_2024 = read_bed6(bed_2024_file)
+
+print("2024 tblastn BED loaded")
+print(f"Raw rows: {len(bed_2024):,}")
+
+# -----------------------------
+# 4. Combine current 2026 BED6 files
+# -----------------------------
+current_bed_files = find_current_bed6_files(bed_dir, current_sources)
+
+if len(current_bed_files) == 0:
+    raise FileNotFoundError(
+        "No current BED6/BED files found for MSV000090572 or PXD004720. "
+        "Check filenames in python_outputs/bed."
+    )
+
+print("\nCurrent 2026 BED files selected:")
+for path in current_bed_files:
+    print(f" - {path}")
+
+current_bed_parts = []
+
+for path in current_bed_files:
+    data = read_bed6(path)
+    data["Input_BED_file"] = path.name
+    current_bed_parts.append(data)
+
+bed_2026 = pd.concat(current_bed_parts, ignore_index=True)
+
+bed_2026_nr = (
+    bed_2026
+    .drop_duplicates(subset=["Chromosome", "Start", "End", "Name", "Score", "Strand"])
+    .copy()
+)
+
+bed_2026_nr[bed_cols].to_csv(
+    current_nonredundant_bed_out,
+    sep="\t",
+    header=False,
+    index=False
+)
+
+print("\n2026 GFF3-based BED files combined")
+print(f"Rows before non-redundant filtering: {len(bed_2026):,}")
+print(f"Rows after non-redundant filtering: {len(bed_2026_nr):,}")
+print(f"Saved non-redundant BED6: {current_nonredundant_bed_out}")
+
+# -----------------------------
+# 5. Define unique genome-aligned coordinate features
+# -----------------------------
+# A feature is defined only by:
+# Chromosome, Start, End, Strand
+#
+# Name/peptide labels are intentionally excluded from feature identity.
+
+feature_cols = ["Chromosome", "Start", "End", "Strand"]
+
+bed_2024_features = (
+    bed_2024
+    .drop_duplicates(subset=feature_cols)
+    .copy()
+    .reset_index(drop=True)
+)
+
+bed_2026_features = (
+    bed_2026_nr
+    .drop_duplicates(subset=feature_cols)
+    .copy()
+    .reset_index(drop=True)
+)
+
+bed_2024_features["FeatureID_2024"] = range(len(bed_2024_features))
+bed_2026_features["FeatureID_2026"] = range(len(bed_2026_features))
+
+print("\nUnique genome-aligned coordinate features")
+print(f"2024 unique coordinate features: {len(bed_2024_features):,}")
+print(f"2026 unique coordinate features: {len(bed_2026_features):,}")
+
+# -----------------------------
+# 6. Tolerant Start/End coordinate matching
+# -----------------------------
+# A 2024 feature and a 2026 feature are considered shared if:
+# - same chromosome
+# - same strand
+# - Start differs by no more than ±coordinate_tolerance_nt
+# - End differs by no more than ±coordinate_tolerance_nt
+
+coord_to_2026_id = {}
+
+for row in bed_2026_features[
+    ["FeatureID_2026", "Chromosome", "Start", "End", "Strand"]
+].itertuples(index=False):
+
+    key = (row.Chromosome, row.Strand, row.Start, row.End)
+    coord_to_2026_id[key] = row.FeatureID_2026
+
+match_records = []
+
+for i, row in enumerate(
+    bed_2024_features[
+        ["FeatureID_2024", "Chromosome", "Start", "End", "Strand", "Name", "Score"]
+    ].itertuples(index=False),
+    start=1
+):
+
+    if i % 10000 == 0:
+        print(f"Processed {i:,} / {len(bed_2024_features):,} 2024 features...")
+
+    for start_shift in range(-coordinate_tolerance_nt, coordinate_tolerance_nt + 1):
+        for end_shift in range(-coordinate_tolerance_nt, coordinate_tolerance_nt + 1):
+
+            candidate_key = (
+                row.Chromosome,
+                row.Strand,
+                row.Start + start_shift,
+                row.End + end_shift
+            )
+
+            feature_id_2026 = coord_to_2026_id.get(candidate_key)
+
+            if feature_id_2026 is None:
+                continue
+
+            current_2026 = bed_2026_features.loc[feature_id_2026]
+
+            match_records.append({
+                "FeatureID_2024": row.FeatureID_2024,
+                "FeatureID_2026": feature_id_2026,
+
+                "Chromosome": row.Chromosome,
+                "Strand": row.Strand,
+
+                "Start_2024": row.Start,
+                "End_2024": row.End,
+                "Name_2024": row.Name,
+                "Score_2024": row.Score,
+
+                "Start_2026": int(current_2026["Start"]),
+                "End_2026": int(current_2026["End"]),
+                "Name_2026": current_2026["Name"],
+                "Score_2026": current_2026["Score"],
+
+                "Start_difference_nt": int(current_2026["Start"]) - row.Start,
+                "End_difference_nt": int(current_2026["End"]) - row.End,
+                "Absolute_start_difference_nt": abs(int(current_2026["Start"]) - row.Start),
+                "Absolute_end_difference_nt": abs(int(current_2026["End"]) - row.End),
+
+                "Coordinate_tolerance_nt": coordinate_tolerance_nt
+            })
+
+feature_matches = pd.DataFrame(match_records)
+
+if not feature_matches.empty:
+    feature_matches = feature_matches.drop_duplicates(
+        subset=["FeatureID_2024", "FeatureID_2026"]
+    ).copy()
+
+feature_matches.to_csv(feature_match_out, index=False)
+
+matched_2024_feature_ids = set(feature_matches["FeatureID_2024"]) if not feature_matches.empty else set()
+matched_2026_feature_ids = set(feature_matches["FeatureID_2026"]) if not feature_matches.empty else set()
+
+print("\nTolerant coordinate feature matching completed")
+print(f"Coordinate tolerance used: ±{coordinate_tolerance_nt} nt")
+print(f"Total 2024-vs-2026 feature match pairs: {len(feature_matches):,}")
+print(f"2024 coordinate features with at least one 2026 match: {len(matched_2024_feature_ids):,}")
+print(f"2026 coordinate features with at least one 2024 match: {len(matched_2026_feature_ids):,}")
+
+# -----------------------------
+# 7. Build shared genome-aligned feature clusters
+# -----------------------------
+# Because one 2024 feature can match several 2026 features, and vice versa,
+# the Venn diagram is built from tolerance-based feature clusters.
+#
+# A shared cluster contains at least one 2024 coordinate feature and
+# at least one 2026 coordinate feature.
+
+uf = UnionFind()
+
+for row in feature_matches[["FeatureID_2024", "FeatureID_2026"]].itertuples(index=False):
+    node_2024 = f"2024_{row.FeatureID_2024}"
+    node_2026 = f"2026_{row.FeatureID_2026}"
+    uf.union(node_2024, node_2026)
+
+cluster_members = defaultdict(lambda: {"FeatureIDs_2024": set(), "FeatureIDs_2026": set()})
+
+for feature_id in matched_2024_feature_ids:
+    node = f"2024_{feature_id}"
+    root = uf.find(node)
+    cluster_members[root]["FeatureIDs_2024"].add(feature_id)
+
+for feature_id in matched_2026_feature_ids:
+    node = f"2026_{feature_id}"
+    root = uf.find(node)
+    cluster_members[root]["FeatureIDs_2026"].add(feature_id)
+
+cluster_records = []
+
+for cluster_id, members in enumerate(cluster_members.values(), start=1):
+    n_2024 = len(members["FeatureIDs_2024"])
+    n_2026 = len(members["FeatureIDs_2026"])
+
+    if n_2024 > 0 and n_2026 > 0:
+        cluster_class = "shared"
+    elif n_2024 > 0:
+        cluster_class = "2024_only"
+    else:
+        cluster_class = "2026_only"
+
+    cluster_records.append({
+        "ClusterID": cluster_id,
+        "Cluster_class": cluster_class,
+        "Number_of_2024_features": n_2024,
+        "Number_of_2026_features": n_2026,
+        "FeatureIDs_2024": ";".join(map(str, sorted(members["FeatureIDs_2024"]))),
+        "FeatureIDs_2026": ";".join(map(str, sorted(members["FeatureIDs_2026"])))
+    })
+
+shared_cluster_table = pd.DataFrame(cluster_records)
+
+n_shared_feature_clusters = (
+    shared_cluster_table["Cluster_class"].eq("shared").sum()
+    if not shared_cluster_table.empty else 0
+)
+
+n_2024_only_features = len(bed_2024_features) - len(matched_2024_feature_ids)
+n_2026_only_features = len(bed_2026_features) - len(matched_2026_feature_ids)
+
+cluster_summary = pd.DataFrame({
+    "Feature_class": [
+        "2024_only",
+        "shared",
+        "2026_only"
+    ],
+    "Count": [
+        n_2024_only_features,
+        n_shared_feature_clusters,
+        n_2026_only_features
+    ]
+})
+
+shared_cluster_table.to_csv(feature_cluster_out, index=False)
+
+print("\nGenome-aligned feature classes")
+print(f"2024-only coordinate features: {n_2024_only_features:,}")
+print(f"Shared genome-aligned feature clusters: {n_shared_feature_clusters:,}")
+print(f"2026-only coordinate features: {n_2026_only_features:,}")
+
+# -----------------------------
+# 8. Summary table
+# -----------------------------
+summary_records = [
+    {
+        "Comparison_level": "Input BED rows",
+        "Metric": "2024 tblastn BED rows",
+        "Value": len(bed_2024)
+    },
+    {
+        "Comparison_level": "Input BED rows",
+        "Metric": "2026 validated GFF3-based BED rows, non-redundant",
+        "Value": len(bed_2026_nr)
+    },
+    {
+        "Comparison_level": "Unique coordinate features",
+        "Metric": "2024 unique coordinate features",
+        "Value": len(bed_2024_features)
+    },
+    {
+        "Comparison_level": "Unique coordinate features",
+        "Metric": "2026 unique coordinate features",
+        "Value": len(bed_2026_features)
+    },
+    {
+        "Comparison_level": "Tolerant coordinate matching",
+        "Metric": f"Total 2024-vs-2026 feature match pairs within ±{coordinate_tolerance_nt} nt",
+        "Value": len(feature_matches)
+    },
+    {
+        "Comparison_level": "Tolerant coordinate matching",
+        "Metric": f"2024 coordinate features with at least one 2026 match within ±{coordinate_tolerance_nt} nt",
+        "Value": len(matched_2024_feature_ids)
+    },
+    {
+        "Comparison_level": "Tolerant coordinate matching",
+        "Metric": f"2026 coordinate features with at least one 2024 match within ±{coordinate_tolerance_nt} nt",
+        "Value": len(matched_2026_feature_ids)
+    },
+    {
+        "Comparison_level": "Feature classes for Venn diagram",
+        "Metric": "2024-only coordinate features",
+        "Value": n_2024_only_features
+    },
+    {
+        "Comparison_level": "Feature classes for Venn diagram",
+        "Metric": f"Shared genome-aligned feature clusters within ±{coordinate_tolerance_nt} nt",
+        "Value": n_shared_feature_clusters
+    },
+    {
+        "Comparison_level": "Feature classes for Venn diagram",
+        "Metric": "2026-only coordinate features",
+        "Value": n_2026_only_features
+    }
+]
+
+summary = pd.DataFrame(summary_records)
+summary.to_csv(summary_out, index=False)
+
+# -----------------------------
+# 9. Bar plot: genome-aligned feature classes
+# -----------------------------
+bar_data = cluster_summary.copy()
+
+fig, ax = plt.subplots(figsize=(9, 5))
+
+bars = ax.barh(
+    bar_data["Feature_class"],
+    bar_data["Count"],
+    color="#3F007E"
+)
+
+ax.set_xlabel("Number of genome-aligned features / feature clusters")
+ax.set_ylabel("")
+ax.set_title(
+    f"2024 vs 2026 genome-aligned feature comparison\n"
+    f"Shared features defined by chromosome, strand, Start and End within ±{coordinate_tolerance_nt} nt"
+)
+
+ax.invert_yaxis()
+
+total_for_percent = bar_data["Count"].sum()
+
+for bar in bars:
+    width = bar.get_width()
+    percent = (width / total_for_percent) * 100 if total_for_percent > 0 else 0
+
+    ax.text(
+        width,
+        bar.get_y() + bar.get_height() / 2,
+        f" {int(width):,} ({percent:.1f}%)",
+        va="center",
+        ha="left",
+        fontsize=9
+    )
+
+plt.tight_layout()
+
+plt.savefig(
+    barplot_out,
+    dpi=300,
+    bbox_inches="tight"
+)
+
+plt.show()
+
+print(f"Feature-class bar plot saved: {barplot_out}")
+
+# -----------------------------
+# 10. Venn diagram: genome-aligned feature classes
+# -----------------------------
+try:
+    from matplotlib_venn import venn2
+
+    n_2024_only = n_2024_only_features
+    n_2026_only = n_2026_only_features
+    n_shared = n_shared_feature_clusters
+
+    n_2024_total_for_venn = n_2024_only + n_shared
+    n_2026_total_for_venn = n_2026_only + n_shared
+    n_union = n_2024_only + n_2026_only + n_shared
+
+    pct_2024_only = (n_2024_only / n_union) * 100 if n_union > 0 else 0
+    pct_2026_only = (n_2026_only / n_union) * 100 if n_union > 0 else 0
+    pct_shared = (n_shared / n_union) * 100 if n_union > 0 else 0
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    venn = venn2(
+        subsets=(n_2024_only, n_2026_only, n_shared),
+        set_labels=(
+            f"2024 genome-aligned features\n({n_2024_total_for_venn:,})",
+            f"2026 genome-aligned features\n({n_2026_total_for_venn:,})"
+        ),
+        ax=ax
+    )
+
+    if venn.get_patch_by_id("10") is not None:
+        venn.get_patch_by_id("10").set_color("#FF3399")
+        venn.get_patch_by_id("10").set_alpha(0.65)
+
+    if venn.get_patch_by_id("01") is not None:
+        venn.get_patch_by_id("01").set_color("#3F007E")
+        venn.get_patch_by_id("01").set_alpha(0.65)
+
+    if venn.get_patch_by_id("11") is not None:
+        venn.get_patch_by_id("11").set_color("#E6CDFF")
+        venn.get_patch_by_id("11").set_alpha(0.85)
+
+    if venn.get_label_by_id("10") is not None:
+        venn.get_label_by_id("10").set_text(f"{n_2024_only:,}\n({pct_2024_only:.1f}%)")
+
+    if venn.get_label_by_id("01") is not None:
+        venn.get_label_by_id("01").set_text(f"{n_2026_only:,}\n({pct_2026_only:.1f}%)")
+
+    if venn.get_label_by_id("11") is not None:
+        venn.get_label_by_id("11").set_text(f"{n_shared:,}\n({pct_shared:.1f}%)")
+
+    ax.set_title(
+        f"Genome-aligned feature overlap between 2024 and 2026 workflows\n"
+        f"Feature identity: chromosome, strand, Start and End within ±{coordinate_tolerance_nt} nt",
+        fontsize=15,
+        pad=20
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        venn_out,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.show()
+
+    print(f"Genome-feature Venn diagram saved: {venn_out}")
+
+except ImportError:
+    print(
+        "matplotlib-venn is not installed. "
+        "Install it with: pip install matplotlib-venn"
+    )
+
+# -----------------------------
+# 11. Display outputs
+# -----------------------------
+print(f"\nSummary saved: {summary_out}")
+print(f"Tolerant coordinate feature matches saved: {feature_match_out}")
+print(f"Feature cluster classes saved: {feature_cluster_out}")
+print(f"Bar plot saved: {barplot_out}")
+print(f"Venn diagram saved: {venn_out}")
+
+display(summary)
+display(cluster_summary)
+```
+
+    2024 tblastn BED loaded
+    Raw rows: 106,321
+    
+    Current 2026 BED files selected:
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_anther_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_boot_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_coleoptile_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_embryo_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_endosperm_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_glume_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-70_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-71_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-75_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-83_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-87_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_leaf-flag-mature_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_leaf-flag-senescing_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_leaf-flag-young_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_lemma_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_node-secretion_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_node_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_palea_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_pericarp_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_pollen_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_rachilla_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_radicle_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-mature_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-secretion_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-tip_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-vasculature_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_spike-immature_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_stem_validated_peptides.bed6
+     - python_outputs\bed_validated\FragPipe_Vincent_MSV000090572_stored-grain_validated_peptides.bed6
+    
+    2026 GFF3-based BED files combined
+    Rows before non-redundant filtering: 3,437,683
+    Rows after non-redundant filtering: 1,975,276
+    Saved non-redundant BED6: python_outputs\bed_validated\Vincent_2026_MSV000090572_PXD004720_nonredundant_validated_projected_features_annotation_proteogenomics_step26.bed6
+    
+    Unique genome-aligned coordinate features
+    2024 unique coordinate features: 103,174
+    2026 unique coordinate features: 635,902
+    Processed 10,000 / 103,174 2024 features...
+    Processed 20,000 / 103,174 2024 features...
+    Processed 30,000 / 103,174 2024 features...
+    Processed 40,000 / 103,174 2024 features...
+    Processed 50,000 / 103,174 2024 features...
+    Processed 60,000 / 103,174 2024 features...
+    Processed 70,000 / 103,174 2024 features...
+    Processed 80,000 / 103,174 2024 features...
+    Processed 90,000 / 103,174 2024 features...
+    Processed 100,000 / 103,174 2024 features...
+    
+    Tolerant coordinate feature matching completed
+    Coordinate tolerance used: ±4 nt
+    Total 2024-vs-2026 feature match pairs: 25,862
+    2024 coordinate features with at least one 2026 match: 22,572
+    2026 coordinate features with at least one 2024 match: 23,053
+    
+    Genome-aligned feature classes
+    2024-only coordinate features: 80,602
+    Shared genome-aligned feature clusters: 21,028
+    2026-only coordinate features: 612,849
+    
+
+
+    
+![png](output_55_1.png)
+    
+
+
+    Feature-class bar plot saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_barplot_tolerance_4nt.png
+    
+
+
+    
+![png](output_55_3.png)
+    
+
+
+    Genome-feature Venn diagram saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_venn_tolerance_4nt.png
+    
+    Summary saved: python_outputs\tables\wheat_2024_vs_2026_genome_feature_comparison_summary_step26.csv
+    Tolerant coordinate feature matches saved: python_outputs\tables\wheat_2024_vs_2026_tolerant_coordinate_feature_matches_step26.csv
+    Feature cluster classes saved: python_outputs\tables\wheat_2024_vs_2026_genome_feature_cluster_classes_step26.csv
+    Bar plot saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_barplot_tolerance_4nt.png
+    Venn diagram saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_venn_tolerance_4nt.png
+    
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Comparison_level</th>
+      <th>Metric</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Input BED rows</td>
+      <td>2024 tblastn BED rows</td>
+      <td>106321</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Input BED rows</td>
+      <td>2026 validated GFF3-based BED rows, non-redundant</td>
+      <td>1975276</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Unique coordinate features</td>
+      <td>2024 unique coordinate features</td>
+      <td>103174</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Unique coordinate features</td>
+      <td>2026 unique coordinate features</td>
+      <td>635902</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Tolerant coordinate matching</td>
+      <td>Total 2024-vs-2026 feature match pairs within ...</td>
+      <td>25862</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>Tolerant coordinate matching</td>
+      <td>2024 coordinate features with at least one 202...</td>
+      <td>22572</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Tolerant coordinate matching</td>
+      <td>2026 coordinate features with at least one 202...</td>
+      <td>23053</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Feature classes for Venn diagram</td>
+      <td>2024-only coordinate features</td>
+      <td>80602</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>Feature classes for Venn diagram</td>
+      <td>Shared genome-aligned feature clusters within ...</td>
+      <td>21028</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Feature classes for Venn diagram</td>
+      <td>2026-only coordinate features</td>
+      <td>612849</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Feature_class</th>
+      <th>Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2024_only</td>
+      <td>80602</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>shared</td>
+      <td>21028</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2026_only</td>
+      <td>612849</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 
 # End of notebook
