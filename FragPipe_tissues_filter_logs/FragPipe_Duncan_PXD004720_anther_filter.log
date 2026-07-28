@@ -1,0 +1,37 @@
+time="12:49:55" level=info msg="Executing Filter  v5.1.3"
+time="12:49:55" level=info msg="Processing peptide identification files"
+time="12:49:55" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_9.pep.xml"
+time="12:49:55" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_2.pep.xml"
+time="12:49:55" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_10.pep.xml"
+time="12:49:55" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_1.pep.xml"
+time="12:49:56" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_11.pep.xml"
+time="12:49:56" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_12.pep.xml"
+time="12:49:56" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_5.pep.xml"
+time="12:49:56" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_3.pep.xml"
+time="12:49:57" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_4.pep.xml"
+time="12:49:58" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_7.pep.xml"
+time="12:49:58" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_6.pep.xml"
+time="12:49:58" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\anther_run05\\interact-ANTHER_8.pep.xml"
+time="12:50:00" level=info msg="1+ Charge profile" decoy=0 target=0
+time="12:50:00" level=info msg="2+ Charge profile" decoy=0 target=83701
+time="12:50:00" level=info msg="3+ Charge profile" decoy=0 target=57520
+time="12:50:00" level=info msg="4+ Charge profile" decoy=0 target=17607
+time="12:50:00" level=info msg="5+ Charge profile" decoy=0 target=6759
+time="12:50:00" level=info msg="6+ Charge profile" decoy=0 target=0
+time="12:50:01" level=info msg="Database search results" ions=42492 peptides=34427 psms=165587
+time="12:50:01" level=info msg="Converged to 0.00 % FDR with 165586 PSMs" decoy=0 threshold=0.0502 total=165586
+time="12:50:01" level=info msg="Converged to 0.00 % FDR with 34426 Peptides" decoy=0 threshold=0.0502 total=34426
+time="12:50:01" level=info msg="Converged to 0.00 % FDR with 42491 Ions" decoy=0 threshold=0.0502 total=42491
+time="12:50:01" level=info msg="Protein inference results" decoy=489 target=15908
+time="12:50:01" level=info msg="Converged to 0.16 % FDR with 10096 Proteins" decoy=22 threshold=0 total=10118
+time="12:50:02" level=info msg="Applying sequential FDR estimation" ions=42290 peptides=34226 psms=165375
+time="12:50:02" level=info msg="165374 PSMs" decoy=0 threshold=0.0503 total=165374
+time="12:50:02" level=info msg="34225 Peptides" decoy=0 threshold=0.0503 total=34225
+time="12:50:02" level=info msg="42289 Ions" decoy=0 threshold=0.0503 total=42289
+time="12:50:02" level=info msg="Post processing identifications"
+time="12:50:04" level=info msg="Assigning protein identifications to layers"
+time="12:50:17" level=info msg="Processing protein inference"
+time="12:50:18" level=info msg="Synchronizing PSMs and proteins"
+time="12:50:19" level=info msg="Final report numbers after FDR filtering, and post-processing" ions=42267 peptides=34203 proteins=10095 psms=165316
+time="12:50:19" level=info msg=Saving
+time="12:50:20" level=info msg=Done

@@ -1,0 +1,26 @@
+time="03:20:18" level=info msg="Executing Filter  v5.1.3"
+time="03:20:18" level=info msg="Processing peptide identification files"
+time="03:20:18" level=info msg="Parsing F:\\Data_Science\\Rudi\\Proteogenomics_Mar2026\\Delphine_FragPipe_results_stored-grains\\interact-all_wheat_stored_grains_MS2_thermo_RAW_2023-02-27.pep.xml"
+time="03:20:22" level=info msg="1+ Charge profile" decoy=0 target=22
+time="03:20:22" level=info msg="2+ Charge profile" decoy=0 target=23908
+time="03:20:22" level=info msg="3+ Charge profile" decoy=0 target=6450
+time="03:20:22" level=info msg="4+ Charge profile" decoy=0 target=3145
+time="03:20:22" level=info msg="5+ Charge profile" decoy=0 target=0
+time="03:20:22" level=info msg="6+ Charge profile" decoy=0 target=0
+time="03:20:22" level=info msg="Database search results" ions=9878 peptides=9456 psms=33525
+time="03:20:22" level=info msg="Converged to 0.00 % FDR with 33525 PSMs" decoy=0 threshold=0.05 total=33525
+time="03:20:22" level=info msg="Converged to 0.00 % FDR with 9455 Peptides" decoy=0 threshold=0.0502 total=9455
+time="03:20:22" level=info msg="Converged to 0.00 % FDR with 9877 Ions" decoy=0 threshold=0.0502 total=9877
+time="03:20:22" level=info msg="Protein inference results" decoy=57 target=8249
+time="03:20:23" level=info msg="Converged to 0.11 % FDR with 7074 Proteins" decoy=8 threshold=0 total=7082
+time="03:20:23" level=info msg="Applying sequential FDR estimation" ions=9772 peptides=9351 psms=33415
+time="03:20:23" level=info msg="33415 PSMs" decoy=0 threshold=0.0501 total=33415
+time="03:20:23" level=info msg="9351 Peptides" decoy=0 threshold=0.0502 total=9351
+time="03:20:23" level=info msg="9772 Ions" decoy=0 threshold=0.0502 total=9772
+time="03:20:23" level=info msg="Post processing identifications"
+time="03:20:24" level=info msg="Assigning protein identifications to layers"
+time="03:20:29" level=info msg="Processing protein inference"
+time="03:20:31" level=info msg="Synchronizing PSMs and proteins"
+time="03:20:32" level=info msg="Final report numbers after FDR filtering, and post-processing" ions=9764 peptides=9343 proteins=7074 psms=33331
+time="03:20:32" level=info msg=Saving
+time="03:20:35" level=info msg=Done

@@ -1,0 +1,37 @@
+time="18:55:38" level=info msg="Executing Filter  v5.1.3"
+time="18:55:38" level=info msg="Processing peptide identification files"
+time="18:55:38" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_9.pep.xml"
+time="18:55:38" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_10.pep.xml"
+time="18:55:38" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_1.pep.xml"
+time="18:55:38" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_4.pep.xml"
+time="18:55:39" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_11.pep.xml"
+time="18:55:39" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_12.pep.xml"
+time="18:55:39" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_2.pep.xml"
+time="18:55:39" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_3.pep.xml"
+time="18:55:40" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_6.pep.xml"
+time="18:55:40" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_5.pep.xml"
+time="18:55:40" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_7.pep.xml"
+time="18:55:40" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\grain-Z71_run01\\interact-ZADOCKS71_8.pep.xml"
+time="18:55:43" level=info msg="1+ Charge profile" decoy=0 target=0
+time="18:55:43" level=info msg="2+ Charge profile" decoy=0 target=97754
+time="18:55:43" level=info msg="3+ Charge profile" decoy=0 target=33240
+time="18:55:43" level=info msg="4+ Charge profile" decoy=0 target=3335
+time="18:55:43" level=info msg="5+ Charge profile" decoy=0 target=311
+time="18:55:43" level=info msg="6+ Charge profile" decoy=0 target=0
+time="18:55:43" level=info msg="Database search results" ions=42678 peptides=36415 psms=134640
+time="18:55:44" level=info msg="Converged to 0.00 % FDR with 134640 PSMs" decoy=0 threshold=0.05 total=134640
+time="18:55:44" level=info msg="Converged to 0.00 % FDR with 36414 Peptides" decoy=0 threshold=0.0501 total=36414
+time="18:55:44" level=info msg="Converged to 0.00 % FDR with 42677 Ions" decoy=0 threshold=0.0501 total=42677
+time="18:55:44" level=info msg="Protein inference results" decoy=714 target=19539
+time="18:55:44" level=info msg="Converged to 0.31 % FDR with 12336 Proteins" decoy=50 threshold=0 total=12386
+time="18:55:45" level=info msg="Applying sequential FDR estimation" ions=42304 peptides=36042 psms=134254
+time="18:55:45" level=info msg="134253 PSMs" decoy=0 threshold=0.0501 total=134253
+time="18:55:45" level=info msg="36042 Peptides" decoy=0 threshold=0.0501 total=36042
+time="18:55:45" level=info msg="42304 Ions" decoy=0 threshold=0.0501 total=42304
+time="18:55:45" level=info msg="Post processing identifications"
+time="18:55:46" level=info msg="Assigning protein identifications to layers"
+time="18:55:58" level=info msg="Processing protein inference"
+time="18:55:59" level=info msg="Synchronizing PSMs and proteins"
+time="18:56:00" level=info msg="Final report numbers after FDR filtering, and post-processing" ions=42252 peptides=35990 proteins=12336 psms=134174
+time="18:56:00" level=info msg=Saving
+time="18:56:01" level=info msg=Done

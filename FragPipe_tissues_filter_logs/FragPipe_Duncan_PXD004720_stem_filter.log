@@ -1,0 +1,37 @@
+time="12:48:28" level=info msg="Executing Filter  v5.1.3"
+time="12:48:28" level=info msg="Processing peptide identification files"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM12.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM01.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM02.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM07.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM03.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM04.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM05.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM06.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM09.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM08.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM10.pep.xml"
+time="12:48:28" level=info msg="Parsing C:\\Users\\Delphine_2026\\FragPipe_results\\stem_run01\\interact-STEM11.pep.xml"
+time="12:48:29" level=info msg="1+ Charge profile" decoy=0 target=0
+time="12:48:29" level=info msg="2+ Charge profile" decoy=0 target=26610
+time="12:48:29" level=info msg="3+ Charge profile" decoy=0 target=10297
+time="12:48:29" level=info msg="4+ Charge profile" decoy=0 target=1290
+time="12:48:29" level=info msg="5+ Charge profile" decoy=0 target=111
+time="12:48:29" level=info msg="6+ Charge profile" decoy=0 target=0
+time="12:48:29" level=info msg="Database search results" ions=15895 peptides=14664 psms=38308
+time="12:48:29" level=info msg="Converged to 0.00 % FDR with 38308 PSMs" decoy=0 threshold=0.05 total=38308
+time="12:48:29" level=info msg="Converged to 0.00 % FDR with 14664 Peptides" decoy=0 threshold=0.05 total=14664
+time="12:48:29" level=info msg="Converged to 0.00 % FDR with 15895 Ions" decoy=0 threshold=0.05 total=15895
+time="12:48:29" level=info msg="Protein inference results" decoy=327 target=11837
+time="12:48:29" level=info msg="Converged to 0.31 % FDR with 8984 Proteins" decoy=29 threshold=0 total=9013
+time="12:48:30" level=info msg="Applying sequential FDR estimation" ions=15649 peptides=14418 psms=38024
+time="12:48:30" level=info msg="38024 PSMs" decoy=0 threshold=0.05 total=38024
+time="12:48:30" level=info msg="14418 Peptides" decoy=0 threshold=0.0501 total=14418
+time="12:48:30" level=info msg="15649 Ions" decoy=0 threshold=0.0501 total=15649
+time="12:48:30" level=info msg="Post processing identifications"
+time="12:48:30" level=info msg="Assigning protein identifications to layers"
+time="12:48:34" level=info msg="Processing protein inference"
+time="12:48:35" level=info msg="Synchronizing PSMs and proteins"
+time="12:48:35" level=info msg="Final report numbers after FDR filtering, and post-processing" ions=15619 peptides=14389 proteins=8984 psms=37964
+time="12:48:35" level=info msg=Saving
+time="12:48:35" level=info msg=Done
