@@ -35,7 +35,7 @@ Python-wheat-proteogenomics_2026/
 ├── CITATION.cff
 │
 ├── notebooks/
-│   └── Vincent_Proteogenomics_wheat_2026-05-18_dlf2024.ipynb
+│   └── Vincent_Proteogenomics_wheat_2026-07-27_dlf2024.ipynb
 │
 ├── environment/
 │   ├── environment.yml
@@ -45,16 +45,29 @@ Python-wheat-proteogenomics_2026/
 │
 ├── workflow_figures/
 │   ├── graphical_abstract.png
-│   └── Vincent_wheat-proteogenomics_technical-note_2026-05-18_figures.pdf
+│   └── Vincent_wheat-proteogenomics_technical-note_2026-07-27_figures.pdf
 │
 ├── protein_database/
-│   ├── iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
+│   └── iwgsc_refseqv2.1_annotation_200916_HC_LC_pep_cRAP_with_DECOY.fasta
 │
 ├── FragPipe_results_example/
 │   ├── FragPipe workflow and MSFragger search parameters.txt
 │   ├── wheat_tissues_FragPipe-result-manifest.csv
 │   ├── FragPipe_Duncan_PXD004720_embryo_peptide.tsv
-│   ├── FragPipe_Duncan_PXD004720_embryo_protein.tsv
+│   └── FragPipe_Duncan_PXD004720_embryo_protein.tsv
+│
+├── FragPipe_tissue_reports/
+│   └── FragPipe report.pdf
+│
+├── FragPipe_tissue_runtime_logs/
+│   └── FragPipe log_xxx.txt
+│
+├── FragPipe_tissue_filter_logs/
+│   └── FragPipe filter.log
+│
+├── FragPipe_tissue_manisfests/
+│   ├── FragPipe filelist_proteinprophet.txt
+│   └── Suppl-Table-S1_raw-data-file-manifest.csv
 │
 ├── BED_files/
 │   ├── BED6/
@@ -180,6 +193,12 @@ If you use this repository, please cite:
 
 Vincent D., Appels R.  
 *Community Resource: A Genome-Guided Extension of Large-Scale Wheat Proteogenomics*  
-(under review)
+(under revision in Journal of proteome Research)
 
+Archived software:
+https://doi.org/10.5281/zenodo.21696274
 
+---
+## Zenodo
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21696274.svg)](https://doi.org/10.5281/zenodo.21696274)
