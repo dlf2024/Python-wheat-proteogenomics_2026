@@ -1,0 +1,28 @@
+order,Metric,Total,MSV000090572,PXD004720,PXD050500,Note
+1,Total tissues analysed,32.0,1.0,28.0,3.0,
+2,Total PRIDE/MassIVE datasets,3.0,1.0,1.0,1.0,
+3,Total raw MS files,576.0,63.0,335.0,178.0,
+4,Total raw data size (GB),1009.0,12.0,563.0,434.0,
+5,FragPipe unique peptides,2226779.0,9329.0,705663.0,1511787.0,From Step 24 column: step7_peptide_protein_evidence_Unique_peptides
+6,FragPipe unique proteins,1648740.0,17481.0,942854.0,688405.0,From Step 24 column: step7_peptide_protein_evidence_Unique_proteins
+7,Initial annotation-projected peptide rows,8291056.0,30314.0,3461176.0,4799566.0,From Step 24 column: step9_initial_projection_Projected_rows
+8,Rows entering translation validation,8291056.0,30314.0,3461176.0,4799566.0,From Step 11 column: Rows_from_step10_validation_table
+9,Translation-validated peptide projection rows,8214230.0,29892.0,3440549.0,4743789.0,From Step 11 column: Rows_translation_validated
+10,Rows excluded by translation validation,76826.0,422.0,20627.0,55777.0,From Step 11 column: Rows_excluded_by_translation_validation
+11,Rows passing all sanity checks,8214230.0,29892.0,3440549.0,4743789.0,From Step 11 column: Rows_passing_all_sanity_checks
+12,Rows failing any sanity check,0.0,0.0,0.0,0.0,From Step 11 column: Rows_failing_any_sanity_check
+13,Final validation rate (%),99.07,98.61,99.4,98.84,Rows passing translation validation and all sanity checks / rows entering translation validation × 100
+14,Non-redundant validated peptide projection rows,3173811.0,29892.0,826257.0,2842246.0,Computed from Step 13 all-tissue non-redundant validated table; source columns are not mutually exclusive if evidence is shared across sources
+15,Non-redundant validated within-exon peptide projection rows,2808552.0,26630.0,711151.0,2521279.0,Within-exon defined as BED_block_count == 1
+16,Non-redundant validated exon-spanning peptide projection rows,365259.0,3262.0,115106.0,320967.0,Exon-spanning defined as BED_block_count > 1
+17,Non-redundant validated unique peptide sequences,1095523.0,9126.0,231901.0,976526.0,Computed from Step 13 all-tissue non-redundant validated table
+18,Non-redundant validated unique protein isoforms,272298.0,17110.0,169983.0,268333.0,Computed from Step 13 all-tissue non-redundant validated table
+19,Non-redundant validated HC gene models,104417.0,9126.0,79627.0,103770.0,Computed from Step 13 all-tissue non-redundant validated table
+20,Non-redundant validated LC gene models,139147.0,5410.0,67040.0,135929.0,Computed from Step 13 all-tissue non-redundant validated table
+21,Non-redundant validated total gene models,243564.0,14536.0,146667.0,239699.0,HC + LC non-redundant validated gene models
+22,GFF3-parsed HC gene models,106914.0,,,,Reference denominator from unique HC GeneModel counts in protein-to-gene mapping table
+23,GFF3-parsed LC gene models,159838.0,,,,Reference denominator from unique LC GeneModel counts in protein-to-gene mapping table
+24,GFF3-parsed total gene models,266752.0,,,,HC + LC unique GFF3-parsed gene models
+25,HC gene model validation rate (%),97.66,8.54,74.48,97.06,Non-redundant validated HC gene models / GFF3-parsed HC gene models × 100
+26,LC gene model validation rate (%),87.06,3.38,41.94,85.04,Non-redundant validated LC gene models / GFF3-parsed LC gene models × 100
+27,Total gene model validation rate (%),91.31,5.45,54.98,89.86,Non-redundant validated total gene models / GFF3-parsed total gene models × 100

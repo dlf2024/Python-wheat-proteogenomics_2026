@@ -43,7 +43,6 @@ The peptide alignments along bread wheat genome are publicly available from the 
 - 23: EDA: Pie chart of HC and LC Proteogenomic Coverage with Within-Exon/Exon-spanning Peptides (this notebook)
 - 24: Combine Python workflow Summary Tables at Source/Tissue Level (this notebook)
 - 25: Prepare manuscript Table 1 summary statistics (this notebook)
-- 26: Compare this annotation-based alignment with the tblastn one from the 2024 study (this notebook)
 
 ---
 
@@ -9708,39 +9707,70 @@ These checks provide an additional safeguard before sharing the BED tracks as a 
 
 ```python
 # ============================================================
-# Step 11 — Sanity checks for translation-validated peptide genome projections (takes 30 min)
+# Step 11A — Sanity checks for translation-validated peptide
+# genome projections (takes approximately 30 min)
+#
+# Corrected to retain valid ChrUnknown projections.
 # ============================================================
 
 import pandas as pd
 from pathlib import Path
 
+
 # -----------------------------
 # 1. Input / output paths
 # -----------------------------
+
 fragpipe_dir = Path("FragPipe_results")
 tables_dir = Path("python_outputs/tables")
 tables_dir.mkdir(parents=True, exist_ok=True)
 
-manifest_file = fragpipe_dir / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+manifest_file = (
+    fragpipe_dir
+    / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+)
 
-sanity_full_out = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
-sanity_failed_out = tables_dir / "wheat_projection_translation_validated_sanity_checks_failed_rows_step11.csv"
-sanity_summary_out = tables_dir / "wheat_projection_translation_validated_sanity_checks_summary_step11.csv"
+sanity_full_out = (
+    tables_dir
+    / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
+)
 
-manifest = pd.read_csv(manifest_file, encoding="utf-8-sig")
+sanity_failed_out = (
+    tables_dir
+    / "wheat_projection_translation_validated_sanity_checks_failed_rows_step11.csv"
+)
+
+sanity_summary_out = (
+    tables_dir
+    / "wheat_projection_translation_validated_sanity_checks_summary_step11.csv"
+)
+
+manifest = pd.read_csv(
+    manifest_file,
+    encoding="utf-8-sig"
+)
 
 # Step 10 output: full translation-validation table
-validation_file = tables_dir / "wheat_projection_validation_stratified100percent_step10.csv"
+validation_file = (
+    tables_dir
+    / "wheat_projection_validation_stratified100percent_step10.csv"
+)
 
 if not validation_file.exists():
     raise FileNotFoundError(
-        f"Step 10 translation-validation file not found:\n{validation_file}\n\n"
+        f"Step 10 translation-validation file not found:\n"
+        f"{validation_file}\n\n"
         "Please run Step 10 first."
     )
 
+
 # -----------------------------
-# 2. Expected wheat chromosomes and valid strands
+# 2. Expected wheat sequence identifiers and valid strands
 # -----------------------------
+
+# ChrUnknown is a valid sequence identifier in the
+# IWGSC RefSeq v2.1 GFF3 annotation and must therefore
+# pass this annotation-consistency check.
 valid_chromosomes = {
     "Chr1A", "Chr1B", "Chr1D",
     "Chr2A", "Chr2B", "Chr2D",
@@ -9748,19 +9778,28 @@ valid_chromosomes = {
     "Chr4A", "Chr4B", "Chr4D",
     "Chr5A", "Chr5B", "Chr5D",
     "Chr6A", "Chr6B", "Chr6D",
-    "Chr7A", "Chr7B", "Chr7D"
+    "Chr7A", "Chr7B", "Chr7D",
+    "ChrUnknown"
 }
 
-valid_strands = {"+", "-"}
+valid_strands = {
+    "+",
+    "-"
+}
+
 
 # -----------------------------
 # 3. Helper functions
 # -----------------------------
+
 def parse_bed_list(value):
     """
-    Convert comma-separated BED block size/start strings into integer lists.
-    Handles empty or missing values.
+    Convert comma-separated BED block-size or block-start
+    strings into integer lists.
+
+    Empty or missing values return an empty list.
     """
+
     if pd.isna(value):
         return []
 
@@ -9770,7 +9809,12 @@ def parse_bed_list(value):
         return []
 
     try:
-        return [int(x) for x in value.split(",") if str(x).strip() != ""]
+        return [
+            int(item)
+            for item in value.split(",")
+            if str(item).strip() != ""
+        ]
+
     except ValueError:
         return []
 
@@ -9779,10 +9823,20 @@ def check_bed_geometry(row):
     """
     Check BED interval and BED12-style block geometry.
     """
+
     try:
-        bed_start = int(row["BED_start_0based"])
-        bed_end = int(row["BED_end_0based_exclusive"])
-        block_count = int(row["BED_block_count"])
+        bed_start = int(
+            row["BED_start_0based"]
+        )
+
+        bed_end = int(
+            row["BED_end_0based_exclusive"]
+        )
+
+        block_count = int(
+            row["BED_block_count"]
+        )
+
     except Exception:
         return False
 
@@ -9792,8 +9846,13 @@ def check_bed_geometry(row):
     if bed_end <= bed_start:
         return False
 
-    block_sizes = parse_bed_list(row["BED_block_sizes"])
-    block_starts = parse_bed_list(row["BED_block_starts"])
+    block_sizes = parse_bed_list(
+        row["BED_block_sizes"]
+    )
+
+    block_starts = parse_bed_list(
+        row["BED_block_starts"]
+    )
 
     if block_count <= 0:
         return False
@@ -9804,17 +9863,34 @@ def check_bed_geometry(row):
     if len(block_starts) != block_count:
         return False
 
-    if any(size <= 0 for size in block_sizes):
+    if any(
+        size <= 0
+        for size in block_sizes
+    ):
         return False
 
-    if any(start < 0 for start in block_starts):
+    if any(
+        start < 0
+        for start in block_starts
+    ):
         return False
 
-    interval_length = bed_end - bed_start
+    interval_length = (
+        bed_end
+        - bed_start
+    )
 
-    # Every block must fit inside the BED interval
-    for block_start, block_size in zip(block_starts, block_sizes):
-        if block_start + block_size > interval_length:
+    # Every block must fit inside the BED interval.
+    for block_start, block_size in zip(
+        block_starts,
+        block_sizes
+    ):
+
+        if (
+            block_start
+            + block_size
+            > interval_length
+        ):
             return False
 
     return True
@@ -9822,39 +9898,73 @@ def check_bed_geometry(row):
 
 def check_block_nt_length(row):
     """
-    Check that the sum of BED block nucleotide lengths matches peptide length × 3.
+    Check that the sum of BED block nucleotide lengths
+    matches peptide length multiplied by three.
     """
+
     try:
-        peptide_len = int(row["Peptide_length_AA"])
+        peptide_length = int(
+            row["Peptide_length_AA"]
+        )
+
     except Exception:
         return False
 
-    block_sizes = parse_bed_list(row["BED_block_sizes"])
+    block_sizes = parse_bed_list(
+        row["BED_block_sizes"]
+    )
 
     if len(block_sizes) == 0:
         return False
 
-    return sum(block_sizes) == peptide_len * 3
+    return (
+        sum(block_sizes)
+        == peptide_length * 3
+    )
 
 
 def check_chromosome_and_strand(row):
     """
-    Check valid chromosome and strand assignment.
-    """
-    chrom = str(row["Chromosome"])
-    strand = str(row["Strand"])
+    Check that the sequence identifier is represented in the
+    IWGSC RefSeq v2.1 annotation and that the strand is valid.
 
-    return chrom in valid_chromosomes and strand in valid_strands
+    ChrUnknown is retained because it is a valid GFF3 sequence
+    identifier representing unplaced annotated sequence.
+    """
+
+    chromosome = str(
+        row["Chromosome"]
+    ).strip()
+
+    strand = str(
+        row["Strand"]
+    ).strip()
+
+    return (
+        chromosome in valid_chromosomes
+        and strand in valid_strands
+    )
 
 
 def check_protein_coordinates(row):
     """
-    Check that amino-acid coordinates are internally consistent with peptide length.
+    Check that amino-acid coordinates are internally
+    consistent with peptide length.
     """
+
     try:
-        aa_start = int(row["AA_start"])
-        aa_end = int(row["AA_end"])
-        peptide_len = int(row["Peptide_length_AA"])
+        aa_start = int(
+            row["AA_start"]
+        )
+
+        aa_end = int(
+            row["AA_end"]
+        )
+
+        peptide_length = int(
+            row["Peptide_length_AA"]
+        )
+
     except Exception:
         return False
 
@@ -9864,63 +9974,100 @@ def check_protein_coordinates(row):
     if aa_end < aa_start:
         return False
 
-    if (aa_end - aa_start + 1) != peptide_len:
+    if (
+        aa_end
+        - aa_start
+        + 1
+        != peptide_length
+    ):
         return False
 
-    peptide = str(row["Peptide"])
+    peptide = str(
+        row["Peptide"]
+    )
 
-    if len(peptide) != peptide_len:
+    if len(peptide) != peptide_length:
         return False
 
     return True
 
+
 # -----------------------------
-# 4. Run sanity checks across translation-validated Step 10 output
+# 4. Run sanity checks across Step 10 output
 # -----------------------------
 
-print("\nRunning sanity checks on Step 10 translation-validated projections...")
+print(
+    "\nRunning sanity checks on Step 10 "
+    "translation-validated projections..."
+)
 
 chunk_size = 100_000
 
-# Clear previous outputs if rerunning
-for out_file in [sanity_full_out, sanity_failed_out, sanity_summary_out]:
-    if out_file.exists():
-        out_file.unlink()
+# Overwrite previous Step 11 outputs.
+for output_file in [
+    sanity_full_out,
+    sanity_failed_out,
+    sanity_summary_out
+]:
 
-# Build lookup from Step 9 projection filename to manifest metadata
+    if output_file.exists():
+        output_file.unlink()
+
+
+# Build lookup from Step 9 projection filename
+# to manifest metadata.
 manifest_lookup = {}
 
 for _, manifest_row in manifest.iterrows():
 
-    projection_filename = manifest_row["FragPipe-Output-Peptide"].replace(
-        "_peptide.tsv",
-        "_peptide_genome_projection.csv"
+    projection_filename = (
+        manifest_row[
+            "FragPipe-Output-Peptide"
+        ]
+        .replace(
+            "_peptide.tsv",
+            "_peptide_genome_projection.csv"
+        )
     )
 
-    manifest_lookup[projection_filename] = {
-        "Source": manifest_row["Source"],
-        "Species": manifest_row["Species"],
-        "Tissue": manifest_row["Tissue-Raw-Code"],
-        "Batch": manifest_row["Batch"]
+    manifest_lookup[
+        projection_filename
+    ] = {
+        "Source":
+            manifest_row["Source"],
+
+        "Species":
+            manifest_row["Species"],
+
+        "Tissue":
+            manifest_row["Tissue-Raw-Code"],
+
+        "Batch":
+            manifest_row["Batch"]
     }
 
 
 def detect_source_file_column(chunk):
     """
-    Detect the column containing the original Step 9 projection filename.
+    Detect the column containing the original Step 9
+    projection filename.
 
-    Step 10 intended to write '_source_file', but pandas itertuples()
-    may rename columns beginning with '_' into positional names.
-    This helper first checks for '_source_file', then searches for a
-    column containing values ending in '_peptide_genome_projection.csv'.
+    Step 10 intended to write '_source_file', but pandas
+    itertuples() may rename columns beginning with an
+    underscore into positional names.
+
+    This function first checks for '_source_file', then
+    searches for a column containing values ending in
+    '_peptide_genome_projection.csv'.
     """
 
     if "_source_file" in chunk.columns:
         return "_source_file"
 
-    for col in chunk.columns:
+    for column in chunk.columns:
+
         sample_values = (
-            chunk[col]
+            chunk[column]
             .dropna()
             .astype(str)
             .head(20)
@@ -9930,57 +10077,84 @@ def detect_source_file_column(chunk):
             "_peptide_genome_projection.csv",
             regex=False
         ).any():
-            return col
+
+            return column
 
     return None
 
 
 summary_dict = {}
+
 header_written_full = False
 header_written_failed = False
+
 first_failed_examples = []
-source_file_col = None
+
+source_file_column = None
 
 total_rows_read = 0
 total_translation_validated = 0
 total_translation_excluded = 0
 
-for chunk_i, chunk in enumerate(
+
+for chunk_number, chunk in enumerate(
+
     pd.read_csv(
         validation_file,
         chunksize=chunk_size,
         low_memory=False
     ),
+
     start=1
 ):
 
-    total_rows_read += len(chunk)
+    total_rows_read += len(
+        chunk
+    )
 
-    # Detect source-file column once, then reuse it
-    if source_file_col is None:
-        source_file_col = detect_source_file_column(chunk)
+    # Detect the source-file column once.
+    if source_file_column is None:
 
-        if source_file_col is None:
+        source_file_column = (
+            detect_source_file_column(
+                chunk
+            )
+        )
+
+        if source_file_column is None:
+
             raise KeyError(
-                "Could not identify the Step 10 source-file column. "
-                "Expected '_source_file' or a column containing values ending with "
+                "Could not identify the Step 10 source-file "
+                "column. Expected '_source_file' or a column "
+                "containing values ending with "
                 "'_peptide_genome_projection.csv'."
             )
 
-        print(f"Detected Step 10 source-file column: {source_file_col}")
-
-    if "Validation_status" not in chunk.columns:
-        raise KeyError(
-            "Column 'Validation_status' was not found in the Step 10 validation table."
+        print(
+            "Detected Step 10 source-file column: "
+            f"{source_file_column}"
         )
 
-    # Count all Step 10 rows by source file and translation status
-    for projection_filename, file_group in chunk.groupby(source_file_col):
+    if "Validation_status" not in chunk.columns:
 
-        projection_filename = str(projection_filename)
+        raise KeyError(
+            "Column 'Validation_status' was not found "
+            "in the Step 10 validation table."
+        )
+
+    # Count all Step 10 rows by source file
+    # and translation-validation status.
+    for projection_filename, file_group in chunk.groupby(
+        source_file_column
+    ):
+
+        projection_filename = str(
+            projection_filename
+        )
 
         if projection_filename not in summary_dict:
-            meta = manifest_lookup.get(
+
+            metadata = manifest_lookup.get(
                 projection_filename,
                 {
                     "Source": pd.NA,
@@ -9990,108 +10164,291 @@ for chunk_i, chunk in enumerate(
                 }
             )
 
-            summary_dict[projection_filename] = {
-                "Source": meta["Source"],
-                "Species": meta["Species"],
-                "Tissue": meta["Tissue"],
-                "Batch": meta["Batch"],
-                "Projection_file": projection_filename,
+            summary_dict[
+                projection_filename
+            ] = {
+                "Source":
+                    metadata["Source"],
 
-                "Rows_from_step10_validation_table": 0,
-                "Rows_translation_validated": 0,
-                "Rows_excluded_by_translation_validation": 0,
+                "Species":
+                    metadata["Species"],
 
-                "Translation_validated_rows_checked": 0,
-                "Rows_passing_all_sanity_checks": 0,
-                "Rows_failing_any_sanity_check": 0,
+                "Tissue":
+                    metadata["Tissue"],
 
-                "BED_geometry_failures": 0,
-                "Block_nt_length_failures": 0,
-                "Chromosome_strand_failures": 0,
-                "Protein_coordinate_failures": 0
+                "Batch":
+                    metadata["Batch"],
+
+                "Projection_file":
+                    projection_filename,
+
+                "Rows_from_step10_validation_table":
+                    0,
+
+                "Rows_translation_validated":
+                    0,
+
+                "Rows_excluded_by_translation_validation":
+                    0,
+
+                "Translation_validated_rows_checked":
+                    0,
+
+                "Rows_passing_all_sanity_checks":
+                    0,
+
+                "Rows_failing_any_sanity_check":
+                    0,
+
+                "BED_geometry_failures":
+                    0,
+
+                "Block_nt_length_failures":
+                    0,
+
+                "Chromosome_strand_failures":
+                    0,
+
+                "Protein_coordinate_failures":
+                    0
             }
 
-        summary_dict[projection_filename]["Rows_from_step10_validation_table"] += len(file_group)
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_from_step10_validation_table"
+        ] += len(
+            file_group
+        )
 
-        n_validated = int((file_group["Validation_status"].astype(str) == "validated").sum())
-        n_excluded = len(file_group) - n_validated
+        number_validated = int(
+            (
+                file_group[
+                    "Validation_status"
+                ]
+                .astype(str)
+                == "validated"
+            ).sum()
+        )
 
-        summary_dict[projection_filename]["Rows_translation_validated"] += n_validated
-        summary_dict[projection_filename]["Rows_excluded_by_translation_validation"] += n_excluded
+        number_excluded = (
+            len(file_group)
+            - number_validated
+        )
 
-    # Keep only translation-validated rows for sanity checks
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_translation_validated"
+        ] += number_validated
+
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_excluded_by_translation_validation"
+        ] += number_excluded
+
+
+    # Retain only translation-validated rows
+    # for Step 11 sanity checking.
     projected = chunk[
-        chunk["Validation_status"].astype(str) == "validated"
+        chunk[
+            "Validation_status"
+        ]
+        .astype(str)
+        == "validated"
     ].copy()
 
-    total_translation_validated += len(projected)
-    total_translation_excluded += len(chunk) - len(projected)
+    total_translation_validated += len(
+        projected
+    )
+
+    total_translation_excluded += (
+        len(chunk)
+        - len(projected)
+    )
 
     if projected.empty:
+
         print(
-            f"Chunk {chunk_i}: read {len(chunk):,} rows | "
-            f"no translation-validated rows"
+            f"Chunk {chunk_number}: "
+            f"read {len(chunk):,} rows | "
+            "no translation-validated rows"
         )
+
         continue
 
-    # Derive peptide length if not already present
+
+    # Derive peptide length when not already present.
     if "Peptide_length_AA" not in projected.columns:
-        if "Original_peptide_clean" in projected.columns:
-            projected["Peptide_length_AA"] = (
-                projected["Original_peptide_clean"]
+
+        if (
+            "Original_peptide_clean"
+            in projected.columns
+        ):
+
+            projected[
+                "Peptide_length_AA"
+            ] = (
+                projected[
+                    "Original_peptide_clean"
+                ]
                 .astype(str)
                 .str.len()
             )
+
         else:
-            projected["Peptide_length_AA"] = (
+
+            projected[
+                "Peptide_length_AA"
+            ] = (
                 projected["Peptide"]
                 .astype(str)
                 .str.len()
             )
 
-    # Add/standardise projection file metadata
-    projected["Projection_file"] = projected[source_file_col].astype(str)
 
-    projected["Source"] = projected["Projection_file"].map(
-        lambda x: manifest_lookup.get(x, {}).get("Source", pd.NA)
-    )
-    projected["Species"] = projected["Projection_file"].map(
-        lambda x: manifest_lookup.get(x, {}).get("Species", pd.NA)
-    )
-    projected["Tissue"] = projected["Projection_file"].map(
-        lambda x: manifest_lookup.get(x, {}).get("Tissue", pd.NA)
-    )
-    projected["Batch"] = projected["Projection_file"].map(
-        lambda x: manifest_lookup.get(x, {}).get("Batch", pd.NA)
+    # Add or standardise projection-file metadata.
+    projected[
+        "Projection_file"
+    ] = (
+        projected[
+            source_file_column
+        ]
+        .astype(str)
     )
 
-    # Sanity checks
-    projected["Check_BED_geometry"] = projected.apply(check_bed_geometry, axis=1)
-    projected["Check_block_nt_length"] = projected.apply(check_block_nt_length, axis=1)
-    projected["Check_chromosome_and_strand"] = projected.apply(check_chromosome_and_strand, axis=1)
-    projected["Check_protein_coordinates"] = projected.apply(check_protein_coordinates, axis=1)
+    projected["Source"] = (
+        projected[
+            "Projection_file"
+        ]
+        .map(
+            lambda value:
+            manifest_lookup
+            .get(value, {})
+            .get(
+                "Source",
+                pd.NA
+            )
+        )
+    )
 
-    check_cols = [
+    projected["Species"] = (
+        projected[
+            "Projection_file"
+        ]
+        .map(
+            lambda value:
+            manifest_lookup
+            .get(value, {})
+            .get(
+                "Species",
+                pd.NA
+            )
+        )
+    )
+
+    projected["Tissue"] = (
+        projected[
+            "Projection_file"
+        ]
+        .map(
+            lambda value:
+            manifest_lookup
+            .get(value, {})
+            .get(
+                "Tissue",
+                pd.NA
+            )
+        )
+    )
+
+    projected["Batch"] = (
+        projected[
+            "Projection_file"
+        ]
+        .map(
+            lambda value:
+            manifest_lookup
+            .get(value, {})
+            .get(
+                "Batch",
+                pd.NA
+            )
+        )
+    )
+
+
+    # Run the four sanity checks.
+    projected[
+        "Check_BED_geometry"
+    ] = projected.apply(
+        check_bed_geometry,
+        axis=1
+    )
+
+    projected[
+        "Check_block_nt_length"
+    ] = projected.apply(
+        check_block_nt_length,
+        axis=1
+    )
+
+    projected[
+        "Check_chromosome_and_strand"
+    ] = projected.apply(
+        check_chromosome_and_strand,
+        axis=1
+    )
+
+    projected[
+        "Check_protein_coordinates"
+    ] = projected.apply(
+        check_protein_coordinates,
+        axis=1
+    )
+
+    check_columns = [
         "Check_BED_geometry",
         "Check_block_nt_length",
         "Check_chromosome_and_strand",
         "Check_protein_coordinates"
     ]
 
-    projected["All_sanity_checks_passed"] = projected[check_cols].all(axis=1)
+    projected[
+        "All_sanity_checks_passed"
+    ] = (
+        projected[
+            check_columns
+        ]
+        .all(axis=1)
+    )
 
-    projected["Sanity_check_status"] = projected["All_sanity_checks_passed"].map({
-        True: "passed",
-        False: "failed"
-    })
+    projected[
+        "Sanity_check_status"
+    ] = (
+        projected[
+            "All_sanity_checks_passed"
+        ]
+        .map({
+            True: "passed",
+            False: "failed"
+        })
+    )
 
-    # Update summary counts by source projection file
-    for projection_filename, file_group in projected.groupby("Projection_file"):
 
-        projection_filename = str(projection_filename)
+    # Update source–tissue summary counts.
+    for projection_filename, file_group in projected.groupby(
+        "Projection_file"
+    ):
+
+        projection_filename = str(
+            projection_filename
+        )
 
         if projection_filename not in summary_dict:
-            meta = manifest_lookup.get(
+
+            metadata = manifest_lookup.get(
                 projection_filename,
                 {
                     "Source": pd.NA,
@@ -10101,49 +10458,135 @@ for chunk_i, chunk in enumerate(
                 }
             )
 
-            summary_dict[projection_filename] = {
-                "Source": meta["Source"],
-                "Species": meta["Species"],
-                "Tissue": meta["Tissue"],
-                "Batch": meta["Batch"],
-                "Projection_file": projection_filename,
+            summary_dict[
+                projection_filename
+            ] = {
+                "Source":
+                    metadata["Source"],
 
-                "Rows_from_step10_validation_table": 0,
-                "Rows_translation_validated": 0,
-                "Rows_excluded_by_translation_validation": 0,
+                "Species":
+                    metadata["Species"],
 
-                "Translation_validated_rows_checked": 0,
-                "Rows_passing_all_sanity_checks": 0,
-                "Rows_failing_any_sanity_check": 0,
+                "Tissue":
+                    metadata["Tissue"],
 
-                "BED_geometry_failures": 0,
-                "Block_nt_length_failures": 0,
-                "Chromosome_strand_failures": 0,
-                "Protein_coordinate_failures": 0
+                "Batch":
+                    metadata["Batch"],
+
+                "Projection_file":
+                    projection_filename,
+
+                "Rows_from_step10_validation_table":
+                    0,
+
+                "Rows_translation_validated":
+                    0,
+
+                "Rows_excluded_by_translation_validation":
+                    0,
+
+                "Translation_validated_rows_checked":
+                    0,
+
+                "Rows_passing_all_sanity_checks":
+                    0,
+
+                "Rows_failing_any_sanity_check":
+                    0,
+
+                "BED_geometry_failures":
+                    0,
+
+                "Block_nt_length_failures":
+                    0,
+
+                "Chromosome_strand_failures":
+                    0,
+
+                "Protein_coordinate_failures":
+                    0
             }
 
-        summary_dict[projection_filename]["Translation_validated_rows_checked"] += len(file_group)
-        summary_dict[projection_filename]["Rows_passing_all_sanity_checks"] += int(
-            file_group["All_sanity_checks_passed"].sum()
-        )
-        summary_dict[projection_filename]["Rows_failing_any_sanity_check"] += int(
-            (~file_group["All_sanity_checks_passed"]).sum()
-        )
-
-        summary_dict[projection_filename]["BED_geometry_failures"] += int(
-            (~file_group["Check_BED_geometry"]).sum()
-        )
-        summary_dict[projection_filename]["Block_nt_length_failures"] += int(
-            (~file_group["Check_block_nt_length"]).sum()
-        )
-        summary_dict[projection_filename]["Chromosome_strand_failures"] += int(
-            (~file_group["Check_chromosome_and_strand"]).sum()
-        )
-        summary_dict[projection_filename]["Protein_coordinate_failures"] += int(
-            (~file_group["Check_protein_coordinates"]).sum()
+        summary_dict[
+            projection_filename
+        ][
+            "Translation_validated_rows_checked"
+        ] += len(
+            file_group
         )
 
-    # Write full sanity-check output incrementally
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_passing_all_sanity_checks"
+        ] += int(
+            file_group[
+                "All_sanity_checks_passed"
+            ].sum()
+        )
+
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_failing_any_sanity_check"
+        ] += int(
+            (
+                ~file_group[
+                    "All_sanity_checks_passed"
+                ]
+            ).sum()
+        )
+
+        summary_dict[
+            projection_filename
+        ][
+            "BED_geometry_failures"
+        ] += int(
+            (
+                ~file_group[
+                    "Check_BED_geometry"
+                ]
+            ).sum()
+        )
+
+        summary_dict[
+            projection_filename
+        ][
+            "Block_nt_length_failures"
+        ] += int(
+            (
+                ~file_group[
+                    "Check_block_nt_length"
+                ]
+            ).sum()
+        )
+
+        summary_dict[
+            projection_filename
+        ][
+            "Chromosome_strand_failures"
+        ] += int(
+            (
+                ~file_group[
+                    "Check_chromosome_and_strand"
+                ]
+            ).sum()
+        )
+
+        summary_dict[
+            projection_filename
+        ][
+            "Protein_coordinate_failures"
+        ] += int(
+            (
+                ~file_group[
+                    "Check_protein_coordinates"
+                ]
+            ).sum()
+        )
+
+
+    # Write the complete sanity-check output incrementally.
     projected.to_csv(
         sanity_full_out,
         index=False,
@@ -10153,9 +10596,13 @@ for chunk_i, chunk in enumerate(
 
     header_written_full = True
 
-    # Write failed rows incrementally
+
+    # Write failed rows incrementally.
     failed = projected[
-        projected["Sanity_check_status"] == "failed"
+        projected[
+            "Sanity_check_status"
+        ]
+        == "failed"
     ].copy()
 
     if not failed.empty:
@@ -10170,12 +10617,24 @@ for chunk_i, chunk in enumerate(
         header_written_failed = True
 
         if len(first_failed_examples) < 20:
-            remaining = 20 - len(first_failed_examples)
-            first_failed_examples.append(failed.head(remaining))
+
+            number_remaining = (
+                20
+                - len(first_failed_examples)
+            )
+
+            first_failed_examples.append(
+                failed.head(
+                    number_remaining
+                )
+            )
+
 
     print(
-        f"Chunk {chunk_i}: read {len(chunk):,} rows | "
-        f"translation-validated {len(projected):,} | "
+        f"Chunk {chunk_number}: "
+        f"read {len(chunk):,} rows | "
+        f"translation-validated "
+        f"{len(projected):,} | "
         f"sanity failed {len(failed):,}"
     )
 
@@ -10183,165 +10642,277 @@ for chunk_i, chunk in enumerate(
 # -----------------------------
 # 5. Build and export summary table
 # -----------------------------
+
 if not header_written_full:
+
     raise ValueError(
-        "No translation-validated projected peptide rows were available for sanity checking."
+        "No translation-validated projected peptide rows "
+        "were available for sanity checking."
     )
 
-sanity_summary = pd.DataFrame(summary_dict.values())
 
-# Add percentages
-sanity_summary["Percent_translation_validated"] = (
-    sanity_summary["Rows_translation_validated"] /
-    sanity_summary["Rows_from_step10_validation_table"] *
-    100
+sanity_summary = pd.DataFrame(
+    summary_dict.values()
+)
+
+
+sanity_summary[
+    "Percent_translation_validated"
+] = (
+    sanity_summary[
+        "Rows_translation_validated"
+    ]
+    / sanity_summary[
+        "Rows_from_step10_validation_table"
+    ]
+    * 100
 ).round(4)
 
-sanity_summary["Percent_passing_all_sanity_checks"] = (
-    sanity_summary["Rows_passing_all_sanity_checks"] /
-    sanity_summary["Translation_validated_rows_checked"] *
-    100
+
+sanity_summary[
+    "Percent_passing_all_sanity_checks"
+] = (
+    sanity_summary[
+        "Rows_passing_all_sanity_checks"
+    ]
+    / sanity_summary[
+        "Translation_validated_rows_checked"
+    ]
+    * 100
 ).round(4)
 
-sanity_summary.to_csv(sanity_summary_out, index=False)
 
-# Build a small failed-row preview for display
+sanity_summary.to_csv(
+    sanity_summary_out,
+    index=False
+)
+
+
+# Build a small failed-row preview for display.
 if len(first_failed_examples) > 0:
-    sanity_failed_preview = pd.concat(first_failed_examples, ignore_index=True).head(20)
+
+    sanity_failed_preview = (
+        pd.concat(
+            first_failed_examples,
+            ignore_index=True
+        )
+        .head(20)
+    )
+
 else:
+
     sanity_failed_preview = pd.DataFrame()
 
 
 # -----------------------------
 # 6. Overall summary
 # -----------------------------
-overall_checked = int(sanity_summary["Translation_validated_rows_checked"].sum())
-overall_passed = int(sanity_summary["Rows_passing_all_sanity_checks"].sum())
-overall_failed = int(sanity_summary["Rows_failing_any_sanity_check"].sum())
 
-overall_pass_percent = round(
-    (overall_passed / overall_checked) * 100,
-    4
-) if overall_checked > 0 else pd.NA
+overall_checked = int(
+    sanity_summary[
+        "Translation_validated_rows_checked"
+    ].sum()
+)
 
-print("\n===== STEP 11 SANITY CHECK SUMMARY =====")
-print(f"Rows read from Step 10 validation table: {total_rows_read:,}")
-print(f"Rows excluded by translation validation: {total_translation_excluded:,}")
-print(f"Translation-validated rows checked: {overall_checked:,}")
-print(f"Rows passing all sanity checks: {overall_passed:,}")
-print(f"Rows failing at least one sanity check: {overall_failed:,}")
-print(f"Overall sanity-check pass rate among translation-validated rows: {overall_pass_percent}%")
+overall_passed = int(
+    sanity_summary[
+        "Rows_passing_all_sanity_checks"
+    ].sum()
+)
 
-print(f"\nFull sanity-check table saved: {sanity_full_out}")
-print(f"Failed-row diagnostic table saved: {sanity_failed_out}")
-print(f"Tissue-level sanity summary saved: {sanity_summary_out}")
+overall_failed = int(
+    sanity_summary[
+        "Rows_failing_any_sanity_check"
+    ].sum()
+)
 
-display(sanity_summary)
+overall_pass_percent = (
+    round(
+        overall_passed
+        / overall_checked
+        * 100,
+        4
+    )
+    if overall_checked > 0
+    else pd.NA
+)
+
+
+print(
+    "\n===== STEP 11 SANITY CHECK SUMMARY ====="
+)
+
+print(
+    "Rows read from Step 10 validation table: "
+    f"{total_rows_read:,}"
+)
+
+print(
+    "Rows excluded by translation validation: "
+    f"{total_translation_excluded:,}"
+)
+
+print(
+    "Translation-validated rows checked: "
+    f"{overall_checked:,}"
+)
+
+print(
+    "Rows passing all sanity checks: "
+    f"{overall_passed:,}"
+)
+
+print(
+    "Rows failing at least one sanity check: "
+    f"{overall_failed:,}"
+)
+
+print(
+    "Overall sanity-check pass rate among "
+    "translation-validated rows: "
+    f"{overall_pass_percent}%"
+)
+
+print(
+    f"\nFull sanity-check table saved: "
+    f"{sanity_full_out}"
+)
+
+if sanity_failed_out.exists():
+
+    print(
+        f"Failed-row diagnostic table saved: "
+        f"{sanity_failed_out}"
+    )
+
+else:
+
+    print(
+        "No failed-row diagnostic table was created "
+        "because all rows passed."
+    )
+
+print(
+    f"Source–tissue sanity summary saved: "
+    f"{sanity_summary_out}"
+)
+
+
+display(
+    sanity_summary
+)
 
 if not sanity_failed_preview.empty:
-    display(sanity_failed_preview)
+
+    display(
+        sanity_failed_preview
+    )
+
 else:
-    print("\nNo failed sanity-check rows to display.")
+
+    print(
+        "\nNo failed sanity-check rows to display."
+    )
 ```
 
     
     Running sanity checks on Step 10 translation-validated projections...
     Detected Step 10 source-file column: _22
-    Chunk 1: read 100,000 rows | translation-validated 99,476 | sanity failed 890
-    Chunk 2: read 100,000 rows | translation-validated 99,426 | sanity failed 953
-    Chunk 3: read 100,000 rows | translation-validated 99,342 | sanity failed 1,023
-    Chunk 4: read 100,000 rows | translation-validated 99,392 | sanity failed 933
-    Chunk 5: read 100,000 rows | translation-validated 99,450 | sanity failed 840
-    Chunk 6: read 100,000 rows | translation-validated 99,285 | sanity failed 1,169
-    Chunk 7: read 100,000 rows | translation-validated 99,365 | sanity failed 954
-    Chunk 8: read 100,000 rows | translation-validated 99,354 | sanity failed 875
-    Chunk 9: read 100,000 rows | translation-validated 99,505 | sanity failed 764
-    Chunk 10: read 100,000 rows | translation-validated 99,501 | sanity failed 763
-    Chunk 11: read 100,000 rows | translation-validated 99,434 | sanity failed 809
-    Chunk 12: read 100,000 rows | translation-validated 99,319 | sanity failed 923
-    Chunk 13: read 100,000 rows | translation-validated 99,437 | sanity failed 793
-    Chunk 14: read 100,000 rows | translation-validated 99,306 | sanity failed 1,059
-    Chunk 15: read 100,000 rows | translation-validated 99,132 | sanity failed 1,178
-    Chunk 16: read 100,000 rows | translation-validated 99,263 | sanity failed 1,095
-    Chunk 17: read 100,000 rows | translation-validated 99,256 | sanity failed 997
-    Chunk 18: read 100,000 rows | translation-validated 99,369 | sanity failed 942
-    Chunk 19: read 100,000 rows | translation-validated 99,286 | sanity failed 1,045
-    Chunk 20: read 100,000 rows | translation-validated 98,989 | sanity failed 1,118
-    Chunk 21: read 100,000 rows | translation-validated 99,334 | sanity failed 1,102
-    Chunk 22: read 100,000 rows | translation-validated 99,505 | sanity failed 1,012
-    Chunk 23: read 100,000 rows | translation-validated 99,561 | sanity failed 915
-    Chunk 24: read 100,000 rows | translation-validated 99,464 | sanity failed 951
-    Chunk 25: read 100,000 rows | translation-validated 99,373 | sanity failed 1,025
-    Chunk 26: read 100,000 rows | translation-validated 99,536 | sanity failed 828
-    Chunk 27: read 100,000 rows | translation-validated 99,638 | sanity failed 745
-    Chunk 28: read 100,000 rows | translation-validated 99,215 | sanity failed 1,062
-    Chunk 29: read 100,000 rows | translation-validated 99,444 | sanity failed 969
-    Chunk 30: read 100,000 rows | translation-validated 99,562 | sanity failed 720
-    Chunk 31: read 100,000 rows | translation-validated 99,724 | sanity failed 633
-    Chunk 32: read 100,000 rows | translation-validated 99,533 | sanity failed 896
-    Chunk 33: read 100,000 rows | translation-validated 99,557 | sanity failed 900
-    Chunk 34: read 100,000 rows | translation-validated 99,593 | sanity failed 850
-    Chunk 35: read 100,000 rows | translation-validated 99,263 | sanity failed 857
-    Chunk 36: read 100,000 rows | translation-validated 99,161 | sanity failed 839
-    Chunk 37: read 100,000 rows | translation-validated 98,841 | sanity failed 901
-    Chunk 38: read 100,000 rows | translation-validated 98,936 | sanity failed 804
-    Chunk 39: read 100,000 rows | translation-validated 98,967 | sanity failed 874
-    Chunk 40: read 100,000 rows | translation-validated 98,988 | sanity failed 973
-    Chunk 41: read 100,000 rows | translation-validated 98,863 | sanity failed 1,010
-    Chunk 42: read 100,000 rows | translation-validated 98,549 | sanity failed 993
-    Chunk 43: read 100,000 rows | translation-validated 98,710 | sanity failed 905
-    Chunk 44: read 100,000 rows | translation-validated 98,681 | sanity failed 844
-    Chunk 45: read 100,000 rows | translation-validated 99,065 | sanity failed 1,055
-    Chunk 46: read 100,000 rows | translation-validated 98,648 | sanity failed 1,214
-    Chunk 47: read 100,000 rows | translation-validated 98,674 | sanity failed 1,020
-    Chunk 48: read 100,000 rows | translation-validated 98,781 | sanity failed 949
-    Chunk 49: read 100,000 rows | translation-validated 98,855 | sanity failed 975
-    Chunk 50: read 100,000 rows | translation-validated 98,971 | sanity failed 841
-    Chunk 51: read 100,000 rows | translation-validated 99,035 | sanity failed 855
-    Chunk 52: read 100,000 rows | translation-validated 99,018 | sanity failed 839
-    Chunk 53: read 100,000 rows | translation-validated 98,620 | sanity failed 860
-    Chunk 54: read 100,000 rows | translation-validated 99,201 | sanity failed 858
-    Chunk 55: read 100,000 rows | translation-validated 98,586 | sanity failed 984
-    Chunk 56: read 100,000 rows | translation-validated 98,751 | sanity failed 870
-    Chunk 57: read 100,000 rows | translation-validated 98,933 | sanity failed 858
-    Chunk 58: read 100,000 rows | translation-validated 99,051 | sanity failed 899
-    Chunk 59: read 100,000 rows | translation-validated 98,832 | sanity failed 942
-    Chunk 60: read 100,000 rows | translation-validated 98,643 | sanity failed 1,067
-    Chunk 61: read 100,000 rows | translation-validated 98,680 | sanity failed 936
-    Chunk 62: read 100,000 rows | translation-validated 98,679 | sanity failed 983
-    Chunk 63: read 100,000 rows | translation-validated 98,817 | sanity failed 960
-    Chunk 64: read 100,000 rows | translation-validated 98,927 | sanity failed 1,156
-    Chunk 65: read 100,000 rows | translation-validated 98,459 | sanity failed 1,135
-    Chunk 66: read 100,000 rows | translation-validated 98,605 | sanity failed 1,063
-    Chunk 67: read 100,000 rows | translation-validated 98,867 | sanity failed 906
-    Chunk 68: read 100,000 rows | translation-validated 98,829 | sanity failed 932
-    Chunk 69: read 100,000 rows | translation-validated 98,929 | sanity failed 828
-    Chunk 70: read 100,000 rows | translation-validated 98,927 | sanity failed 757
-    Chunk 71: read 100,000 rows | translation-validated 98,990 | sanity failed 874
-    Chunk 72: read 100,000 rows | translation-validated 98,661 | sanity failed 928
-    Chunk 73: read 100,000 rows | translation-validated 99,181 | sanity failed 848
-    Chunk 74: read 100,000 rows | translation-validated 98,771 | sanity failed 876
-    Chunk 75: read 100,000 rows | translation-validated 98,701 | sanity failed 905
-    Chunk 76: read 100,000 rows | translation-validated 98,660 | sanity failed 960
-    Chunk 77: read 100,000 rows | translation-validated 98,836 | sanity failed 944
-    Chunk 78: read 100,000 rows | translation-validated 98,863 | sanity failed 939
-    Chunk 79: read 100,000 rows | translation-validated 98,473 | sanity failed 1,148
-    Chunk 80: read 100,000 rows | translation-validated 98,816 | sanity failed 1,001
-    Chunk 81: read 100,000 rows | translation-validated 98,978 | sanity failed 788
-    Chunk 82: read 100,000 rows | translation-validated 99,176 | sanity failed 846
-    Chunk 83: read 91,056 rows | translation-validated 89,856 | sanity failed 1,013
+    Chunk 1: read 100,000 rows | translation-validated 99,476 | sanity failed 0
+    Chunk 2: read 100,000 rows | translation-validated 99,426 | sanity failed 0
+    Chunk 3: read 100,000 rows | translation-validated 99,342 | sanity failed 0
+    Chunk 4: read 100,000 rows | translation-validated 99,392 | sanity failed 0
+    Chunk 5: read 100,000 rows | translation-validated 99,450 | sanity failed 0
+    Chunk 6: read 100,000 rows | translation-validated 99,285 | sanity failed 0
+    Chunk 7: read 100,000 rows | translation-validated 99,365 | sanity failed 0
+    Chunk 8: read 100,000 rows | translation-validated 99,354 | sanity failed 0
+    Chunk 9: read 100,000 rows | translation-validated 99,505 | sanity failed 0
+    Chunk 10: read 100,000 rows | translation-validated 99,501 | sanity failed 0
+    Chunk 11: read 100,000 rows | translation-validated 99,434 | sanity failed 0
+    Chunk 12: read 100,000 rows | translation-validated 99,319 | sanity failed 0
+    Chunk 13: read 100,000 rows | translation-validated 99,437 | sanity failed 0
+    Chunk 14: read 100,000 rows | translation-validated 99,306 | sanity failed 0
+    Chunk 15: read 100,000 rows | translation-validated 99,132 | sanity failed 0
+    Chunk 16: read 100,000 rows | translation-validated 99,263 | sanity failed 0
+    Chunk 17: read 100,000 rows | translation-validated 99,256 | sanity failed 0
+    Chunk 18: read 100,000 rows | translation-validated 99,369 | sanity failed 0
+    Chunk 19: read 100,000 rows | translation-validated 99,286 | sanity failed 0
+    Chunk 20: read 100,000 rows | translation-validated 98,989 | sanity failed 0
+    Chunk 21: read 100,000 rows | translation-validated 99,334 | sanity failed 0
+    Chunk 22: read 100,000 rows | translation-validated 99,505 | sanity failed 0
+    Chunk 23: read 100,000 rows | translation-validated 99,561 | sanity failed 0
+    Chunk 24: read 100,000 rows | translation-validated 99,464 | sanity failed 0
+    Chunk 25: read 100,000 rows | translation-validated 99,373 | sanity failed 0
+    Chunk 26: read 100,000 rows | translation-validated 99,536 | sanity failed 0
+    Chunk 27: read 100,000 rows | translation-validated 99,638 | sanity failed 0
+    Chunk 28: read 100,000 rows | translation-validated 99,215 | sanity failed 0
+    Chunk 29: read 100,000 rows | translation-validated 99,444 | sanity failed 0
+    Chunk 30: read 100,000 rows | translation-validated 99,562 | sanity failed 0
+    Chunk 31: read 100,000 rows | translation-validated 99,724 | sanity failed 0
+    Chunk 32: read 100,000 rows | translation-validated 99,533 | sanity failed 0
+    Chunk 33: read 100,000 rows | translation-validated 99,557 | sanity failed 0
+    Chunk 34: read 100,000 rows | translation-validated 99,593 | sanity failed 0
+    Chunk 35: read 100,000 rows | translation-validated 99,263 | sanity failed 0
+    Chunk 36: read 100,000 rows | translation-validated 99,161 | sanity failed 0
+    Chunk 37: read 100,000 rows | translation-validated 98,841 | sanity failed 0
+    Chunk 38: read 100,000 rows | translation-validated 98,936 | sanity failed 0
+    Chunk 39: read 100,000 rows | translation-validated 98,967 | sanity failed 0
+    Chunk 40: read 100,000 rows | translation-validated 98,988 | sanity failed 0
+    Chunk 41: read 100,000 rows | translation-validated 98,863 | sanity failed 0
+    Chunk 42: read 100,000 rows | translation-validated 98,549 | sanity failed 0
+    Chunk 43: read 100,000 rows | translation-validated 98,710 | sanity failed 0
+    Chunk 44: read 100,000 rows | translation-validated 98,681 | sanity failed 0
+    Chunk 45: read 100,000 rows | translation-validated 99,065 | sanity failed 0
+    Chunk 46: read 100,000 rows | translation-validated 98,648 | sanity failed 0
+    Chunk 47: read 100,000 rows | translation-validated 98,674 | sanity failed 0
+    Chunk 48: read 100,000 rows | translation-validated 98,781 | sanity failed 0
+    Chunk 49: read 100,000 rows | translation-validated 98,855 | sanity failed 0
+    Chunk 50: read 100,000 rows | translation-validated 98,971 | sanity failed 0
+    Chunk 51: read 100,000 rows | translation-validated 99,035 | sanity failed 0
+    Chunk 52: read 100,000 rows | translation-validated 99,018 | sanity failed 0
+    Chunk 53: read 100,000 rows | translation-validated 98,620 | sanity failed 0
+    Chunk 54: read 100,000 rows | translation-validated 99,201 | sanity failed 0
+    Chunk 55: read 100,000 rows | translation-validated 98,586 | sanity failed 0
+    Chunk 56: read 100,000 rows | translation-validated 98,751 | sanity failed 0
+    Chunk 57: read 100,000 rows | translation-validated 98,933 | sanity failed 0
+    Chunk 58: read 100,000 rows | translation-validated 99,051 | sanity failed 0
+    Chunk 59: read 100,000 rows | translation-validated 98,832 | sanity failed 0
+    Chunk 60: read 100,000 rows | translation-validated 98,643 | sanity failed 0
+    Chunk 61: read 100,000 rows | translation-validated 98,680 | sanity failed 0
+    Chunk 62: read 100,000 rows | translation-validated 98,679 | sanity failed 0
+    Chunk 63: read 100,000 rows | translation-validated 98,817 | sanity failed 0
+    Chunk 64: read 100,000 rows | translation-validated 98,927 | sanity failed 0
+    Chunk 65: read 100,000 rows | translation-validated 98,459 | sanity failed 0
+    Chunk 66: read 100,000 rows | translation-validated 98,605 | sanity failed 0
+    Chunk 67: read 100,000 rows | translation-validated 98,867 | sanity failed 0
+    Chunk 68: read 100,000 rows | translation-validated 98,829 | sanity failed 0
+    Chunk 69: read 100,000 rows | translation-validated 98,929 | sanity failed 0
+    Chunk 70: read 100,000 rows | translation-validated 98,927 | sanity failed 0
+    Chunk 71: read 100,000 rows | translation-validated 98,990 | sanity failed 0
+    Chunk 72: read 100,000 rows | translation-validated 98,661 | sanity failed 0
+    Chunk 73: read 100,000 rows | translation-validated 99,181 | sanity failed 0
+    Chunk 74: read 100,000 rows | translation-validated 98,771 | sanity failed 0
+    Chunk 75: read 100,000 rows | translation-validated 98,701 | sanity failed 0
+    Chunk 76: read 100,000 rows | translation-validated 98,660 | sanity failed 0
+    Chunk 77: read 100,000 rows | translation-validated 98,836 | sanity failed 0
+    Chunk 78: read 100,000 rows | translation-validated 98,863 | sanity failed 0
+    Chunk 79: read 100,000 rows | translation-validated 98,473 | sanity failed 0
+    Chunk 80: read 100,000 rows | translation-validated 98,816 | sanity failed 0
+    Chunk 81: read 100,000 rows | translation-validated 98,978 | sanity failed 0
+    Chunk 82: read 100,000 rows | translation-validated 99,176 | sanity failed 0
+    Chunk 83: read 91,056 rows | translation-validated 89,856 | sanity failed 0
     
     ===== STEP 11 SANITY CHECK SUMMARY =====
     Rows read from Step 10 validation table: 8,291,056
     Rows excluded by translation validation: 76,826
     Translation-validated rows checked: 8,214,230
-    Rows passing all sanity checks: 8,136,687
-    Rows failing at least one sanity check: 77,543
-    Overall sanity-check pass rate among translation-validated rows: 99.056%
+    Rows passing all sanity checks: 8,214,230
+    Rows failing at least one sanity check: 0
+    Overall sanity-check pass rate among translation-validated rows: 100.0%
     
     Full sanity-check table saved: python_outputs\tables\wheat_projection_translation_validated_sanity_checks_full_step11.csv
-    Failed-row diagnostic table saved: python_outputs\tables\wheat_projection_translation_validated_sanity_checks_failed_rows_step11.csv
-    Tissue-level sanity summary saved: python_outputs\tables\wheat_projection_translation_validated_sanity_checks_summary_step11.csv
+    No failed-row diagnostic table was created because all rows passed.
+    Source–tissue sanity summary saved: python_outputs\tables\wheat_projection_translation_validated_sanity_checks_summary_step11.csv
     
 
 
@@ -10394,14 +10965,14 @@ else:
       <td>163467</td>
       <td>898</td>
       <td>163467</td>
-      <td>161955</td>
-      <td>1512</td>
+      <td>163467</td>
       <td>0</td>
       <td>0</td>
-      <td>1512</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4537</td>
-      <td>99.0750</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>1</th>
@@ -10414,14 +10985,14 @@ else:
       <td>13137</td>
       <td>90</td>
       <td>13137</td>
-      <td>13024</td>
-      <td>113</td>
+      <td>13137</td>
       <td>0</td>
       <td>0</td>
-      <td>113</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.3196</td>
-      <td>99.1398</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>2</th>
@@ -10434,14 +11005,14 @@ else:
       <td>203264</td>
       <td>1212</td>
       <td>203264</td>
-      <td>201259</td>
-      <td>2005</td>
+      <td>203264</td>
       <td>0</td>
       <td>0</td>
-      <td>2005</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4073</td>
-      <td>99.0136</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>3</th>
@@ -10454,14 +11025,14 @@ else:
       <td>8742</td>
       <td>110</td>
       <td>8742</td>
-      <td>8662</td>
-      <td>80</td>
+      <td>8742</td>
       <td>0</td>
       <td>0</td>
-      <td>80</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.7573</td>
-      <td>99.0849</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>4</th>
@@ -10474,14 +11045,14 @@ else:
       <td>102289</td>
       <td>541</td>
       <td>102289</td>
-      <td>101413</td>
-      <td>876</td>
+      <td>102289</td>
       <td>0</td>
       <td>0</td>
-      <td>876</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4739</td>
-      <td>99.1436</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>5</th>
@@ -10494,14 +11065,14 @@ else:
       <td>144079</td>
       <td>1054</td>
       <td>144079</td>
-      <td>142449</td>
-      <td>1630</td>
+      <td>144079</td>
       <td>0</td>
       <td>0</td>
-      <td>1630</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.2738</td>
-      <td>98.8687</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>6</th>
@@ -10514,14 +11085,14 @@ else:
       <td>125355</td>
       <td>840</td>
       <td>125355</td>
-      <td>124251</td>
-      <td>1104</td>
+      <td>125355</td>
       <td>0</td>
       <td>0</td>
-      <td>1104</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.3344</td>
-      <td>99.1193</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>7</th>
@@ -10534,14 +11105,14 @@ else:
       <td>178814</td>
       <td>911</td>
       <td>178814</td>
-      <td>177392</td>
-      <td>1422</td>
+      <td>178814</td>
       <td>0</td>
       <td>0</td>
-      <td>1422</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4931</td>
-      <td>99.2048</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>8</th>
@@ -10554,14 +11125,14 @@ else:
       <td>132081</td>
       <td>620</td>
       <td>132081</td>
-      <td>131066</td>
-      <td>1015</td>
+      <td>132081</td>
       <td>0</td>
       <td>0</td>
-      <td>1015</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.5328</td>
-      <td>99.2315</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>9</th>
@@ -10574,14 +11145,14 @@ else:
       <td>112389</td>
       <td>814</td>
       <td>112389</td>
-      <td>111335</td>
-      <td>1054</td>
+      <td>112389</td>
       <td>0</td>
       <td>0</td>
-      <td>1054</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.2809</td>
-      <td>99.0622</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>10</th>
@@ -10594,14 +11165,14 @@ else:
       <td>111156</td>
       <td>636</td>
       <td>111156</td>
-      <td>110256</td>
-      <td>900</td>
+      <td>111156</td>
       <td>0</td>
       <td>0</td>
-      <td>900</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4311</td>
-      <td>99.1903</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>11</th>
@@ -10614,14 +11185,14 @@ else:
       <td>144641</td>
       <td>991</td>
       <td>144641</td>
-      <td>143118</td>
-      <td>1523</td>
+      <td>144641</td>
       <td>0</td>
       <td>0</td>
-      <td>1523</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.3195</td>
-      <td>98.9470</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>12</th>
@@ -10634,14 +11205,14 @@ else:
       <td>45680</td>
       <td>520</td>
       <td>45680</td>
-      <td>45054</td>
-      <td>626</td>
+      <td>45680</td>
       <td>0</td>
       <td>0</td>
-      <td>626</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.8745</td>
-      <td>98.6296</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>13</th>
@@ -10654,14 +11225,14 @@ else:
       <td>119922</td>
       <td>899</td>
       <td>119922</td>
-      <td>118601</td>
-      <td>1321</td>
+      <td>119922</td>
       <td>0</td>
       <td>0</td>
-      <td>1321</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.2559</td>
-      <td>98.8985</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>14</th>
@@ -10674,14 +11245,14 @@ else:
       <td>146562</td>
       <td>1056</td>
       <td>146562</td>
-      <td>145101</td>
-      <td>1461</td>
+      <td>146562</td>
       <td>0</td>
       <td>0</td>
-      <td>1461</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.2846</td>
-      <td>99.0032</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>15</th>
@@ -10694,14 +11265,14 @@ else:
       <td>168564</td>
       <td>1111</td>
       <td>168564</td>
-      <td>166896</td>
-      <td>1668</td>
+      <td>168564</td>
       <td>0</td>
       <td>0</td>
-      <td>1668</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.3452</td>
-      <td>99.0105</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>16</th>
@@ -10714,14 +11285,14 @@ else:
       <td>98731</td>
       <td>1092</td>
       <td>98731</td>
-      <td>97553</td>
-      <td>1178</td>
+      <td>98731</td>
       <td>0</td>
       <td>0</td>
-      <td>1178</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.9061</td>
-      <td>98.8069</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>17</th>
@@ -10734,14 +11305,14 @@ else:
       <td>116285</td>
       <td>651</td>
       <td>116285</td>
-      <td>115047</td>
-      <td>1238</td>
+      <td>116285</td>
       <td>0</td>
       <td>0</td>
-      <td>1238</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4433</td>
-      <td>98.9354</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>18</th>
@@ -10754,14 +11325,14 @@ else:
       <td>130645</td>
       <td>570</td>
       <td>130645</td>
-      <td>129415</td>
-      <td>1230</td>
+      <td>130645</td>
       <td>0</td>
       <td>0</td>
-      <td>1230</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.5656</td>
-      <td>99.0585</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>19</th>
@@ -10774,14 +11345,14 @@ else:
       <td>74334</td>
       <td>364</td>
       <td>74334</td>
-      <td>73586</td>
-      <td>748</td>
+      <td>74334</td>
       <td>0</td>
       <td>0</td>
-      <td>748</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.5127</td>
-      <td>98.9937</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>20</th>
@@ -10794,14 +11365,14 @@ else:
       <td>159219</td>
       <td>985</td>
       <td>159219</td>
-      <td>157648</td>
-      <td>1571</td>
+      <td>159219</td>
       <td>0</td>
       <td>0</td>
-      <td>1571</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.3852</td>
-      <td>99.0133</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>21</th>
@@ -10814,14 +11385,14 @@ else:
       <td>193938</td>
       <td>756</td>
       <td>193938</td>
-      <td>192432</td>
-      <td>1506</td>
+      <td>193938</td>
       <td>0</td>
       <td>0</td>
-      <td>1506</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.6117</td>
-      <td>99.2235</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>22</th>
@@ -10834,14 +11405,14 @@ else:
       <td>96387</td>
       <td>801</td>
       <td>96387</td>
-      <td>95329</td>
-      <td>1058</td>
+      <td>96387</td>
       <td>0</td>
       <td>0</td>
-      <td>1058</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.1758</td>
-      <td>98.9023</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>23</th>
@@ -10854,14 +11425,14 @@ else:
       <td>100085</td>
       <td>554</td>
       <td>100085</td>
-      <td>99127</td>
-      <td>958</td>
+      <td>100085</td>
       <td>0</td>
       <td>0</td>
-      <td>958</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.4495</td>
-      <td>99.0428</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>24</th>
@@ -10874,14 +11445,14 @@ else:
       <td>191262</td>
       <td>681</td>
       <td>191262</td>
-      <td>189975</td>
-      <td>1287</td>
+      <td>191262</td>
       <td>0</td>
       <td>0</td>
-      <td>1287</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.6452</td>
-      <td>99.3271</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>25</th>
@@ -10894,14 +11465,14 @@ else:
       <td>111315</td>
       <td>516</td>
       <td>111315</td>
-      <td>110307</td>
-      <td>1008</td>
+      <td>111315</td>
       <td>0</td>
       <td>0</td>
-      <td>1008</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.5386</td>
-      <td>99.0945</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>26</th>
@@ -10914,14 +11485,14 @@ else:
       <td>188025</td>
       <td>801</td>
       <td>188025</td>
-      <td>186379</td>
-      <td>1646</td>
+      <td>188025</td>
       <td>0</td>
       <td>0</td>
-      <td>1646</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.5758</td>
-      <td>99.1246</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>27</th>
@@ -10934,14 +11505,14 @@ else:
       <td>60181</td>
       <td>553</td>
       <td>60181</td>
-      <td>59623</td>
-      <td>558</td>
+      <td>60181</td>
       <td>0</td>
       <td>0</td>
-      <td>558</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>99.0895</td>
-      <td>99.0728</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>28</th>
@@ -10954,14 +11525,14 @@ else:
       <td>1829196</td>
       <td>20940</td>
       <td>1829196</td>
-      <td>1812027</td>
-      <td>17169</td>
+      <td>1829196</td>
       <td>0</td>
       <td>0</td>
-      <td>17169</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.8682</td>
-      <td>99.0614</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>29</th>
@@ -10974,14 +11545,14 @@ else:
       <td>1864415</td>
       <td>22507</td>
       <td>1864415</td>
-      <td>1846620</td>
-      <td>17795</td>
+      <td>1864415</td>
       <td>0</td>
       <td>0</td>
-      <td>17795</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.8072</td>
-      <td>99.0455</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>30</th>
@@ -10994,14 +11565,14 @@ else:
       <td>1050178</td>
       <td>12330</td>
       <td>1050178</td>
-      <td>1040357</td>
-      <td>9821</td>
+      <td>1050178</td>
       <td>0</td>
       <td>0</td>
-      <td>9821</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.8395</td>
-      <td>99.0648</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>31</th>
@@ -11014,548 +11585,23 @@ else:
       <td>29892</td>
       <td>422</td>
       <td>29892</td>
-      <td>29430</td>
-      <td>462</td>
+      <td>29892</td>
       <td>0</td>
       <td>0</td>
-      <td>462</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
       <td>98.6079</td>
-      <td>98.4544</td>
+      <td>100.0</td>
     </tr>
   </tbody>
 </table>
 </div>
 
 
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Source</th>
-      <th>Species</th>
-      <th>Tissue</th>
-      <th>Batch</th>
-      <th>Peptide</th>
-      <th>ProteinID</th>
-      <th>Probability</th>
-      <th>GeneModel</th>
-      <th>TranscriptID</th>
-      <th>Chromosome</th>
-      <th>...</th>
-      <th>IL_normalised_match</th>
-      <th>Validation_status</th>
-      <th>Peptide_length_AA</th>
-      <th>Projection_file</th>
-      <th>Check_BED_geometry</th>
-      <th>Check_block_nt_length</th>
-      <th>Check_chromosome_and_strand</th>
-      <th>Check_protein_coordinates</th>
-      <th>All_sanity_checks_passed</th>
-      <th>Sanity_check_status</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>ADLHHLAMFLAGRQPDAPQEALQVLDIVLR</td>
-      <td>TraesCSU03G0061400.2</td>
-      <td>1.0000</td>
-      <td>TraesCSU03G0061400</td>
-      <td>TraesCSU03G0061400.2</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>30</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AKQMAESFNMSTFANREDLLGQSK</td>
-      <td>TraesCSU03G0111000.1</td>
-      <td>0.4495</td>
-      <td>TraesCSU03G0111000</td>
-      <td>TraesCSU03G0111000.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>24</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AHEELVK</td>
-      <td>TraesCSU03G0430400LC.1</td>
-      <td>0.9305</td>
-      <td>TraesCSU03G0430400LC</td>
-      <td>TraesCSU03G0430400LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>7</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAAMGVEEAVR</td>
-      <td>TraesCSU03G0402100.1</td>
-      <td>0.3517</td>
-      <td>TraesCSU03G0402100</td>
-      <td>TraesCSU03G0402100.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>11</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>APGIIER</td>
-      <td>TraesCSU03G0138700LC.1</td>
-      <td>0.7045</td>
-      <td>TraesCSU03G0138700LC</td>
-      <td>TraesCSU03G0138700LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>7</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>DSDMQSADGDGR</td>
-      <td>TraesCSU03G0144900LC.1</td>
-      <td>0.5074</td>
-      <td>TraesCSU03G0144900LC</td>
-      <td>TraesCSU03G0144900LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>12</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AVGVSTEK</td>
-      <td>TraesCSU03G0112900LC.1</td>
-      <td>0.1800</td>
-      <td>TraesCSU03G0112900LC</td>
-      <td>TraesCSU03G0112900LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>8</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>APGIIER</td>
-      <td>TraesCSU03G0351700LC.1</td>
-      <td>0.7045</td>
-      <td>TraesCSU03G0351700LC</td>
-      <td>TraesCSU03G0351700LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>7</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AEHLASIFGTEKDR</td>
-      <td>TraesCSU03G0553300LC.1</td>
-      <td>1.0000</td>
-      <td>TraesCSU03G0553300LC</td>
-      <td>TraesCSU03G0553300LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>14</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AVANETGAFFFLINGPEIMSK</td>
-      <td>TraesCSU03G0001700.1</td>
-      <td>1.0000</td>
-      <td>TraesCSU03G0001700</td>
-      <td>TraesCSU03G0001700.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>21</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>DNGMHALIIYDDLSK</td>
-      <td>TraesCSU03G0519600LC.1</td>
-      <td>1.0000</td>
-      <td>TraesCSU03G0519600LC</td>
-      <td>TraesCSU03G0519600LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>15</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>ASVAPPTVGKER</td>
-      <td>TraesCSU03G0433300LC.1</td>
-      <td>0.6832</td>
-      <td>TraesCSU03G0433300LC</td>
-      <td>TraesCSU03G0433300LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>12</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AFTELLK</td>
-      <td>TraesCSU03G0362800LC.1</td>
-      <td>0.9993</td>
-      <td>TraesCSU03G0362800LC</td>
-      <td>TraesCSU03G0362800LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>7</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AVTSPSAR</td>
-      <td>TraesCSU03G0279300.1</td>
-      <td>0.0573</td>
-      <td>TraesCSU03G0279300</td>
-      <td>TraesCSU03G0279300.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>8</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>ADGFAGVFPEHKYEIVK</td>
-      <td>TraesCSU03G0076400.4</td>
-      <td>0.5887</td>
-      <td>TraesCSU03G0076400</td>
-      <td>TraesCSU03G0076400.4</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>17</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AHVIVMGATNRPNSIDPALR</td>
-      <td>TraesCSU03G0001700.1</td>
-      <td>1.0000</td>
-      <td>TraesCSU03G0001700</td>
-      <td>TraesCSU03G0001700.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>20</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAGIPSK</td>
-      <td>TraesCSU03G0054300.1</td>
-      <td>0.9320</td>
-      <td>TraesCSU03G0054300</td>
-      <td>TraesCSU03G0054300.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>7</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AGVYHPWGPGNGRR</td>
-      <td>TraesCSU03G0292000LC.1</td>
-      <td>0.2867</td>
-      <td>TraesCSU03G0292000LC</td>
-      <td>TraesCSU03G0292000LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>14</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAQLSGR</td>
-      <td>TraesCSU03G0023500LC.1</td>
-      <td>0.6112</td>
-      <td>TraesCSU03G0023500LC</td>
-      <td>TraesCSU03G0023500LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>7</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAVFQMEHNKAP</td>
-      <td>TraesCSU03G0002700LC.1</td>
-      <td>0.0546</td>
-      <td>TraesCSU03G0002700LC</td>
-      <td>TraesCSU03G0002700LC.1</td>
-      <td>ChrUnknown</td>
-      <td>...</td>
-      <td>True</td>
-      <td>validated</td>
-      <td>12</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-    </tr>
-  </tbody>
-</table>
-<p>20 rows × 38 columns</p>
-</div>
-
+    
+    No failed sanity-check rows to display.
+    
 
 # Step 11B — Diagnostic Audit: Fate of ChrUnknown Peptide Projections
 
@@ -11603,88 +11649,199 @@ wheat_ChrUnknown_validation_fate_summary_step11B.csv
 
 ```python
 # ============================================================
-# Step 11B — Diagnostic audit: fate of ChrUnknown peptide projections
-# Memory-light version for large CSV files
+# Step 11B — Diagnostic audit: fate of ChrUnknown peptide
+# projections
+#
+# Memory-light version for large CSV files.
 # ============================================================
 
 import pandas as pd
+
 from pathlib import Path
 from collections import defaultdict
+
 
 # -----------------------------
 # 1. Paths
 # -----------------------------
+
 fragpipe_dir = Path("FragPipe_results")
+
 tables_dir = Path("python_outputs/tables")
-tables_dir.mkdir(parents=True, exist_ok=True)
+tables_dir.mkdir(
+    parents=True,
+    exist_ok=True
+)
 
-manifest_file = fragpipe_dir / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+manifest_file = (
+    fragpipe_dir
+    / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+)
 
-# Existing large workflow files
-step10_validation_file = tables_dir / "wheat_projection_validation_stratified100percent_step10.csv"
-step11_sanity_file = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
-step13_combined_file = tables_dir / "wheat_all_tissues_nonredundant_validated_peptides_step13.csv"
+# Existing workflow files
+step10_validation_file = (
+    tables_dir
+    / "wheat_projection_validation_stratified100percent_step10.csv"
+)
 
-summary_out = tables_dir / "wheat_ChrUnknown_validation_fate_summary_step11B.csv"
-failed_examples_out = tables_dir / "wheat_ChrUnknown_failed_sanity_examples_step11B.csv"
+step11_sanity_file = (
+    tables_dir
+    / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
+)
+
+step13_combined_file = (
+    tables_dir
+    / "wheat_all_tissues_nonredundant_validated_peptides_step13.csv"
+)
+
+# Original Step 11B output filenames
+summary_out = (
+    tables_dir
+    / "wheat_ChrUnknown_validation_fate_summary_step11B.csv"
+)
+
+failed_examples_out = (
+    tables_dir
+    / "wheat_ChrUnknown_failed_sanity_examples_step11B.csv"
+)
 
 chunksize = 25_000
 max_failed_examples = 100
 
-manifest = pd.read_csv(manifest_file, encoding="utf-8-sig")
 
 # -----------------------------
-# 2. Helper functions
+# 2. Confirm required inputs
 # -----------------------------
+
+if not manifest_file.exists():
+
+    raise FileNotFoundError(
+        f"Manifest file not found:\n"
+        f"{manifest_file}"
+    )
+
+
+if not step10_validation_file.exists():
+
+    raise FileNotFoundError(
+        f"Step 10 file not found:\n"
+        f"{step10_validation_file}"
+    )
+
+
+if not step11_sanity_file.exists():
+
+    raise FileNotFoundError(
+        f"Step 11 file not found:\n"
+        f"{step11_sanity_file}\n\n"
+        "Please run the corrected Step 11 first."
+    )
+
+
+manifest = pd.read_csv(
+    manifest_file,
+    encoding="utf-8-sig"
+)
+
+
+# Overwrite previous Step 11B outputs.
+for output_file in [
+    summary_out,
+    failed_examples_out
+]:
+
+    if output_file.exists():
+        output_file.unlink()
+
+
+# -----------------------------
+# 3. Helper functions
+# -----------------------------
+
 def normalise_chr(value):
     """
-    Normalise chromosome labels for ChrUnknown audit.
+    Normalise sequence labels for the ChrUnknown audit.
     """
+
     if pd.isna(value):
         return "NA"
 
     value = str(value).strip()
 
-    if value.lower() in ["chrunknown", "unknown"]:
+    if value.lower() in [
+        "chrunknown",
+        "unknown"
+    ]:
+
         return "ChrUnknown"
 
-    if value.lower() in ["nan", "none", "", "<na>"]:
+    if value.lower() in [
+        "nan",
+        "none",
+        "",
+        "<na>"
+    ]:
+
         return "NA"
 
     return value
 
 
-def build_manifest_lookup(manifest):
+def build_manifest_lookup(manifest_data):
     """
-    Build lookup from Step 9 projection filename to source/tissue metadata.
+    Build a lookup from Step 9 projection filename to
+    source–tissue metadata.
     """
+
     lookup = {}
 
-    for _, row in manifest.iterrows():
+    for _, row in manifest_data.iterrows():
 
-        projection_filename = row["FragPipe-Output-Peptide"].replace(
-            "_peptide.tsv",
-            "_peptide_genome_projection.csv"
+        projection_filename = (
+            row[
+                "FragPipe-Output-Peptide"
+            ]
+            .replace(
+                "_peptide.tsv",
+                "_peptide_genome_projection.csv"
+            )
         )
 
-        lookup[projection_filename] = {
-            "Source": row["Source"],
-            "Species": row["Species"],
-            "Tissue": row["Tissue-Raw-Code"],
-            "Batch": row["Batch"]
+        lookup[
+            projection_filename
+        ] = {
+            "Source":
+                row["Source"],
+
+            "Species":
+                row["Species"],
+
+            "Tissue":
+                row["Tissue-Raw-Code"],
+
+            "Batch":
+                row["Batch"]
         }
 
     return lookup
 
 
-manifest_lookup = build_manifest_lookup(manifest)
+manifest_lookup = build_manifest_lookup(
+    manifest
+)
 
 
-def get_meta_from_projection_file(projection_file):
+def get_meta_from_projection_file(
+    projection_file
+):
     """
-    Recover Source/Species/Tissue/Batch from projection filename.
+    Recover source–tissue metadata from a Step 9
+    projection filename.
     """
-    projection_file = Path(str(projection_file)).name
+
+    projection_file = Path(
+        str(projection_file)
+    ).name
 
     return manifest_lookup.get(
         projection_file,
@@ -11697,20 +11854,71 @@ def get_meta_from_projection_file(projection_file):
     )
 
 
+def detect_projection_source_column(
+    dataframe
+):
+    """
+    Detect the column containing the original Step 9
+    projection filename.
+
+    Step 10 intended to use '_source_file', although pandas
+    may rename columns beginning with an underscore.
+    """
+
+    preferred_columns = [
+        "_source_file",
+        "Projection_file",
+        "Genome_projection_file",
+        "Source_file"
+    ]
+
+    for column in preferred_columns:
+
+        if column in dataframe.columns:
+            return column
+
+    for column in dataframe.columns:
+
+        sample_values = (
+            dataframe[column]
+            .dropna()
+            .astype(str)
+            .head(50)
+        )
+
+        if sample_values.str.contains(
+            "_peptide_genome_projection.csv",
+            regex=False
+        ).any():
+
+            return column
+
+    return None
+
+
 def get_gene_col(columns):
     """
     Return the first available gene-model column.
     """
-    for col in ["GeneModel", "GeneID", "Gene_label", "Gene_model"]:
-        if col in columns:
-            return col
+
+    for column in [
+        "GeneModel",
+        "GeneID",
+        "Gene_label",
+        "Gene_model"
+    ]:
+
+        if column in columns:
+            return column
+
     return None
 
 
 def init_record():
     """
-    Initialise a compact audit record.
+    Initialise one compact ChrUnknown audit record.
     """
+
     return {
         "Total_rows": 0,
         "ChrUnknown_rows": 0,
@@ -11720,104 +11928,254 @@ def init_record():
     }
 
 
-def update_record(records, key, chunk, chr_mask):
+def update_record(
+    records,
+    key,
+    dataframe,
+    chrunknown_mask
+):
     """
-    Update compact counts for one audit group.
-    Only unique values from ChrUnknown rows are retained.
+    Update counts for one audit group.
+
+    Only unique identifiers from ChrUnknown rows are retained
+    in memory.
     """
-    rec = records[key]
 
-    rec["Total_rows"] += len(chunk)
-    rec["ChrUnknown_rows"] += int(chr_mask.sum())
+    record = records[key]
 
-    chr_chunk = chunk.loc[chr_mask]
+    record[
+        "Total_rows"
+    ] += len(
+        dataframe
+    )
 
-    if chr_chunk.empty:
+    record[
+        "ChrUnknown_rows"
+    ] += int(
+        chrunknown_mask.sum()
+    )
+
+    chrunknown_data = dataframe.loc[
+        chrunknown_mask
+    ]
+
+    if chrunknown_data.empty:
         return
 
-    if "Peptide" in chr_chunk.columns:
-        rec["ChrUnknown_peptides"].update(
-            chr_chunk["Peptide"].dropna().astype(str).unique()
+
+    if "Peptide" in chrunknown_data.columns:
+
+        record[
+            "ChrUnknown_peptides"
+        ].update(
+            chrunknown_data[
+                "Peptide"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
         )
 
-    if "ProteinID" in chr_chunk.columns:
-        rec["ChrUnknown_proteins"].update(
-            chr_chunk["ProteinID"].dropna().astype(str).unique()
+
+    if "ProteinID" in chrunknown_data.columns:
+
+        record[
+            "ChrUnknown_proteins"
+        ].update(
+            chrunknown_data[
+                "ProteinID"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
         )
 
-    gene_col = get_gene_col(chr_chunk.columns)
 
-    if gene_col is not None:
-        rec["ChrUnknown_genes"].update(
-            chr_chunk[gene_col].dropna().astype(str).unique()
+    gene_column = get_gene_col(
+        chrunknown_data.columns
+    )
+
+    if gene_column is not None:
+
+        record[
+            "ChrUnknown_genes"
+        ].update(
+            chrunknown_data[
+                gene_column
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
         )
 
 
 def records_to_dataframe(records):
     """
-    Convert compact audit dictionary to a DataFrame.
+    Convert compact audit records to a DataFrame.
     """
+
     rows = []
 
-    for key, rec in records.items():
+    for key, record in records.items():
 
-        stage, source, species, tissue, batch, projection_file, status_detail = key
+        (
+            stage,
+            source,
+            species,
+            tissue,
+            batch,
+            projection_file,
+            status_detail
+        ) = key
 
-        total_rows = rec["Total_rows"]
-        chr_rows = rec["ChrUnknown_rows"]
+        total_rows = record[
+            "Total_rows"
+        ]
+
+        chrunknown_rows = record[
+            "ChrUnknown_rows"
+        ]
 
         rows.append({
-            "Stage": stage,
-            "Source": source,
-            "Species": species,
-            "Tissue": tissue,
-            "Batch": batch,
-            "Projection_file": projection_file,
-            "Status_detail": status_detail,
-            "Total_rows": total_rows,
-            "ChrUnknown_rows": chr_rows,
-            "ChrUnknown_percent_rows": round((chr_rows / total_rows) * 100, 4) if total_rows > 0 else 0,
-            "ChrUnknown_unique_peptides": len(rec["ChrUnknown_peptides"]),
-            "ChrUnknown_unique_proteins": len(rec["ChrUnknown_proteins"]),
-            "ChrUnknown_unique_gene_models": len(rec["ChrUnknown_genes"])
+            "Stage":
+                stage,
+
+            "Source":
+                source,
+
+            "Species":
+                species,
+
+            "Tissue":
+                tissue,
+
+            "Batch":
+                batch,
+
+            "Projection_file":
+                projection_file,
+
+            "Status_detail":
+                status_detail,
+
+            "Total_rows":
+                total_rows,
+
+            "ChrUnknown_rows":
+                chrunknown_rows,
+
+            "ChrUnknown_percent_rows":
+                (
+                    round(
+                        chrunknown_rows
+                        / total_rows
+                        * 100,
+                        4
+                    )
+                    if total_rows > 0
+                    else 0
+                ),
+
+            "ChrUnknown_unique_peptides":
+                len(
+                    record[
+                        "ChrUnknown_peptides"
+                    ]
+                ),
+
+            "ChrUnknown_unique_proteins":
+                len(
+                    record[
+                        "ChrUnknown_proteins"
+                    ]
+                ),
+
+            "ChrUnknown_unique_gene_models":
+                len(
+                    record[
+                        "ChrUnknown_genes"
+                    ]
+                )
         })
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(
+        rows
+    )
 
 
 # -----------------------------
-# 3. Stage A — Step 9 initial projected rows
+# 4. Stage A — Step 9 initial projected rows
 # -----------------------------
-print("Auditing Step 9 projected rows...")
 
-step9_records = defaultdict(init_record)
+print(
+    "Auditing Step 9 projected rows..."
+)
+
+step9_records = defaultdict(
+    init_record
+)
+
 
 for _, row in manifest.iterrows():
 
-    projection_filename = row["FragPipe-Output-Peptide"].replace(
-        "_peptide.tsv",
-        "_peptide_genome_projection.csv"
+    projection_filename = (
+        row[
+            "FragPipe-Output-Peptide"
+        ]
+        .replace(
+            "_peptide.tsv",
+            "_peptide_genome_projection.csv"
+        )
     )
 
-    projection_path = tables_dir / projection_filename
+    projection_path = (
+        tables_dir
+        / projection_filename
+    )
 
     if not projection_path.exists():
-        print(f"Skipped missing Step 9 file: {projection_path}")
-        continue
 
-    header = pd.read_csv(projection_path, nrows=0)
-    header_cols = list(header.columns)
-
-    required = ["Chromosome", "Projection_status"]
-    missing = [c for c in required if c not in header_cols]
-
-    if missing:
-        raise KeyError(
-            f"Missing required column(s) in {projection_filename}: {missing}"
+        print(
+            "Skipped missing Step 9 file: "
+            f"{projection_path}"
         )
 
-    usecols = [
-        col for col in [
+        continue
+
+
+    header = pd.read_csv(
+        projection_path,
+        nrows=0
+    )
+
+    header_columns = list(
+        header.columns
+    )
+
+
+    required_columns = [
+        "Chromosome",
+        "Projection_status"
+    ]
+
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in header_columns
+    ]
+
+    if missing_columns:
+
+        raise KeyError(
+            f"Missing required column(s) in "
+            f"{projection_filename}: "
+            f"{missing_columns}"
+        )
+
+
+    use_columns = [
+        column
+        for column in [
             "Chromosome",
             "Projection_status",
             "Peptide",
@@ -11826,8 +12184,9 @@ for _, row in manifest.iterrows():
             "GeneID",
             "Gene_label"
         ]
-        if col in header_cols
+        if column in header_columns
     ]
+
 
     key = (
         "Step 9 projected rows",
@@ -11839,60 +12198,111 @@ for _, row in manifest.iterrows():
         "Projection_status == projected"
     )
 
+
     for chunk in pd.read_csv(
         projection_path,
-        usecols=usecols,
+        usecols=use_columns,
         chunksize=chunksize,
         low_memory=False
     ):
 
         chunk = chunk[
-            chunk["Projection_status"].astype(str) == "projected"
+            chunk[
+                "Projection_status"
+            ]
+            .astype(str)
+            .str.strip()
+            .eq("projected")
         ].copy()
 
         if chunk.empty:
             continue
 
-        chr_norm = chunk["Chromosome"].apply(normalise_chr)
-        chr_mask = chr_norm == "ChrUnknown"
 
-        update_record(step9_records, key, chunk, chr_mask)
+        chromosome_normalised = (
+            chunk[
+                "Chromosome"
+            ]
+            .map(
+                normalise_chr
+            )
+        )
 
-step9_summary = records_to_dataframe(step9_records)
+        chrunknown_mask = (
+            chromosome_normalised
+            .eq("ChrUnknown")
+        )
+
+
+        update_record(
+            step9_records,
+            key,
+            chunk,
+            chrunknown_mask
+        )
+
+
+step9_summary = records_to_dataframe(
+    step9_records
+)
+
 
 # -----------------------------
-# 4. Stage B — Step 10 translation validation
+# 5. Stage B — Step 10 translation validation
 # -----------------------------
-print("Auditing Step 10 translation-validation rows...")
 
-if not step10_validation_file.exists():
-    raise FileNotFoundError(
-        f"Step 10 file not found:\n{step10_validation_file}"
-    )
+print(
+    "Auditing Step 10 translation-validation rows..."
+)
 
-step10_header = pd.read_csv(step10_validation_file, nrows=0)
-step10_cols = list(step10_header.columns)
 
-# Step 10 may or may not contain a source/projection filename column.
-# If absent, we still audit ChrUnknown globally by Validation_status.
-source_file_col = None
+step10_header = pd.read_csv(
+    step10_validation_file,
+    nrows=0
+)
 
-for candidate in ["_source_file", "Projection_file", "Genome_projection_file"]:
-    if candidate in step10_cols:
-        source_file_col = candidate
-        break
+step10_columns = list(
+    step10_header.columns
+)
 
-required = ["Chromosome", "Validation_status"]
-missing = [c for c in required if c not in step10_cols]
 
-if missing:
+required_columns = [
+    "Chromosome",
+    "Validation_status"
+]
+
+missing_columns = [
+    column
+    for column in required_columns
+    if column not in step10_columns
+]
+
+if missing_columns:
+
     raise KeyError(
-        f"Missing required Step 10 column(s): {missing}"
+        "Missing required Step 10 column(s): "
+        f"{missing_columns}"
     )
 
-step10_usecols = [
-    col for col in [
-        source_file_col,
+
+# Read a small sample to detect the projection-source column.
+step10_sample = pd.read_csv(
+    step10_validation_file,
+    nrows=100,
+    low_memory=False
+)
+
+source_file_column = (
+    detect_projection_source_column(
+        step10_sample
+    )
+)
+
+
+step10_use_columns = [
+    column
+    for column in [
+        source_file_column,
         "Source",
         "Species",
         "Tissue",
@@ -11905,40 +12315,97 @@ step10_usecols = [
         "GeneID",
         "Gene_label"
     ]
-    if col is not None and col in step10_cols
+    if (
+        column is not None
+        and column in step10_columns
+    )
 ]
 
-print(f"Step 10 columns used: {step10_usecols}")
 
-if source_file_col is None:
+print(
+    "Step 10 columns used: "
+    f"{step10_use_columns}"
+)
+
+
+if source_file_column is None:
+
     print(
-        "No Step 10 source/projection filename column found. "
-        "Step 10 ChrUnknown audit will be summarised globally by Validation_status."
+        "No Step 10 projection-source filename column "
+        "was found. Step 10 will be summarised globally "
+        "by Validation_status."
     )
+
 else:
-    print(f"Detected Step 10 source-file column: {source_file_col}")
 
-step10_records = defaultdict(init_record)
+    print(
+        "Detected Step 10 projection-source column: "
+        f"{source_file_column}"
+    )
 
-for chunk_i, chunk in enumerate(
+
+step10_records = defaultdict(
+    init_record
+)
+
+
+for chunk_number, chunk in enumerate(
+
     pd.read_csv(
         step10_validation_file,
-        usecols=step10_usecols,
+        usecols=step10_use_columns,
         chunksize=chunksize,
         low_memory=False
     ),
+
     start=1
 ):
 
-    chunk["Chromosome_norm"] = chunk["Chromosome"].apply(normalise_chr)
+    chunk[
+        "Chromosome_norm"
+    ] = (
+        chunk[
+            "Chromosome"
+        ]
+        .map(
+            normalise_chr
+        )
+    )
 
-    # Case 1: Step 10 has explicit source/tissue metadata
-    if all(col in chunk.columns for col in ["Source", "Species", "Tissue", "Batch"]):
 
-        for (source, species, tissue, batch, status), group in chunk.groupby(
-            ["Source", "Species", "Tissue", "Batch", "Validation_status"],
+    metadata_columns = [
+        "Source",
+        "Species",
+        "Tissue",
+        "Batch"
+    ]
+
+
+    # Case 1: source–tissue metadata are present.
+    if all(
+        column in chunk.columns
+        for column in metadata_columns
+    ):
+
+        for group_values, group in chunk.groupby(
+            [
+                "Source",
+                "Species",
+                "Tissue",
+                "Batch",
+                "Validation_status"
+            ],
             dropna=False
         ):
+
+            (
+                source,
+                species,
+                tissue,
+                batch,
+                validation_status
+            ) = group_values
+
 
             key = (
                 "Step 10 translation validation",
@@ -11947,42 +12414,95 @@ for chunk_i, chunk in enumerate(
                 tissue,
                 batch,
                 "Step10_global_table",
-                f"Validation_status == {status}"
+                (
+                    "Validation_status == "
+                    f"{validation_status}"
+                )
             )
 
-            chr_mask = group["Chromosome_norm"] == "ChrUnknown"
 
-            update_record(step10_records, key, group, chr_mask)
+            chrunknown_mask = (
+                group[
+                    "Chromosome_norm"
+                ]
+                .eq("ChrUnknown")
+            )
 
-    # Case 2: Step 10 has projection filename metadata but not Source/Tissue
-    elif source_file_col is not None:
 
-        for (projection_file, status), group in chunk.groupby(
-            [source_file_col, "Validation_status"],
+            update_record(
+                step10_records,
+                key,
+                group,
+                chrunknown_mask
+            )
+
+
+    # Case 2: a projection-source filename is available.
+    elif source_file_column is not None:
+
+        for group_values, group in chunk.groupby(
+            [
+                source_file_column,
+                "Validation_status"
+            ],
             dropna=False
         ):
 
-            projection_file_name = Path(str(projection_file)).name
-            meta = get_meta_from_projection_file(projection_file_name)
+            (
+                projection_file,
+                validation_status
+            ) = group_values
+
+
+            projection_file_name = Path(
+                str(projection_file)
+            ).name
+
+
+            metadata = (
+                get_meta_from_projection_file(
+                    projection_file_name
+                )
+            )
+
 
             key = (
                 "Step 10 translation validation",
-                meta["Source"],
-                meta["Species"],
-                meta["Tissue"],
-                meta["Batch"],
+                metadata["Source"],
+                metadata["Species"],
+                metadata["Tissue"],
+                metadata["Batch"],
                 projection_file_name,
-                f"Validation_status == {status}"
+                (
+                    "Validation_status == "
+                    f"{validation_status}"
+                )
             )
 
-            chr_mask = group["Chromosome_norm"] == "ChrUnknown"
 
-            update_record(step10_records, key, group, chr_mask)
+            chrunknown_mask = (
+                group[
+                    "Chromosome_norm"
+                ]
+                .eq("ChrUnknown")
+            )
 
-    # Case 3: Step 10 has no source/projection metadata
+
+            update_record(
+                step10_records,
+                key,
+                group,
+                chrunknown_mask
+            )
+
+
+    # Case 3: no source metadata are available.
     else:
 
-        for status, group in chunk.groupby("Validation_status", dropna=False):
+        for validation_status, group in chunk.groupby(
+            "Validation_status",
+            dropna=False
+        ):
 
             key = (
                 "Step 10 translation validation",
@@ -11991,50 +12511,91 @@ for chunk_i, chunk in enumerate(
                 "ALL",
                 "ALL",
                 step10_validation_file.name,
-                f"Validation_status == {status}"
+                (
+                    "Validation_status == "
+                    f"{validation_status}"
+                )
             )
 
-            chr_mask = group["Chromosome_norm"] == "ChrUnknown"
 
-            update_record(step10_records, key, group, chr_mask)
+            chrunknown_mask = (
+                group[
+                    "Chromosome_norm"
+                ]
+                .eq("ChrUnknown")
+            )
 
-    if chunk_i % 20 == 0:
-        print(f"  Step 10 chunks processed: {chunk_i}")
 
-step10_summary = records_to_dataframe(step10_records)
+            update_record(
+                step10_records,
+                key,
+                group,
+                chrunknown_mask
+            )
+
+
+    if chunk_number % 20 == 0:
+
+        print(
+            "  Step 10 chunks processed: "
+            f"{chunk_number}"
+        )
+
+
+step10_summary = records_to_dataframe(
+    step10_records
+)
+
 
 # -----------------------------
-# 5. Stage C — Step 11 sanity checks
+# 6. Stage C — Step 11 sanity checks
 # -----------------------------
-print("Auditing Step 11 sanity-check rows...")
 
-if not step11_sanity_file.exists():
-    raise FileNotFoundError(
-        f"Step 11 file not found:\n{step11_sanity_file}"
-    )
+print(
+    "Auditing corrected Step 11 sanity-check rows..."
+)
 
-step11_header = pd.read_csv(step11_sanity_file, nrows=0)
-step11_cols = list(step11_header.columns)
 
-required = [
+step11_header = pd.read_csv(
+    step11_sanity_file,
+    nrows=0
+)
+
+step11_columns = list(
+    step11_header.columns
+)
+
+
+required_columns = [
     "Source",
     "Species",
     "Tissue",
     "Batch",
     "Projection_file",
     "Chromosome",
-    "Sanity_check_status"
+    "Sanity_check_status",
+    "Check_chromosome_and_strand"
 ]
 
-missing = [c for c in required if c not in step11_cols]
+missing_columns = [
+    column
+    for column in required_columns
+    if column not in step11_columns
+]
 
-if missing:
+if missing_columns:
+
     raise KeyError(
-        f"Missing required Step 11 column(s): {missing}"
+        "Missing required Step 11 column(s): "
+        f"{missing_columns}\n\n"
+        "Confirm that the corrected Step 11 cell "
+        "completed successfully."
     )
 
-step11_usecols = [
-    col for col in [
+
+step11_use_columns = [
+    column
+    for column in [
         "Source",
         "Species",
         "Tissue",
@@ -12054,30 +12615,70 @@ step11_usecols = [
         "Check_protein_coordinates",
         "All_sanity_checks_passed"
     ]
-    if col in step11_cols
+    if column in step11_columns
 ]
 
-step11_records = defaultdict(init_record)
+
+step11_records = defaultdict(
+    init_record
+)
+
 failed_examples = []
 
-for chunk_i, chunk in enumerate(
+
+for chunk_number, chunk in enumerate(
+
     pd.read_csv(
         step11_sanity_file,
-        usecols=step11_usecols,
+        usecols=step11_use_columns,
         chunksize=chunksize,
         low_memory=False
     ),
+
     start=1
 ):
 
-    chunk["Chromosome_norm"] = chunk["Chromosome"].apply(normalise_chr)
+    chunk[
+        "Chromosome_norm"
+    ] = (
+        chunk[
+            "Chromosome"
+        ]
+        .map(
+            normalise_chr
+        )
+    )
 
-    for (source, species, tissue, batch, projection_file, status), group in chunk.groupby(
-        ["Source", "Species", "Tissue", "Batch", "Projection_file", "Sanity_check_status"],
+
+    grouping_columns = [
+        "Source",
+        "Species",
+        "Tissue",
+        "Batch",
+        "Projection_file",
+        "Sanity_check_status"
+    ]
+
+
+    for group_values, group in chunk.groupby(
+        grouping_columns,
         dropna=False
     ):
 
-        projection_file_name = Path(str(projection_file)).name
+        (
+            source,
+            species,
+            tissue,
+            batch,
+            projection_file,
+            sanity_status
+        ) = group_values
+
+
+        projection_file_name = Path(
+            str(projection_file)
+        ).name
+
 
         key = (
             "Step 11 sanity checks",
@@ -12086,148 +12687,427 @@ for chunk_i, chunk in enumerate(
             tissue,
             batch,
             projection_file_name,
-            f"Sanity_check_status == {status}"
+            (
+                "Sanity_check_status == "
+                f"{sanity_status}"
+            )
         )
 
-        chr_mask = group["Chromosome_norm"] == "ChrUnknown"
 
-        update_record(step11_records, key, group, chr_mask)
+        chrunknown_mask = (
+            group[
+                "Chromosome_norm"
+            ]
+            .eq("ChrUnknown")
+        )
 
-    # Keep only a small number of failed ChrUnknown examples
-    if len(failed_examples) < max_failed_examples:
 
-        chr_failed = chunk[
-            (chunk["Chromosome_norm"] == "ChrUnknown") &
-            (chunk["Sanity_check_status"].astype(str) == "failed")
+        update_record(
+            step11_records,
+            key,
+            group,
+            chrunknown_mask
+        )
+
+
+    # Retain only a limited number of failed ChrUnknown
+    # rows for diagnostic inspection.
+    if len(
+        failed_examples
+    ) < max_failed_examples:
+
+        chrunknown_failed = chunk[
+            (
+                chunk[
+                    "Chromosome_norm"
+                ]
+                .eq("ChrUnknown")
+            )
+            &
+            (
+                chunk[
+                    "Sanity_check_status"
+                ]
+                .astype(str)
+                .str.strip()
+                .eq("failed")
+            )
         ].copy()
 
-        if not chr_failed.empty:
 
-            slots_remaining = max_failed_examples - len(failed_examples)
-            failed_examples.extend(
-                chr_failed.head(slots_remaining).to_dict("records")
+        if not chrunknown_failed.empty:
+
+            slots_remaining = (
+                max_failed_examples
+                - len(failed_examples)
             )
 
-    if chunk_i % 20 == 0:
-        print(f"  Step 11 chunks processed: {chunk_i}")
+            failed_examples.extend(
+                chrunknown_failed
+                .head(
+                    slots_remaining
+                )
+                .to_dict(
+                    "records"
+                )
+            )
 
-step11_summary = records_to_dataframe(step11_records)
 
-failed_examples_df = pd.DataFrame(failed_examples)
-failed_examples_df.to_csv(failed_examples_out, index=False)
+    if chunk_number % 20 == 0:
+
+        print(
+            "  Step 11 chunks processed: "
+            f"{chunk_number}"
+        )
+
+
+step11_summary = records_to_dataframe(
+    step11_records
+)
+
+
+failed_examples_df = pd.DataFrame(
+    failed_examples
+)
+
+
+if not failed_examples_df.empty:
+
+    failed_examples_df.to_csv(
+        failed_examples_out,
+        index=False
+    )
+
 
 # -----------------------------
-# 6. Stage D — Step 13 final non-redundant validated table
+# 7. Stage D — Step 13 final nonredundant table
 # -----------------------------
-print("Auditing Step 13 final non-redundant validated table...")
 
-step13_records = defaultdict(init_record)
+print(
+    "Assessing Step 13 final nonredundant table..."
+)
+
+
+step13_records = defaultdict(
+    init_record
+)
+
+step13_included = False
+
 
 if step13_combined_file.exists():
 
-    step13_header = pd.read_csv(step13_combined_file, nrows=0)
-    step13_cols = list(step13_header.columns)
-
-    if "Chromosome" not in step13_cols:
-        raise KeyError("Step 13 combined table lacks 'Chromosome' column.")
-
-    step13_usecols = [
-        col for col in [
-            "Chromosome",
-            "Peptide",
-            "ProteinID",
-            "GeneModel",
-            "GeneID",
-            "Gene_label"
-        ]
-        if col in step13_cols
-    ]
-
-    key = (
-        "Step 13 final non-redundant validated table",
-        "ALL",
-        "bread wheat",
-        "ALL",
-        "ALL",
-        step13_combined_file.name,
-        "Final non-redundant validated rows"
+    step11_modification_time = (
+        step11_sanity_file
+        .stat()
+        .st_mtime
     )
 
-    for chunk_i, chunk in enumerate(
-        pd.read_csv(
-            step13_combined_file,
-            usecols=step13_usecols,
-            chunksize=chunksize,
-            low_memory=False
-        ),
-        start=1
+    step13_modification_time = (
+        step13_combined_file
+        .stat()
+        .st_mtime
+    )
+
+
+    # Only audit Step 13 when it was regenerated after
+    # the corrected Step 11 output.
+    if (
+        step13_modification_time
+        >= step11_modification_time
     ):
 
-        chr_norm = chunk["Chromosome"].apply(normalise_chr)
-        chr_mask = chr_norm == "ChrUnknown"
+        step13_included = True
 
-        update_record(step13_records, key, chunk, chr_mask)
+        print(
+            "Step 13 is current and will be included "
+            "in the audit."
+        )
 
-        if chunk_i % 20 == 0:
-            print(f"  Step 13 chunks processed: {chunk_i}")
+
+        step13_header = pd.read_csv(
+            step13_combined_file,
+            nrows=0
+        )
+
+        step13_columns = list(
+            step13_header.columns
+        )
+
+
+        if "Chromosome" not in step13_columns:
+
+            raise KeyError(
+                "Step 13 combined table lacks "
+                "'Chromosome'."
+            )
+
+
+        step13_use_columns = [
+            column
+            for column in [
+                "Chromosome",
+                "Peptide",
+                "ProteinID",
+                "GeneModel",
+                "GeneID",
+                "Gene_label"
+            ]
+            if column in step13_columns
+        ]
+
+
+        key = (
+            "Step 13 final non-redundant validated table",
+            "ALL",
+            "bread wheat",
+            "ALL",
+            "ALL",
+            step13_combined_file.name,
+            "Final non-redundant validated rows"
+        )
+
+
+        for chunk_number, chunk in enumerate(
+
+            pd.read_csv(
+                step13_combined_file,
+                usecols=step13_use_columns,
+                chunksize=chunksize,
+                low_memory=False
+            ),
+
+            start=1
+        ):
+
+            chromosome_normalised = (
+                chunk[
+                    "Chromosome"
+                ]
+                .map(
+                    normalise_chr
+                )
+            )
+
+            chrunknown_mask = (
+                chromosome_normalised
+                .eq("ChrUnknown")
+            )
+
+
+            update_record(
+                step13_records,
+                key,
+                chunk,
+                chrunknown_mask
+            )
+
+
+            if chunk_number % 20 == 0:
+
+                print(
+                    "  Step 13 chunks processed: "
+                    f"{chunk_number}"
+                )
+
+
+    else:
+
+        print(
+            "Existing Step 13 output predates the corrected "
+            "Step 11 output and will not be included yet."
+        )
+
+        print(
+            "Rerun Step 11B after Steps 12 and 13 have "
+            "been regenerated."
+        )
+
 
 else:
-    print(f"Step 13 file not found, skipped: {step13_combined_file}")
 
-step13_summary = records_to_dataframe(step13_records)
+    print(
+        "Step 13 file not found. "
+        "Step 13 audit skipped."
+    )
+
+
+step13_summary = records_to_dataframe(
+    step13_records
+)
+
 
 # -----------------------------
-# 7. Combine, filter, export
+# 8. Combine, filter and export
 # -----------------------------
-audit_summary = pd.concat(
-    [
+
+summary_tables = [
+    table
+    for table in [
         step9_summary,
         step10_summary,
         step11_summary,
         step13_summary
-    ],
+    ]
+    if not table.empty
+]
+
+
+if not summary_tables:
+
+    raise ValueError(
+        "No ChrUnknown audit records were generated."
+    )
+
+
+audit_summary = pd.concat(
+    summary_tables,
     ignore_index=True
 )
 
-# Keep only informative rows:
-# - any row with ChrUnknown
-# - plus the final Step 13 row, even if ChrUnknown count is zero
+
+# Keep rows containing ChrUnknown evidence.
+# Keep Step 13 when a current Step 13 table was audited.
 audit_summary = audit_summary[
-    (audit_summary["ChrUnknown_rows"] > 0) |
-    (audit_summary["Stage"].str.contains("Step 13", regex=False))
+    (
+        audit_summary[
+            "ChrUnknown_rows"
+        ]
+        > 0
+    )
+    |
+    (
+        audit_summary[
+            "Stage"
+        ]
+        .str.contains(
+            "Step 13",
+            regex=False
+        )
+    )
 ].copy()
 
-audit_summary = audit_summary.sort_values(
-    [
-        "Stage",
-        "Source",
-        "Tissue",
-        "Projection_file",
-        "Status_detail"
-    ],
-    na_position="last"
-).reset_index(drop=True)
 
-audit_summary.to_csv(summary_out, index=False)
+audit_summary = (
+    audit_summary
+    .sort_values(
+        [
+            "Stage",
+            "Source",
+            "Tissue",
+            "Projection_file",
+            "Status_detail"
+        ],
+        na_position="last"
+    )
+    .reset_index(
+        drop=True
+    )
+)
 
-print("\n===== ChrUnknown VALIDATION FATE SUMMARY =====")
-print(f"Summary saved: {summary_out}")
-print(f"Failed examples saved: {failed_examples_out}")
-print(f"Summary rows: {len(audit_summary):,}")
 
-display(audit_summary)
+audit_summary.to_csv(
+    summary_out,
+    index=False
+)
+
+
+# -----------------------------
+# 9. Concise stage summary
+# -----------------------------
+
+stage_totals = (
+    audit_summary
+    .groupby(
+        [
+            "Stage",
+            "Status_detail"
+        ],
+        dropna=False,
+        as_index=False
+    )
+    .agg(
+        Total_rows=(
+            "Total_rows",
+            "sum"
+        ),
+
+        ChrUnknown_rows=(
+            "ChrUnknown_rows",
+            "sum"
+        )
+    )
+)
+
+
+print(
+    "\n===== ChrUnknown VALIDATION FATE SUMMARY ====="
+)
+
+print(
+    f"Summary saved: "
+    f"{summary_out}"
+)
+
+if failed_examples_out.exists():
+
+    print(
+        f"Failed examples saved: "
+        f"{failed_examples_out}"
+    )
+
+else:
+
+    print(
+        "No failed ChrUnknown example file was created "
+        "because no ChrUnknown rows failed Step 11."
+    )
+
+print(
+    f"Summary rows: "
+    f"{len(audit_summary):,}"
+)
+
+
+if not step13_included:
+
+    print(
+        "\nStep 13 is not included in this audit yet."
+    )
+
+
+display(
+    stage_totals
+)
+
+display(
+    audit_summary
+)
+
 
 if not failed_examples_df.empty:
-    print("\nExample ChrUnknown rows failing Step 11 sanity checks:")
-    display(failed_examples_df.head(20))
+
+    print(
+        "\nExample ChrUnknown rows failing "
+        "Step 11 sanity checks:"
+    )
+
+    display(
+        failed_examples_df.head(20)
+    )
+
 else:
-    print("\nNo failed ChrUnknown examples were found in Step 11.")
+
+    print(
+        "\nNo ChrUnknown rows failed the corrected "
+        "Step 11 sanity checks."
+    )
 ```
 
     Auditing Step 9 projected rows...
     Auditing Step 10 translation-validation rows...
-    Step 10 columns used: ['Source', 'Species', 'Tissue', 'Batch', 'Chromosome', 'Validation_status', 'Peptide', 'ProteinID', 'GeneModel']
-    No Step 10 source/projection filename column found. Step 10 ChrUnknown audit will be summarised globally by Validation_status.
+    Step 10 columns used: ['_22', 'Source', 'Species', 'Tissue', 'Batch', 'Chromosome', 'Validation_status', 'Peptide', 'ProteinID', 'GeneModel']
+    Detected Step 10 projection-source column: _22
       Step 10 chunks processed: 20
       Step 10 chunks processed: 40
       Step 10 chunks processed: 60
@@ -12244,7 +13124,7 @@ else:
       Step 10 chunks processed: 280
       Step 10 chunks processed: 300
       Step 10 chunks processed: 320
-    Auditing Step 11 sanity-check rows...
+    Auditing corrected Step 11 sanity-check rows...
       Step 11 chunks processed: 20
       Step 11 chunks processed: 40
       Step 11 chunks processed: 60
@@ -12261,7 +13141,8 @@ else:
       Step 11 chunks processed: 280
       Step 11 chunks processed: 300
       Step 11 chunks processed: 320
-    Auditing Step 13 final non-redundant validated table...
+    Assessing Step 13 final nonredundant table...
+    Step 13 is current and will be included in the audit.
       Step 13 chunks processed: 20
       Step 13 chunks processed: 40
       Step 13 chunks processed: 60
@@ -12271,9 +13152,75 @@ else:
     
     ===== ChrUnknown VALIDATION FATE SUMMARY =====
     Summary saved: python_outputs\tables\wheat_ChrUnknown_validation_fate_summary_step11B.csv
-    Failed examples saved: python_outputs\tables\wheat_ChrUnknown_failed_sanity_examples_step11B.csv
+    No failed ChrUnknown example file was created because no ChrUnknown rows failed Step 11.
     Summary rows: 128
     
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Stage</th>
+      <th>Status_detail</th>
+      <th>Total_rows</th>
+      <th>ChrUnknown_rows</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>Step 10 translation validation</td>
+      <td>Validation_status == translation_mismatch</td>
+      <td>76721</td>
+      <td>2102</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Step 10 translation validation</td>
+      <td>Validation_status == validated</td>
+      <td>8214230</td>
+      <td>77543</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Step 11 sanity checks</td>
+      <td>Sanity_check_status == passed</td>
+      <td>8214230</td>
+      <td>77543</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>Step 13 final non-redundant validated table</td>
+      <td>Final non-redundant validated rows</td>
+      <td>3173811</td>
+      <td>34908</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Step 9 projected rows</td>
+      <td>Projection_status == projected</td>
+      <td>8291056</td>
+      <td>79645</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 
 
 <div>
@@ -12493,452 +13440,8 @@ else:
 
 
     
-    Example ChrUnknown rows failing Step 11 sanity checks:
+    No ChrUnknown rows failed the corrected Step 11 sanity checks.
     
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Source</th>
-      <th>Species</th>
-      <th>Tissue</th>
-      <th>Batch</th>
-      <th>Peptide</th>
-      <th>ProteinID</th>
-      <th>GeneModel</th>
-      <th>Chromosome</th>
-      <th>Validation_status</th>
-      <th>Projection_file</th>
-      <th>Check_BED_geometry</th>
-      <th>Check_block_nt_length</th>
-      <th>Check_chromosome_and_strand</th>
-      <th>Check_protein_coordinates</th>
-      <th>All_sanity_checks_passed</th>
-      <th>Sanity_check_status</th>
-      <th>Chromosome_norm</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>ADLHHLAMFLAGRQPDAPQEALQVLDIVLR</td>
-      <td>TraesCSU03G0061400.2</td>
-      <td>TraesCSU03G0061400</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AKQMAESFNMSTFANREDLLGQSK</td>
-      <td>TraesCSU03G0111000.1</td>
-      <td>TraesCSU03G0111000</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AHEELVK</td>
-      <td>TraesCSU03G0430400LC.1</td>
-      <td>TraesCSU03G0430400LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAAMGVEEAVR</td>
-      <td>TraesCSU03G0402100.1</td>
-      <td>TraesCSU03G0402100</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>APGIIER</td>
-      <td>TraesCSU03G0138700LC.1</td>
-      <td>TraesCSU03G0138700LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>DSDMQSADGDGR</td>
-      <td>TraesCSU03G0144900LC.1</td>
-      <td>TraesCSU03G0144900LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AVGVSTEK</td>
-      <td>TraesCSU03G0112900LC.1</td>
-      <td>TraesCSU03G0112900LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>APGIIER</td>
-      <td>TraesCSU03G0351700LC.1</td>
-      <td>TraesCSU03G0351700LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AEHLASIFGTEKDR</td>
-      <td>TraesCSU03G0553300LC.1</td>
-      <td>TraesCSU03G0553300LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AVANETGAFFFLINGPEIMSK</td>
-      <td>TraesCSU03G0001700.1</td>
-      <td>TraesCSU03G0001700</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>DNGMHALIIYDDLSK</td>
-      <td>TraesCSU03G0519600LC.1</td>
-      <td>TraesCSU03G0519600LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>ASVAPPTVGKER</td>
-      <td>TraesCSU03G0433300LC.1</td>
-      <td>TraesCSU03G0433300LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AFTELLK</td>
-      <td>TraesCSU03G0362800LC.1</td>
-      <td>TraesCSU03G0362800LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AVTSPSAR</td>
-      <td>TraesCSU03G0279300.1</td>
-      <td>TraesCSU03G0279300</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>ADGFAGVFPEHKYEIVK</td>
-      <td>TraesCSU03G0076400.4</td>
-      <td>TraesCSU03G0076400</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>15</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AHVIVMGATNRPNSIDPALR</td>
-      <td>TraesCSU03G0001700.1</td>
-      <td>TraesCSU03G0001700</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>16</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAGIPSK</td>
-      <td>TraesCSU03G0054300.1</td>
-      <td>TraesCSU03G0054300</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>17</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AGVYHPWGPGNGRR</td>
-      <td>TraesCSU03G0292000LC.1</td>
-      <td>TraesCSU03G0292000LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>18</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAQLSGR</td>
-      <td>TraesCSU03G0023500LC.1</td>
-      <td>TraesCSU03G0023500LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-    <tr>
-      <th>19</th>
-      <td>PXD004720</td>
-      <td>bread wheat</td>
-      <td>anther</td>
-      <td>single</td>
-      <td>AAVFQMEHNKAP</td>
-      <td>TraesCSU03G0002700LC.1</td>
-      <td>TraesCSU03G0002700LC</td>
-      <td>ChrUnknown</td>
-      <td>validated</td>
-      <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>True</td>
-      <td>True</td>
-      <td>False</td>
-      <td>True</td>
-      <td>False</td>
-      <td>failed</td>
-      <td>ChrUnknown</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
 
 # Step 12 — Export BED6 and BED12 Files for JBrowse
 
@@ -13068,46 +13571,102 @@ The resulting BED6 and BED12 files can be loaded into JBrowse to visualise pepti
 
 ```python
 # ============================================================
-# Step 12 — Export fully validated BED6 and BED12 files for JBrowse (takes 30 min)
+# Step 12 — Export fully validated BED6 and BED12 files
+# for JBrowse (takes approximately 30 min)
+#
 # Translation-validated + sanity-check-passed projections only
+# Includes valid ChrUnknown projections.
 # ============================================================
 
 import pandas as pd
 from pathlib import Path
 
+
 # -----------------------------
 # 1. Input / output paths
 # -----------------------------
+
 fragpipe_dir = Path("FragPipe_results")
 tables_dir = Path("python_outputs/tables")
 
 # Final BED outputs after both validation layers:
 # Step 10 translation validation + Step 11 sanity checks
 bed_dir = Path("python_outputs/bed_validated")
-bed_dir.mkdir(parents=True, exist_ok=True)
+bed_dir.mkdir(
+    parents=True,
+    exist_ok=True
+)
 
-manifest_file = fragpipe_dir / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+manifest_file = (
+    fragpipe_dir
+    / "wheat_tissues_FragPipe-result-manifest_2026-05-11.csv"
+)
 
-# Step 11 output: full sanity-check table built from Step 10 translation-validated rows
-sanity_file = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
+# Corrected Step 11 output
+sanity_file = (
+    tables_dir
+    / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
+)
 
-# Step 12 output summary
-step12_summary_out = tables_dir / "wheat_bed_export_validated_summary_step12.csv"
+# Original Step 12 summary filename
+step12_summary_out = (
+    tables_dir
+    / "wheat_bed_export_validated_summary_step12.csv"
+)
 
 chunk_size = 100_000
 
-manifest = pd.read_csv(manifest_file, encoding="utf-8-sig")
+
+# -----------------------------
+# 2. Load manifest and confirm Step 11 input
+# -----------------------------
+
+manifest = pd.read_csv(
+    manifest_file,
+    encoding="utf-8-sig"
+)
 
 if not sanity_file.exists():
+
     raise FileNotFoundError(
-        f"Step 11 sanity-check file not found:\n{sanity_file}\n\n"
-        "Please run Step 11 first."
+        f"Step 11 sanity-check file not found:\n"
+        f"{sanity_file}\n\n"
+        "Please run the corrected Step 11 first."
+    )
+
+
+# Confirm that this is the corrected Step 11 output.
+step11_header = pd.read_csv(
+    sanity_file,
+    nrows=0
+)
+
+required_step11_cols = [
+    "Projection_file",
+    "Chromosome",
+    "Sanity_check_status",
+    "All_sanity_checks_passed",
+    "Check_chromosome_and_strand"
+]
+
+missing_step11_cols = [
+    col
+    for col in required_step11_cols
+    if col not in step11_header.columns
+]
+
+if missing_step11_cols:
+
+    raise KeyError(
+        "Missing required Step 11 column(s): "
+        f"{missing_step11_cols}"
     )
 
 
 # -----------------------------
-# 2. Helper functions
+# 3. Helper functions
 # -----------------------------
+
 def make_bed_score(data):
     """
     Create BED score between 0 and 1000.
@@ -13118,10 +13677,14 @@ def make_bed_score(data):
     """
 
     if "Probability" in data.columns:
-        score = pd.to_numeric(
-            data["Probability"],
-            errors="coerce"
-        ) * 1000
+
+        score = (
+            pd.to_numeric(
+                data["Probability"],
+                errors="coerce"
+            )
+            * 1000
+        )
 
         score = (
             score
@@ -13132,7 +13695,11 @@ def make_bed_score(data):
         )
 
     else:
-        score = pd.Series([1000] * len(data), index=data.index)
+
+        score = pd.Series(
+            [1000] * len(data),
+            index=data.index
+        )
 
     return score
 
@@ -13165,37 +13732,88 @@ def build_bed_name(projected):
     peptide|protein|gene|validated=translation+sanity|tissues=X
     """
 
-    if "Peptide_intron_gapped" in projected.columns:
-        peptide_label = projected["Peptide_intron_gapped"].astype(str)
-    elif "Peptide_intron_gapped_compact" in projected.columns:
-        peptide_label = projected["Peptide_intron_gapped_compact"].astype(str)
+    if (
+        "Peptide_intron_gapped"
+        in projected.columns
+    ):
+
+        peptide_label = (
+            projected[
+                "Peptide_intron_gapped"
+            ]
+            .astype(str)
+        )
+
+    elif (
+        "Peptide_intron_gapped_compact"
+        in projected.columns
+    ):
+
+        peptide_label = (
+            projected[
+                "Peptide_intron_gapped_compact"
+            ]
+            .astype(str)
+        )
+
     else:
-        peptide_label = projected["Peptide"].astype(str)
+
+        peptide_label = (
+            projected["Peptide"]
+            .astype(str)
+        )
+
 
     if "GeneID" in projected.columns:
+
         bed_name = (
-            peptide_label + "|" +
-            projected["ProteinID"].astype(str) + "|" +
-            projected["GeneID"].astype(str)
+            peptide_label
+            + "|"
+            + projected["ProteinID"].astype(str)
+            + "|"
+            + projected["GeneID"].astype(str)
         )
+
+    elif "GeneModel" in projected.columns:
+
+        bed_name = (
+            peptide_label
+            + "|"
+            + projected["ProteinID"].astype(str)
+            + "|"
+            + projected["GeneModel"].astype(str)
+        )
+
     else:
+
         bed_name = (
-            peptide_label + "|" +
-            projected["ProteinID"].astype(str)
+            peptide_label
+            + "|"
+            + projected["ProteinID"].astype(str)
         )
 
-    # Make final BED tracks self-documenting
-    bed_name = bed_name + "|validated=translation+sanity"
 
-    # Add tissue count if present
+    bed_name = (
+        bed_name
+        + "|validated=translation+sanity"
+    )
+
+
     if "Tissues_count" in projected.columns:
+
         bed_name = (
-            bed_name +
-            "|tissues=" +
-            projected["Tissues_count"].astype(str)
+            bed_name
+            + "|tissues="
+            + projected[
+                "Tissues_count"
+            ]
+            .astype(str)
         )
 
-    return bed_name.apply(clean_bed_name)
+
+    return bed_name.apply(
+        clean_bed_name
+    )
 
 
 def prepare_bed_rows(projected):
@@ -13218,39 +13836,79 @@ def prepare_bed_rows(projected):
     ]
 
     missing_cols = [
-        col for col in required_cols
+        col
+        for col in required_cols
         if col not in projected.columns
     ]
 
     if missing_cols:
+
         raise KeyError(
-            f"Missing required BED column(s): {missing_cols}"
+            f"Missing required BED column(s): "
+            f"{missing_cols}"
         )
+
 
     projected = projected.copy()
 
-    # Create BED score and label
-    projected["BED_score"] = make_bed_score(projected)
-    projected["BED_name"] = build_bed_name(projected)
 
-    # Force integer coordinate types
-    projected["BED_start_0based"] = (
-        pd.to_numeric(projected["BED_start_0based"], errors="coerce")
+    # Create BED score and label.
+    projected[
+        "BED_score"
+    ] = make_bed_score(
+        projected
+    )
+
+    projected[
+        "BED_name"
+    ] = build_bed_name(
+        projected
+    )
+
+
+    # Force integer coordinate types.
+    projected[
+        "BED_start_0based"
+    ] = (
+        pd.to_numeric(
+            projected[
+                "BED_start_0based"
+            ],
+            errors="coerce"
+        )
         .astype("Int64")
     )
 
-    projected["BED_end_0based_exclusive"] = (
-        pd.to_numeric(projected["BED_end_0based_exclusive"], errors="coerce")
+    projected[
+        "BED_end_0based_exclusive"
+    ] = (
+        pd.to_numeric(
+            projected[
+                "BED_end_0based_exclusive"
+            ],
+            errors="coerce"
+        )
         .astype("Int64")
     )
 
-    projected["BED_block_count"] = (
-        pd.to_numeric(projected["BED_block_count"], errors="coerce")
+    projected[
+        "BED_block_count"
+    ] = (
+        pd.to_numeric(
+            projected[
+                "BED_block_count"
+            ],
+            errors="coerce"
+        )
         .astype("Int64")
     )
 
-    # Drop rows with missing essential BED fields, just in case
-    before_drop = len(projected)
+
+    # Drop rows with missing essential BED fields,
+    # as a final defensive check.
+    before_drop = len(
+        projected
+    )
 
     projected = projected.dropna(
         subset=[
@@ -13264,13 +13922,44 @@ def prepare_bed_rows(projected):
         ]
     ).copy()
 
-    dropped_missing_bed_fields = before_drop - len(projected)
+    dropped_missing_bed_fields = (
+        before_drop
+        - len(projected)
+    )
 
-    projected["BED_start_0based"] = projected["BED_start_0based"].astype(int)
-    projected["BED_end_0based_exclusive"] = projected["BED_end_0based_exclusive"].astype(int)
-    projected["BED_block_count"] = projected["BED_block_count"].astype(int)
 
-    return projected, dropped_missing_bed_fields
+    projected[
+        "BED_start_0based"
+    ] = (
+        projected[
+            "BED_start_0based"
+        ]
+        .astype(int)
+    )
+
+    projected[
+        "BED_end_0based_exclusive"
+    ] = (
+        projected[
+            "BED_end_0based_exclusive"
+        ]
+        .astype(int)
+    )
+
+    projected[
+        "BED_block_count"
+    ] = (
+        projected[
+            "BED_block_count"
+        ]
+        .astype(int)
+    )
+
+
+    return (
+        projected,
+        dropped_missing_bed_fields
+    )
 
 
 def make_bed6(projected):
@@ -13299,10 +13988,14 @@ def make_bed12(projected):
             projected["Chromosome"],
 
         "chromStart":
-            projected["BED_start_0based"],
+            projected[
+                "BED_start_0based"
+            ],
 
         "chromEnd":
-            projected["BED_end_0based_exclusive"],
+            projected[
+                "BED_end_0based_exclusive"
+            ],
 
         "name":
             projected["BED_name"],
@@ -13314,213 +14007,408 @@ def make_bed12(projected):
             projected["Strand"],
 
         "thickStart":
-            projected["BED_start_0based"],
+            projected[
+                "BED_start_0based"
+            ],
 
         "thickEnd":
-            projected["BED_end_0based_exclusive"],
+            projected[
+                "BED_end_0based_exclusive"
+            ],
 
         "itemRgb":
             "0",
 
         "blockCount":
-            projected["BED_block_count"],
+            projected[
+                "BED_block_count"
+            ],
 
         "blockSizes":
-            projected["BED_block_sizes"],
+            projected[
+                "BED_block_sizes"
+            ],
 
         "blockStarts":
-            projected["BED_block_starts"]
+            projected[
+                "BED_block_starts"
+            ]
     })
 
 
 # -----------------------------
-# 3. Build manifest lookup and output file names
+# 4. Build manifest lookup and output filenames
 # -----------------------------
+
 manifest_lookup = {}
 
 for _, row in manifest.iterrows():
 
-    projection_filename = row["FragPipe-Output-Peptide"].replace(
-        "_peptide.tsv",
-        "_peptide_genome_projection.csv"
+    projection_filename = (
+        row[
+            "FragPipe-Output-Peptide"
+        ]
+        .replace(
+            "_peptide.tsv",
+            "_peptide_genome_projection.csv"
+        )
     )
 
-    bed6_filename = projection_filename.replace(
-        "_peptide_genome_projection.csv",
-        "_validated_peptides.bed6"
+
+    bed6_filename = (
+        projection_filename
+        .replace(
+            "_peptide_genome_projection.csv",
+            "_validated_peptides.bed6"
+        )
     )
 
-    bed12_filename = projection_filename.replace(
-        "_peptide_genome_projection.csv",
-        "_validated_peptides.bed12"
+
+    bed12_filename = (
+        projection_filename
+        .replace(
+            "_peptide_genome_projection.csv",
+            "_validated_peptides.bed12"
+        )
     )
 
-    manifest_lookup[projection_filename] = {
-        "Source": row["Source"],
-        "Species": row["Species"],
-        "Tissue": row["Tissue-Raw-Code"],
-        "Batch": row["Batch"],
-        "BED6_file": bed6_filename,
-        "BED12_file": bed12_filename,
-        "BED6_path": bed_dir / bed6_filename,
-        "BED12_path": bed_dir / bed12_filename
+
+    manifest_lookup[
+        projection_filename
+    ] = {
+        "Source":
+            row["Source"],
+
+        "Species":
+            row["Species"],
+
+        "Tissue":
+            row["Tissue-Raw-Code"],
+
+        "Batch":
+            row["Batch"],
+
+        "BED6_file":
+            bed6_filename,
+
+        "BED12_file":
+            bed12_filename,
+
+        "BED6_path":
+            bed_dir / bed6_filename,
+
+        "BED12_path":
+            bed_dir / bed12_filename
     }
 
 
-# Clear previous BED outputs if rerunning this step
+# -----------------------------
+# 5. Overwrite previous Step 12 outputs
+# -----------------------------
+
 for info in manifest_lookup.values():
-    for path_key in ["BED6_path", "BED12_path"]:
-        path = info[path_key]
-        if path.exists():
-            path.unlink()
+
+    for path_key in [
+        "BED6_path",
+        "BED12_path"
+    ]:
+
+        output_path = info[
+            path_key
+        ]
+
+        if output_path.exists():
+            output_path.unlink()
+
 
 if step12_summary_out.exists():
     step12_summary_out.unlink()
 
 
 # -----------------------------
-# 4. Initialise summary dictionary
+# 6. Initialise summary dictionary
 # -----------------------------
+
 summary_dict = {}
+
 
 for projection_filename, info in manifest_lookup.items():
 
-    summary_dict[projection_filename] = {
-        "Source": info["Source"],
-        "Species": info["Species"],
-        "Tissue": info["Tissue"],
-        "Batch": info["Batch"],
-        "Projection_file": projection_filename,
-        "BED6_file": info["BED6_file"],
-        "BED12_file": info["BED12_file"],
+    summary_dict[
+        projection_filename
+    ] = {
+        "Source":
+            info["Source"],
 
-        "Rows_in_step11_sanity_file": 0,
-        "Rows_passing_all_sanity_checks": 0,
-        "Rows_excluded_by_sanity_checks": 0,
-        "Rows_dropped_missing_BED_fields": 0,
+        "Species":
+            info["Species"],
 
-        "BED_rows": 0,
-        "Unique_BED_peptides": 0,
-        "Unique_BED_proteins": 0,
-        "Unique_BED_gene_models": 0,
-        "Multi_block_peptides": 0,
-        "Within_exon_peptides": 0,
-        "Intron_spanning_BED_rows": 0,
-        "Within_exon_BED_rows": 0,
-        "Unique_intron_spanning_peptides": 0,
-        "Unique_within_exon_peptides": 0,
-        "BED_labels_with_introns": 0
+        "Tissue":
+            info["Tissue"],
+
+        "Batch":
+            info["Batch"],
+
+        "Projection_file":
+            projection_filename,
+
+        "BED6_file":
+            info["BED6_file"],
+
+        "BED12_file":
+            info["BED12_file"],
+
+        "Rows_in_step11_sanity_file":
+            0,
+
+        "Rows_passing_all_sanity_checks":
+            0,
+
+        "Rows_excluded_by_sanity_checks":
+            0,
+
+        "Rows_dropped_missing_BED_fields":
+            0,
+
+        "BED_rows":
+            0,
+
+        "Unique_BED_peptides":
+            0,
+
+        "Unique_BED_proteins":
+            0,
+
+        "Unique_BED_gene_models":
+            0,
+
+        "Multi_block_peptides":
+            0,
+
+        "Within_exon_peptides":
+            0,
+
+        "Intron_spanning_BED_rows":
+            0,
+
+        "Within_exon_BED_rows":
+            0,
+
+        "Unique_intron_spanning_peptides":
+            0,
+
+        "Unique_within_exon_peptides":
+            0,
+
+        "BED_labels_with_introns":
+            0
     }
 
 
-# For unique counts across chunks
-unique_peptides = {k: set() for k in manifest_lookup}
-unique_proteins = {k: set() for k in manifest_lookup}
-unique_genes = {k: set() for k in manifest_lookup}
-unique_intron_spanning_peptides = {k: set() for k in manifest_lookup}
-unique_within_exon_peptides = {k: set() for k in manifest_lookup}
+# Unique counts across chunks.
+unique_peptides = {
+    key: set()
+    for key in manifest_lookup
+}
 
-# Track whether each BED file has already been written to
-bed_file_written = {
-    projection_filename: {
-        "bed6": False,
-        "bed12": False
-    }
-    for projection_filename in manifest_lookup
+unique_proteins = {
+    key: set()
+    for key in manifest_lookup
+}
+
+unique_genes = {
+    key: set()
+    for key in manifest_lookup
+}
+
+unique_intron_spanning_peptides = {
+    key: set()
+    for key in manifest_lookup
+}
+
+unique_within_exon_peptides = {
+    key: set()
+    for key in manifest_lookup
 }
 
 
 # -----------------------------
-# 5. Read Step 11 sanity-check output in chunks and export BED files
+# 7. Read corrected Step 11 output in chunks
 # -----------------------------
-print("\nExporting BED6/BED12 files from Step 11 sanity-passed rows...")
 
-header = pd.read_csv(sanity_file, nrows=0)
+print(
+    "\nExporting BED6/BED12 files from corrected "
+    "Step 11 sanity-passed rows..."
+)
 
-required_step11_cols = [
-    "Projection_file",
-    "Sanity_check_status",
-    "All_sanity_checks_passed"
-]
-
-missing_step11_cols = [
-    col for col in required_step11_cols
-    if col not in header.columns
-]
-
-if missing_step11_cols:
-    raise KeyError(
-        f"Missing required Step 11 column(s): {missing_step11_cols}"
-    )
 
 total_rows_read = 0
 total_sanity_passed = 0
 total_sanity_failed = 0
 total_bed_rows = 0
+total_rows_dropped_missing_bed_fields = 0
+total_chrunknown_bed_rows = 0
 
-for chunk_i, chunk in enumerate(
+
+for chunk_number, chunk in enumerate(
+
     pd.read_csv(
         sanity_file,
         chunksize=chunk_size,
         low_memory=False
     ),
+
     start=1
 ):
 
-    total_rows_read += len(chunk)
+    total_rows_read += len(
+        chunk
+    )
 
-    # Count sanity status per projection file
-    for projection_filename, file_group in chunk.groupby("Projection_file"):
 
-        projection_filename = str(projection_filename)
+    # Count sanity status per projection file.
+    for projection_filename, file_group in chunk.groupby(
+        "Projection_file"
+    ):
+
+        projection_filename = str(
+            projection_filename
+        )
 
         if projection_filename not in summary_dict:
             continue
 
-        n_rows = len(file_group)
-        n_passed = int((file_group["Sanity_check_status"].astype(str) == "passed").sum())
-        n_failed = n_rows - n_passed
 
-        summary_dict[projection_filename]["Rows_in_step11_sanity_file"] += n_rows
-        summary_dict[projection_filename]["Rows_passing_all_sanity_checks"] += n_passed
-        summary_dict[projection_filename]["Rows_excluded_by_sanity_checks"] += n_failed
+        number_rows = len(
+            file_group
+        )
 
-    # Keep only rows passing all sanity checks
+        number_passed = int(
+            (
+                file_group[
+                    "Sanity_check_status"
+                ]
+                .astype(str)
+                == "passed"
+            ).sum()
+        )
+
+        number_failed = (
+            number_rows
+            - number_passed
+        )
+
+
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_in_step11_sanity_file"
+        ] += number_rows
+
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_passing_all_sanity_checks"
+        ] += number_passed
+
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_excluded_by_sanity_checks"
+        ] += number_failed
+
+
+    # Keep only rows passing all sanity checks.
     passed = chunk[
-        chunk["Sanity_check_status"].astype(str) == "passed"
+        chunk[
+            "Sanity_check_status"
+        ]
+        .astype(str)
+        == "passed"
     ].copy()
 
-    total_sanity_passed += len(passed)
-    total_sanity_failed += len(chunk) - len(passed)
+
+    total_sanity_passed += len(
+        passed
+    )
+
+    total_sanity_failed += (
+        len(chunk)
+        - len(passed)
+    )
+
 
     if passed.empty:
+
         print(
-            f"Chunk {chunk_i}: read {len(chunk):,} rows | "
-            f"no sanity-passed rows"
+            f"Chunk {chunk_number}: "
+            f"read {len(chunk):,} rows | "
+            "no sanity-passed rows"
         )
+
         continue
 
-    # Export per projection/source-tissue file
-    for projection_filename, projected in passed.groupby("Projection_file"):
 
-        projection_filename = str(projection_filename)
+    # Export each source–tissue projection file.
+    for projection_filename, projected in passed.groupby(
+        "Projection_file"
+    ):
+
+        projection_filename = str(
+            projection_filename
+        )
+
 
         if projection_filename not in manifest_lookup:
-            print(f"  Warning: projection file not found in manifest, skipped: {projection_filename}")
+
+            print(
+                "Warning: projection file not found in "
+                "manifest, skipped: "
+                f"{projection_filename}"
+            )
+
             continue
 
-        info = manifest_lookup[projection_filename]
 
-        projected_prepared, dropped_missing_bed_fields = prepare_bed_rows(projected)
+        info = manifest_lookup[
+            projection_filename
+        ]
+
+
+        (
+            projected_prepared,
+            dropped_missing_bed_fields
+        ) = prepare_bed_rows(
+            projected
+        )
+
+
+        summary_dict[
+            projection_filename
+        ][
+            "Rows_dropped_missing_BED_fields"
+        ] += dropped_missing_bed_fields
+
+
+        total_rows_dropped_missing_bed_fields += (
+            dropped_missing_bed_fields
+        )
+
 
         if projected_prepared.empty:
-            summary_dict[projection_filename]["Rows_dropped_missing_BED_fields"] += dropped_missing_bed_fields
             continue
 
-        bed6 = make_bed6(projected_prepared)
-        bed12 = make_bed12(projected_prepared)
 
-        # Append to BED6
+        bed6 = make_bed6(
+            projected_prepared
+        )
+
+        bed12 = make_bed12(
+            projected_prepared
+        )
+
+
+        # Append to BED6.
         bed6.to_csv(
             info["BED6_path"],
             sep="\t",
@@ -13529,7 +14417,8 @@ for chunk_i, chunk in enumerate(
             mode="a"
         )
 
-        # Append to BED12
+
+        # Append to BED12.
         bed12.to_csv(
             info["BED12_path"],
             sep="\t",
@@ -13538,120 +14427,299 @@ for chunk_i, chunk in enumerate(
             mode="a"
         )
 
-        # Update summary
-        n_bed = len(projected_prepared)
 
-        summary_dict[projection_filename]["BED_rows"] += n_bed
-        summary_dict[projection_filename]["Rows_dropped_missing_BED_fields"] += dropped_missing_bed_fields
+        # Update summary.
+        number_bed_rows = len(
+            projected_prepared
+        )
+
+        summary_dict[
+            projection_filename
+        ][
+            "BED_rows"
+        ] += number_bed_rows
+
+
+        total_bed_rows += (
+            number_bed_rows
+        )
+
+
+        # Count ChrUnknown rows exported.
+        number_chrunknown_rows = int(
+            (
+                projected_prepared[
+                    "Chromosome"
+                ]
+                .astype(str)
+                .str.strip()
+                == "ChrUnknown"
+            ).sum()
+        )
+
+        total_chrunknown_bed_rows += (
+            number_chrunknown_rows
+        )
+
 
         if "Peptide" in projected_prepared.columns:
-            unique_peptides[projection_filename].update(
-                projected_prepared["Peptide"].dropna().astype(str).unique()
+
+            unique_peptides[
+                projection_filename
+            ].update(
+                projected_prepared[
+                    "Peptide"
+                ]
+                .dropna()
+                .astype(str)
+                .unique()
             )
+
 
         if "ProteinID" in projected_prepared.columns:
-            unique_proteins[projection_filename].update(
-                projected_prepared["ProteinID"].dropna().astype(str).unique()
+
+            unique_proteins[
+                projection_filename
+            ].update(
+                projected_prepared[
+                    "ProteinID"
+                ]
+                .dropna()
+                .astype(str)
+                .unique()
             )
+
 
         if "GeneID" in projected_prepared.columns:
-            unique_genes[projection_filename].update(
-                projected_prepared["GeneID"].dropna().astype(str).unique()
+
+            unique_genes[
+                projection_filename
+            ].update(
+                projected_prepared[
+                    "GeneID"
+                ]
+                .dropna()
+                .astype(str)
+                .unique()
             )
 
-        # Count exon structure of peptide projections
+        elif "GeneModel" in projected_prepared.columns:
+
+            unique_genes[
+                projection_filename
+            ].update(
+                projected_prepared[
+                    "GeneModel"
+                ]
+                .dropna()
+                .astype(str)
+                .unique()
+            )
+
+
+        # Count exon structure.
         block_count = pd.to_numeric(
-            projected_prepared["BED_block_count"],
+            projected_prepared[
+                "BED_block_count"
+            ],
             errors="coerce"
         )
-        
-        intron_spanning_mask = block_count > 1
-        within_exon_mask = block_count == 1
-        
-        intron_spanning_rows = int(intron_spanning_mask.sum())
-        within_exon_rows = int(within_exon_mask.sum())
-        
-        # Existing legacy-style count retained for continuity
-        summary_dict[projection_filename]["Multi_block_peptides"] += intron_spanning_rows
-        
-        # New clearer paired counts
-        summary_dict[projection_filename]["Within_exon_peptides"] += within_exon_rows
-        summary_dict[projection_filename]["Intron_spanning_BED_rows"] += intron_spanning_rows
-        summary_dict[projection_filename]["Within_exon_BED_rows"] += within_exon_rows
-        
-        # Unique peptide-sequence counts by exon structure
+
+
+        intron_spanning_mask = (
+            block_count > 1
+        )
+
+        within_exon_mask = (
+            block_count == 1
+        )
+
+
+        intron_spanning_rows = int(
+            intron_spanning_mask.sum()
+        )
+
+        within_exon_rows = int(
+            within_exon_mask.sum()
+        )
+
+
+        # Existing legacy-style count retained.
+        summary_dict[
+            projection_filename
+        ][
+            "Multi_block_peptides"
+        ] += intron_spanning_rows
+
+
+        summary_dict[
+            projection_filename
+        ][
+            "Within_exon_peptides"
+        ] += within_exon_rows
+
+
+        summary_dict[
+            projection_filename
+        ][
+            "Intron_spanning_BED_rows"
+        ] += intron_spanning_rows
+
+
+        summary_dict[
+            projection_filename
+        ][
+            "Within_exon_BED_rows"
+        ] += within_exon_rows
+
+
         if "Peptide" in projected_prepared.columns:
-        
-            unique_intron_spanning_peptides[projection_filename].update(
+
+            unique_intron_spanning_peptides[
+                projection_filename
+            ].update(
                 projected_prepared.loc[
                     intron_spanning_mask,
                     "Peptide"
-                ].dropna().astype(str).unique()
+                ]
+                .dropna()
+                .astype(str)
+                .unique()
             )
-        
-            unique_within_exon_peptides[projection_filename].update(
+
+
+            unique_within_exon_peptides[
+                projection_filename
+            ].update(
                 projected_prepared.loc[
                     within_exon_mask,
                     "Peptide"
-                ].dropna().astype(str).unique()
+                ]
+                .dropna()
+                .astype(str)
+                .unique()
             )
-        
-        # BED labels containing dashes remain useful as a visual proxy,
-        # but BED_block_count is the authoritative exon-structure count.
-        summary_dict[projection_filename]["BED_labels_with_introns"] += int(
-            projected_prepared["BED_name"]
+
+
+        # BED labels containing dashes remain a visual proxy.
+        summary_dict[
+            projection_filename
+        ][
+            "BED_labels_with_introns"
+        ] += int(
+            projected_prepared[
+                "BED_name"
+            ]
             .astype(str)
-            .str.contains("-", regex=False)
+            .str.contains(
+                "-",
+                regex=False
+            )
             .sum()
         )
 
-        total_bed_rows += n_bed
 
     print(
-        f"Chunk {chunk_i}: read {len(chunk):,} rows | "
+        f"Chunk {chunk_number}: "
+        f"read {len(chunk):,} rows | "
         f"sanity-passed {len(passed):,} | "
-        f"cumulative BED rows {total_bed_rows:,}"
+        f"cumulative BED rows {total_bed_rows:,} | "
+        f"cumulative ChrUnknown rows "
+        f"{total_chrunknown_bed_rows:,}"
     )
 
 
 # -----------------------------
-# 6. Finalise summary table
+# 8. Finalise summary table
 # -----------------------------
+
 for projection_filename in summary_dict:
 
-    summary_dict[projection_filename]["Unique_BED_peptides"] = len(
-        unique_peptides[projection_filename]
+    summary_dict[
+        projection_filename
+    ][
+        "Unique_BED_peptides"
+    ] = len(
+        unique_peptides[
+            projection_filename
+        ]
     )
 
-    summary_dict[projection_filename]["Unique_BED_proteins"] = len(
-        unique_proteins[projection_filename]
+
+    summary_dict[
+        projection_filename
+    ][
+        "Unique_BED_proteins"
+    ] = len(
+        unique_proteins[
+            projection_filename
+        ]
     )
 
-    summary_dict[projection_filename]["Unique_BED_gene_models"] = len(
-        unique_genes[projection_filename]
+
+    summary_dict[
+        projection_filename
+    ][
+        "Unique_BED_gene_models"
+    ] = len(
+        unique_genes[
+            projection_filename
+        ]
     )
 
-    summary_dict[projection_filename]["Unique_intron_spanning_peptides"] = len(
-        unique_intron_spanning_peptides[projection_filename]
+
+    summary_dict[
+        projection_filename
+    ][
+        "Unique_intron_spanning_peptides"
+    ] = len(
+        unique_intron_spanning_peptides[
+            projection_filename
+        ]
     )
 
-    summary_dict[projection_filename]["Unique_within_exon_peptides"] = len(
-        unique_within_exon_peptides[projection_filename]
+
+    summary_dict[
+        projection_filename
+    ][
+        "Unique_within_exon_peptides"
+    ] = len(
+        unique_within_exon_peptides[
+            projection_filename
+        ]
     )
 
-step12_summary = pd.DataFrame(summary_dict.values())
 
-step12_summary["Percent_sanity_passed"] = (
-    step12_summary["Rows_passing_all_sanity_checks"] /
-    step12_summary["Rows_in_step11_sanity_file"] *
-    100
+step12_summary = pd.DataFrame(
+    summary_dict.values()
+)
+
+
+step12_summary[
+    "Percent_sanity_passed"
+] = (
+    step12_summary[
+        "Rows_passing_all_sanity_checks"
+    ]
+    / step12_summary[
+        "Rows_in_step11_sanity_file"
+    ]
+    * 100
 ).round(4)
 
-step12_summary["Percent_exported_to_BED"] = (
-    step12_summary["BED_rows"] /
-    step12_summary["Rows_in_step11_sanity_file"] *
-    100
+
+step12_summary[
+    "Percent_exported_to_BED"
+] = (
+    step12_summary[
+        "BED_rows"
+    ]
+    / step12_summary[
+        "Rows_in_step11_sanity_file"
+    ]
+    * 100
 ).round(4)
+
 
 step12_summary.to_csv(
     step12_summary_out,
@@ -13660,118 +14728,224 @@ step12_summary.to_csv(
 
 
 # -----------------------------
-# 7. Overall summary
+# 9. Integrity checks
 # -----------------------------
-overall_bed_files_bed6 = len(list(bed_dir.glob("*_validated_peptides.bed6")))
-overall_bed_files_bed12 = len(list(bed_dir.glob("*_validated_peptides.bed12")))
 
-print("\n===== STEP 12 VALIDATED BED EXPORT SUMMARY =====")
-print(f"Rows read from Step 11 sanity-check table: {total_rows_read:,}")
-print(f"Rows passing all sanity checks: {total_sanity_passed:,}")
-print(f"Rows excluded by sanity checks: {total_sanity_failed:,}")
-print(f"Rows exported to BED: {total_bed_rows:,}")
-print(f"BED6 files created: {overall_bed_files_bed6:,}")
-print(f"BED12 files created: {overall_bed_files_bed12:,}")
+expected_bed_rows = (
+    total_sanity_passed
+    - total_rows_dropped_missing_bed_fields
+)
 
-print(f"\nBED files saved in: {bed_dir}")
-print(f"Step 12 summary saved: {step12_summary_out}")
 
-display(step12_summary)
+if total_bed_rows != expected_bed_rows:
+
+    raise ValueError(
+        "Step 12 row-accounting mismatch:\n"
+        f"Rows passing sanity checks: "
+        f"{total_sanity_passed:,}\n"
+        f"Rows dropped for missing BED fields: "
+        f"{total_rows_dropped_missing_bed_fields:,}\n"
+        f"Expected BED rows: "
+        f"{expected_bed_rows:,}\n"
+        f"Actual BED rows: "
+        f"{total_bed_rows:,}"
+    )
+
+
+if total_chrunknown_bed_rows != 77_543:
+
+    print(
+        "\nWARNING: expected 77,543 ChrUnknown rows "
+        "from corrected Step 11, but Step 12 exported "
+        f"{total_chrunknown_bed_rows:,}."
+    )
+
+else:
+
+    print(
+        "\nChrUnknown export check passed: "
+        "77,543 rows exported."
+    )
+
+
+# -----------------------------
+# 10. Overall summary
+# -----------------------------
+
+overall_bed_files_bed6 = len(
+    list(
+        bed_dir.glob(
+            "*_validated_peptides.bed6"
+        )
+    )
+)
+
+overall_bed_files_bed12 = len(
+    list(
+        bed_dir.glob(
+            "*_validated_peptides.bed12"
+        )
+    )
+)
+
+
+print(
+    "\n===== STEP 12 VALIDATED BED EXPORT SUMMARY ====="
+)
+
+print(
+    "Rows read from Step 11 sanity-check table: "
+    f"{total_rows_read:,}"
+)
+
+print(
+    "Rows passing all sanity checks: "
+    f"{total_sanity_passed:,}"
+)
+
+print(
+    "Rows excluded by sanity checks: "
+    f"{total_sanity_failed:,}"
+)
+
+print(
+    "Rows dropped for missing essential BED fields: "
+    f"{total_rows_dropped_missing_bed_fields:,}"
+)
+
+print(
+    "Rows exported to BED: "
+    f"{total_bed_rows:,}"
+)
+
+print(
+    "ChrUnknown rows exported to BED: "
+    f"{total_chrunknown_bed_rows:,}"
+)
+
+print(
+    "BED6 files created: "
+    f"{overall_bed_files_bed6:,}"
+)
+
+print(
+    "BED12 files created: "
+    f"{overall_bed_files_bed12:,}"
+)
+
+print(
+    f"\nBED files saved in: "
+    f"{bed_dir}"
+)
+
+print(
+    f"Step 12 summary saved: "
+    f"{step12_summary_out}"
+)
+
+
+display(
+    step12_summary
+)
 ```
 
     
-    Exporting BED6/BED12 files from Step 11 sanity-passed rows...
-    Chunk 1: read 100,000 rows | sanity-passed 99,103 | cumulative BED rows 99,103
-    Chunk 2: read 100,000 rows | sanity-passed 99,042 | cumulative BED rows 198,145
-    Chunk 3: read 100,000 rows | sanity-passed 98,965 | cumulative BED rows 297,110
-    Chunk 4: read 100,000 rows | sanity-passed 99,072 | cumulative BED rows 396,182
-    Chunk 5: read 100,000 rows | sanity-passed 99,141 | cumulative BED rows 495,323
-    Chunk 6: read 100,000 rows | sanity-passed 98,838 | cumulative BED rows 594,161
-    Chunk 7: read 100,000 rows | sanity-passed 99,027 | cumulative BED rows 693,188
-    Chunk 8: read 100,000 rows | sanity-passed 99,136 | cumulative BED rows 792,324
-    Chunk 9: read 100,000 rows | sanity-passed 99,224 | cumulative BED rows 891,548
-    Chunk 10: read 100,000 rows | sanity-passed 99,254 | cumulative BED rows 990,802
-    Chunk 11: read 100,000 rows | sanity-passed 99,160 | cumulative BED rows 1,089,962
-    Chunk 12: read 100,000 rows | sanity-passed 99,088 | cumulative BED rows 1,189,050
-    Chunk 13: read 100,000 rows | sanity-passed 99,193 | cumulative BED rows 1,288,243
-    Chunk 14: read 100,000 rows | sanity-passed 98,905 | cumulative BED rows 1,387,148
-    Chunk 15: read 100,000 rows | sanity-passed 98,837 | cumulative BED rows 1,485,985
-    Chunk 16: read 100,000 rows | sanity-passed 98,897 | cumulative BED rows 1,584,882
-    Chunk 17: read 100,000 rows | sanity-passed 98,979 | cumulative BED rows 1,683,861
-    Chunk 18: read 100,000 rows | sanity-passed 99,059 | cumulative BED rows 1,782,920
-    Chunk 19: read 100,000 rows | sanity-passed 98,967 | cumulative BED rows 1,881,887
-    Chunk 20: read 100,000 rows | sanity-passed 98,810 | cumulative BED rows 1,980,697
-    Chunk 21: read 100,000 rows | sanity-passed 98,925 | cumulative BED rows 2,079,622
-    Chunk 22: read 100,000 rows | sanity-passed 99,018 | cumulative BED rows 2,178,640
-    Chunk 23: read 100,000 rows | sanity-passed 99,038 | cumulative BED rows 2,277,678
-    Chunk 24: read 100,000 rows | sanity-passed 99,055 | cumulative BED rows 2,376,733
-    Chunk 25: read 100,000 rows | sanity-passed 98,990 | cumulative BED rows 2,475,723
-    Chunk 26: read 100,000 rows | sanity-passed 99,206 | cumulative BED rows 2,574,929
-    Chunk 27: read 100,000 rows | sanity-passed 99,222 | cumulative BED rows 2,674,151
-    Chunk 28: read 100,000 rows | sanity-passed 98,908 | cumulative BED rows 2,773,059
-    Chunk 29: read 100,000 rows | sanity-passed 99,076 | cumulative BED rows 2,872,135
-    Chunk 30: read 100,000 rows | sanity-passed 99,293 | cumulative BED rows 2,971,428
-    Chunk 31: read 100,000 rows | sanity-passed 99,320 | cumulative BED rows 3,070,748
-    Chunk 32: read 100,000 rows | sanity-passed 99,085 | cumulative BED rows 3,169,833
-    Chunk 33: read 100,000 rows | sanity-passed 99,136 | cumulative BED rows 3,268,969
-    Chunk 34: read 100,000 rows | sanity-passed 99,097 | cumulative BED rows 3,368,066
-    Chunk 35: read 100,000 rows | sanity-passed 99,148 | cumulative BED rows 3,467,214
-    Chunk 36: read 100,000 rows | sanity-passed 99,169 | cumulative BED rows 3,566,383
-    Chunk 37: read 100,000 rows | sanity-passed 99,114 | cumulative BED rows 3,665,497
-    Chunk 38: read 100,000 rows | sanity-passed 99,182 | cumulative BED rows 3,764,679
-    Chunk 39: read 100,000 rows | sanity-passed 99,057 | cumulative BED rows 3,863,736
-    Chunk 40: read 100,000 rows | sanity-passed 98,957 | cumulative BED rows 3,962,693
-    Chunk 41: read 100,000 rows | sanity-passed 98,997 | cumulative BED rows 4,061,690
-    Chunk 42: read 100,000 rows | sanity-passed 99,107 | cumulative BED rows 4,160,797
-    Chunk 43: read 100,000 rows | sanity-passed 99,042 | cumulative BED rows 4,259,839
-    Chunk 44: read 100,000 rows | sanity-passed 99,128 | cumulative BED rows 4,358,967
-    Chunk 45: read 100,000 rows | sanity-passed 98,819 | cumulative BED rows 4,457,786
-    Chunk 46: read 100,000 rows | sanity-passed 98,863 | cumulative BED rows 4,556,649
-    Chunk 47: read 100,000 rows | sanity-passed 98,948 | cumulative BED rows 4,655,597
-    Chunk 48: read 100,000 rows | sanity-passed 99,086 | cumulative BED rows 4,754,683
-    Chunk 49: read 100,000 rows | sanity-passed 99,008 | cumulative BED rows 4,853,691
-    Chunk 50: read 100,000 rows | sanity-passed 99,199 | cumulative BED rows 4,952,890
-    Chunk 51: read 100,000 rows | sanity-passed 99,139 | cumulative BED rows 5,052,029
-    Chunk 52: read 100,000 rows | sanity-passed 99,127 | cumulative BED rows 5,151,156
-    Chunk 53: read 100,000 rows | sanity-passed 99,101 | cumulative BED rows 5,250,257
-    Chunk 54: read 100,000 rows | sanity-passed 99,098 | cumulative BED rows 5,349,355
-    Chunk 55: read 100,000 rows | sanity-passed 99,066 | cumulative BED rows 5,448,421
-    Chunk 56: read 100,000 rows | sanity-passed 99,182 | cumulative BED rows 5,547,603
-    Chunk 57: read 100,000 rows | sanity-passed 99,056 | cumulative BED rows 5,646,659
-    Chunk 58: read 100,000 rows | sanity-passed 99,148 | cumulative BED rows 5,745,807
-    Chunk 59: read 100,000 rows | sanity-passed 98,940 | cumulative BED rows 5,844,747
-    Chunk 60: read 100,000 rows | sanity-passed 98,960 | cumulative BED rows 5,943,707
-    Chunk 61: read 100,000 rows | sanity-passed 98,997 | cumulative BED rows 6,042,704
-    Chunk 62: read 100,000 rows | sanity-passed 99,076 | cumulative BED rows 6,141,780
-    Chunk 63: read 100,000 rows | sanity-passed 98,946 | cumulative BED rows 6,240,726
-    Chunk 64: read 100,000 rows | sanity-passed 98,710 | cumulative BED rows 6,339,436
-    Chunk 65: read 100,000 rows | sanity-passed 98,980 | cumulative BED rows 6,438,416
-    Chunk 66: read 100,000 rows | sanity-passed 98,997 | cumulative BED rows 6,537,413
-    Chunk 67: read 100,000 rows | sanity-passed 99,038 | cumulative BED rows 6,636,451
-    Chunk 68: read 100,000 rows | sanity-passed 99,159 | cumulative BED rows 6,735,610
-    Chunk 69: read 100,000 rows | sanity-passed 99,199 | cumulative BED rows 6,834,809
-    Chunk 70: read 100,000 rows | sanity-passed 99,153 | cumulative BED rows 6,933,962
-    Chunk 71: read 100,000 rows | sanity-passed 99,141 | cumulative BED rows 7,033,103
-    Chunk 72: read 100,000 rows | sanity-passed 99,059 | cumulative BED rows 7,132,162
-    Chunk 73: read 100,000 rows | sanity-passed 99,140 | cumulative BED rows 7,231,302
-    Chunk 74: read 100,000 rows | sanity-passed 99,153 | cumulative BED rows 7,330,455
-    Chunk 75: read 100,000 rows | sanity-passed 98,987 | cumulative BED rows 7,429,442
-    Chunk 76: read 100,000 rows | sanity-passed 99,048 | cumulative BED rows 7,528,490
-    Chunk 77: read 100,000 rows | sanity-passed 99,101 | cumulative BED rows 7,627,591
-    Chunk 78: read 100,000 rows | sanity-passed 98,819 | cumulative BED rows 7,726,410
-    Chunk 79: read 100,000 rows | sanity-passed 98,937 | cumulative BED rows 7,825,347
-    Chunk 80: read 100,000 rows | sanity-passed 99,217 | cumulative BED rows 7,924,564
-    Chunk 81: read 100,000 rows | sanity-passed 99,111 | cumulative BED rows 8,023,675
-    Chunk 82: read 100,000 rows | sanity-passed 98,995 | cumulative BED rows 8,122,670
-    Chunk 83: read 14,230 rows | sanity-passed 14,017 | cumulative BED rows 8,136,687
+    Exporting BED6/BED12 files from corrected Step 11 sanity-passed rows...
+    Chunk 1: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 100,000 | cumulative ChrUnknown rows 897
+    Chunk 2: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 200,000 | cumulative ChrUnknown rows 1,855
+    Chunk 3: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 300,000 | cumulative ChrUnknown rows 2,890
+    Chunk 4: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 400,000 | cumulative ChrUnknown rows 3,818
+    Chunk 5: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 500,000 | cumulative ChrUnknown rows 4,677
+    Chunk 6: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 600,000 | cumulative ChrUnknown rows 5,839
+    Chunk 7: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 700,000 | cumulative ChrUnknown rows 6,812
+    Chunk 8: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 800,000 | cumulative ChrUnknown rows 7,676
+    Chunk 9: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 900,000 | cumulative ChrUnknown rows 8,452
+    Chunk 10: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,000,000 | cumulative ChrUnknown rows 9,198
+    Chunk 11: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,100,000 | cumulative ChrUnknown rows 10,038
+    Chunk 12: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,200,000 | cumulative ChrUnknown rows 10,950
+    Chunk 13: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,300,000 | cumulative ChrUnknown rows 11,757
+    Chunk 14: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,400,000 | cumulative ChrUnknown rows 12,852
+    Chunk 15: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,500,000 | cumulative ChrUnknown rows 14,015
+    Chunk 16: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,600,000 | cumulative ChrUnknown rows 15,118
+    Chunk 17: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,700,000 | cumulative ChrUnknown rows 16,139
+    Chunk 18: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,800,000 | cumulative ChrUnknown rows 17,080
+    Chunk 19: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 1,900,000 | cumulative ChrUnknown rows 18,113
+    Chunk 20: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,000,000 | cumulative ChrUnknown rows 19,303
+    Chunk 21: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,100,000 | cumulative ChrUnknown rows 20,378
+    Chunk 22: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,200,000 | cumulative ChrUnknown rows 21,360
+    Chunk 23: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,300,000 | cumulative ChrUnknown rows 22,322
+    Chunk 24: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,400,000 | cumulative ChrUnknown rows 23,267
+    Chunk 25: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,500,000 | cumulative ChrUnknown rows 24,277
+    Chunk 26: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,600,000 | cumulative ChrUnknown rows 25,071
+    Chunk 27: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,700,000 | cumulative ChrUnknown rows 25,849
+    Chunk 28: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,800,000 | cumulative ChrUnknown rows 26,941
+    Chunk 29: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 2,900,000 | cumulative ChrUnknown rows 27,865
+    Chunk 30: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,000,000 | cumulative ChrUnknown rows 28,572
+    Chunk 31: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,100,000 | cumulative ChrUnknown rows 29,252
+    Chunk 32: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,200,000 | cumulative ChrUnknown rows 30,167
+    Chunk 33: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,300,000 | cumulative ChrUnknown rows 31,031
+    Chunk 34: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,400,000 | cumulative ChrUnknown rows 31,934
+    Chunk 35: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,500,000 | cumulative ChrUnknown rows 32,786
+    Chunk 36: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,600,000 | cumulative ChrUnknown rows 33,617
+    Chunk 37: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,700,000 | cumulative ChrUnknown rows 34,503
+    Chunk 38: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,800,000 | cumulative ChrUnknown rows 35,321
+    Chunk 39: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 3,900,000 | cumulative ChrUnknown rows 36,264
+    Chunk 40: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,000,000 | cumulative ChrUnknown rows 37,307
+    Chunk 41: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,100,000 | cumulative ChrUnknown rows 38,310
+    Chunk 42: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,200,000 | cumulative ChrUnknown rows 39,203
+    Chunk 43: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,300,000 | cumulative ChrUnknown rows 40,161
+    Chunk 44: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,400,000 | cumulative ChrUnknown rows 41,033
+    Chunk 45: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,500,000 | cumulative ChrUnknown rows 42,214
+    Chunk 46: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,600,000 | cumulative ChrUnknown rows 43,351
+    Chunk 47: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,700,000 | cumulative ChrUnknown rows 44,403
+    Chunk 48: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,800,000 | cumulative ChrUnknown rows 45,317
+    Chunk 49: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 4,900,000 | cumulative ChrUnknown rows 46,309
+    Chunk 50: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,000,000 | cumulative ChrUnknown rows 47,110
+    Chunk 51: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,100,000 | cumulative ChrUnknown rows 47,971
+    Chunk 52: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,200,000 | cumulative ChrUnknown rows 48,844
+    Chunk 53: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,300,000 | cumulative ChrUnknown rows 49,743
+    Chunk 54: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,400,000 | cumulative ChrUnknown rows 50,645
+    Chunk 55: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,500,000 | cumulative ChrUnknown rows 51,579
+    Chunk 56: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,600,000 | cumulative ChrUnknown rows 52,397
+    Chunk 57: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,700,000 | cumulative ChrUnknown rows 53,341
+    Chunk 58: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,800,000 | cumulative ChrUnknown rows 54,193
+    Chunk 59: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 5,900,000 | cumulative ChrUnknown rows 55,253
+    Chunk 60: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,000,000 | cumulative ChrUnknown rows 56,293
+    Chunk 61: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,100,000 | cumulative ChrUnknown rows 57,296
+    Chunk 62: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,200,000 | cumulative ChrUnknown rows 58,220
+    Chunk 63: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,300,000 | cumulative ChrUnknown rows 59,274
+    Chunk 64: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,400,000 | cumulative ChrUnknown rows 60,564
+    Chunk 65: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,500,000 | cumulative ChrUnknown rows 61,584
+    Chunk 66: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,600,000 | cumulative ChrUnknown rows 62,587
+    Chunk 67: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,700,000 | cumulative ChrUnknown rows 63,549
+    Chunk 68: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,800,000 | cumulative ChrUnknown rows 64,390
+    Chunk 69: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 6,900,000 | cumulative ChrUnknown rows 65,191
+    Chunk 70: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,000,000 | cumulative ChrUnknown rows 66,038
+    Chunk 71: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,100,000 | cumulative ChrUnknown rows 66,897
+    Chunk 72: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,200,000 | cumulative ChrUnknown rows 67,838
+    Chunk 73: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,300,000 | cumulative ChrUnknown rows 68,698
+    Chunk 74: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,400,000 | cumulative ChrUnknown rows 69,545
+    Chunk 75: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,500,000 | cumulative ChrUnknown rows 70,558
+    Chunk 76: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,600,000 | cumulative ChrUnknown rows 71,510
+    Chunk 77: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,700,000 | cumulative ChrUnknown rows 72,409
+    Chunk 78: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,800,000 | cumulative ChrUnknown rows 73,590
+    Chunk 79: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 7,900,000 | cumulative ChrUnknown rows 74,653
+    Chunk 80: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 8,000,000 | cumulative ChrUnknown rows 75,436
+    Chunk 81: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 8,100,000 | cumulative ChrUnknown rows 76,325
+    Chunk 82: read 100,000 rows | sanity-passed 100,000 | cumulative BED rows 8,200,000 | cumulative ChrUnknown rows 77,330
+    Chunk 83: read 14,230 rows | sanity-passed 14,230 | cumulative BED rows 8,214,230 | cumulative ChrUnknown rows 77,543
+    
+    ChrUnknown export check passed: 77,543 rows exported.
     
     ===== STEP 12 VALIDATED BED EXPORT SUMMARY =====
     Rows read from Step 11 sanity-check table: 8,214,230
-    Rows passing all sanity checks: 8,136,687
-    Rows excluded by sanity checks: 77,543
-    Rows exported to BED: 8,136,687
-    BED6 files created: 32
-    BED12 files created: 32
+    Rows passing all sanity checks: 8,214,230
+    Rows excluded by sanity checks: 0
+    Rows dropped for missing essential BED fields: 0
+    Rows exported to BED: 8,214,230
+    ChrUnknown rows exported to BED: 77,543
+    BED6 files created: 33
+    BED12 files created: 33
     
     BED files saved in: python_outputs\bed_validated
     Step 12 summary saved: python_outputs\tables\wheat_bed_export_validated_summary_step12.csv
@@ -13830,19 +15004,19 @@ display(step12_summary)
       <td>FragPipe_Vincent_MSV000090572_stored-grain_val...</td>
       <td>FragPipe_Vincent_MSV000090572_stored-grain_val...</td>
       <td>29892</td>
-      <td>29430</td>
-      <td>462</td>
-      <td>...</td>
+      <td>29892</td>
       <td>0</td>
-      <td>3248</td>
-      <td>26182</td>
-      <td>3248</td>
-      <td>26182</td>
-      <td>1077</td>
-      <td>8024</td>
-      <td>1795</td>
-      <td>98.4544</td>
-      <td>98.4544</td>
+      <td>...</td>
+      <td>14536</td>
+      <td>3262</td>
+      <td>26630</td>
+      <td>3262</td>
+      <td>26630</td>
+      <td>1082</td>
+      <td>8075</td>
+      <td>1805</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>1</th>
@@ -13854,19 +15028,19 @@ display(step12_summary)
       <td>FragPipe_Liu_PXD050500_coleoptile_validated_pe...</td>
       <td>FragPipe_Liu_PXD050500_coleoptile_validated_pe...</td>
       <td>1829196</td>
-      <td>1812027</td>
-      <td>17169</td>
-      <td>...</td>
+      <td>1829196</td>
       <td>0</td>
-      <td>226291</td>
-      <td>1585736</td>
-      <td>226291</td>
-      <td>1585736</td>
-      <td>64943</td>
-      <td>509164</td>
-      <td>121256</td>
-      <td>99.0614</td>
-      <td>99.0614</td>
+      <td>...</td>
+      <td>206142</td>
+      <td>227461</td>
+      <td>1601735</td>
+      <td>227461</td>
+      <td>1601735</td>
+      <td>65152</td>
+      <td>511674</td>
+      <td>121858</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>2</th>
@@ -13878,19 +15052,19 @@ display(step12_summary)
       <td>FragPipe_Liu_PXD050500_node_validated_peptides...</td>
       <td>FragPipe_Liu_PXD050500_node_validated_peptides...</td>
       <td>1864415</td>
-      <td>1846620</td>
-      <td>17795</td>
-      <td>...</td>
+      <td>1864415</td>
       <td>0</td>
-      <td>233388</td>
-      <td>1613232</td>
-      <td>233388</td>
-      <td>1613232</td>
-      <td>66647</td>
-      <td>520105</td>
-      <td>125778</td>
-      <td>99.0455</td>
-      <td>99.0455</td>
+      <td>...</td>
+      <td>209468</td>
+      <td>234600</td>
+      <td>1629815</td>
+      <td>234600</td>
+      <td>1629815</td>
+      <td>66853</td>
+      <td>522581</td>
+      <td>126430</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>3</th>
@@ -13902,19 +15076,19 @@ display(step12_summary)
       <td>FragPipe_Liu_PXD050500_radicle_validated_pepti...</td>
       <td>FragPipe_Liu_PXD050500_radicle_validated_pepti...</td>
       <td>1050178</td>
-      <td>1040357</td>
-      <td>9821</td>
-      <td>...</td>
+      <td>1050178</td>
       <td>0</td>
-      <td>117056</td>
-      <td>923301</td>
-      <td>117056</td>
-      <td>923301</td>
-      <td>33950</td>
-      <td>294305</td>
-      <td>61713</td>
-      <td>99.0648</td>
-      <td>99.0648</td>
+      <td>...</td>
+      <td>175179</td>
+      <td>117686</td>
+      <td>932492</td>
+      <td>117686</td>
+      <td>932492</td>
+      <td>34041</td>
+      <td>295733</td>
+      <td>62041</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>4</th>
@@ -13926,19 +15100,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_anther_validated_pep...</td>
       <td>FragPipe_Duncan_PXD004720_anther_validated_pep...</td>
       <td>163467</td>
-      <td>161955</td>
-      <td>1512</td>
-      <td>...</td>
+      <td>163467</td>
       <td>0</td>
-      <td>27584</td>
-      <td>134371</td>
-      <td>27584</td>
-      <td>134371</td>
-      <td>6315</td>
-      <td>27842</td>
-      <td>16044</td>
-      <td>99.0750</td>
-      <td>99.0750</td>
+      <td>...</td>
+      <td>28845</td>
+      <td>27708</td>
+      <td>135759</td>
+      <td>27708</td>
+      <td>135759</td>
+      <td>6317</td>
+      <td>27896</td>
+      <td>16117</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>5</th>
@@ -13950,19 +15124,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_boot_validated_pepti...</td>
       <td>FragPipe_Duncan_PXD004720_boot_validated_pepti...</td>
       <td>13137</td>
-      <td>13024</td>
-      <td>113</td>
-      <td>...</td>
+      <td>13137</td>
       <td>0</td>
-      <td>2718</td>
-      <td>10306</td>
-      <td>2718</td>
-      <td>10306</td>
+      <td>...</td>
+      <td>7279</td>
+      <td>2723</td>
+      <td>10414</td>
+      <td>2723</td>
+      <td>10414</td>
       <td>712</td>
-      <td>2885</td>
-      <td>1534</td>
-      <td>99.1398</td>
-      <td>99.1398</td>
+      <td>2899</td>
+      <td>1535</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>6</th>
@@ -13974,19 +15148,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_coleoptile_validated...</td>
       <td>FragPipe_Duncan_PXD004720_coleoptile_validated...</td>
       <td>203264</td>
-      <td>201259</td>
-      <td>2005</td>
-      <td>...</td>
+      <td>203264</td>
       <td>0</td>
-      <td>31158</td>
-      <td>170101</td>
-      <td>31158</td>
-      <td>170101</td>
-      <td>6787</td>
-      <td>34329</td>
-      <td>18577</td>
-      <td>99.0136</td>
-      <td>99.0136</td>
+      <td>...</td>
+      <td>36208</td>
+      <td>31278</td>
+      <td>171986</td>
+      <td>31278</td>
+      <td>171986</td>
+      <td>6794</td>
+      <td>34380</td>
+      <td>18631</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>7</th>
@@ -13998,19 +15172,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_embryo_validated_pep...</td>
       <td>FragPipe_Duncan_PXD004720_embryo_validated_pep...</td>
       <td>8742</td>
-      <td>8662</td>
-      <td>80</td>
-      <td>...</td>
+      <td>8742</td>
       <td>0</td>
-      <td>1394</td>
-      <td>7268</td>
-      <td>1394</td>
-      <td>7268</td>
-      <td>383</td>
-      <td>2438</td>
-      <td>751</td>
-      <td>99.0849</td>
-      <td>99.0849</td>
+      <td>...</td>
+      <td>5749</td>
+      <td>1407</td>
+      <td>7335</td>
+      <td>1407</td>
+      <td>7335</td>
+      <td>385</td>
+      <td>2444</td>
+      <td>758</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>8</th>
@@ -14022,19 +15196,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_endosperm_validated_...</td>
       <td>FragPipe_Duncan_PXD004720_endosperm_validated_...</td>
       <td>102289</td>
-      <td>101413</td>
-      <td>876</td>
-      <td>...</td>
+      <td>102289</td>
       <td>0</td>
-      <td>14186</td>
-      <td>87227</td>
-      <td>14186</td>
-      <td>87227</td>
-      <td>3066</td>
-      <td>17009</td>
-      <td>7927</td>
-      <td>99.1436</td>
-      <td>99.1436</td>
+      <td>...</td>
+      <td>21529</td>
+      <td>14237</td>
+      <td>88052</td>
+      <td>14237</td>
+      <td>88052</td>
+      <td>3068</td>
+      <td>17038</td>
+      <td>7947</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>9</th>
@@ -14046,19 +15220,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_glume_validated_pept...</td>
       <td>FragPipe_Duncan_PXD004720_glume_validated_pept...</td>
       <td>144079</td>
-      <td>142449</td>
-      <td>1630</td>
-      <td>...</td>
+      <td>144079</td>
       <td>0</td>
-      <td>22004</td>
-      <td>120445</td>
-      <td>22004</td>
-      <td>120445</td>
-      <td>5084</td>
-      <td>23614</td>
-      <td>12693</td>
-      <td>98.8687</td>
-      <td>98.8687</td>
+      <td>...</td>
+      <td>28205</td>
+      <td>22077</td>
+      <td>122002</td>
+      <td>22077</td>
+      <td>122002</td>
+      <td>5086</td>
+      <td>23657</td>
+      <td>12720</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>10</th>
@@ -14070,19 +15244,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-70_vali...</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-70_vali...</td>
       <td>125355</td>
-      <td>124251</td>
-      <td>1104</td>
-      <td>...</td>
+      <td>125355</td>
       <td>0</td>
-      <td>17383</td>
-      <td>106868</td>
-      <td>17383</td>
-      <td>106868</td>
-      <td>3871</td>
-      <td>22304</td>
-      <td>9839</td>
-      <td>99.1193</td>
-      <td>99.1193</td>
+      <td>...</td>
+      <td>28080</td>
+      <td>17442</td>
+      <td>107913</td>
+      <td>17442</td>
+      <td>107913</td>
+      <td>3874</td>
+      <td>22361</td>
+      <td>9870</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>11</th>
@@ -14094,19 +15268,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-71_vali...</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-71_vali...</td>
       <td>178814</td>
-      <td>177392</td>
-      <td>1422</td>
-      <td>...</td>
+      <td>178814</td>
       <td>0</td>
-      <td>27486</td>
-      <td>149906</td>
-      <td>27486</td>
-      <td>149906</td>
-      <td>5774</td>
-      <td>30241</td>
-      <td>15867</td>
-      <td>99.2048</td>
-      <td>99.2048</td>
+      <td>...</td>
+      <td>36269</td>
+      <td>27602</td>
+      <td>151212</td>
+      <td>27602</td>
+      <td>151212</td>
+      <td>5776</td>
+      <td>30293</td>
+      <td>15938</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>12</th>
@@ -14118,19 +15292,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-75_vali...</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-75_vali...</td>
       <td>132081</td>
-      <td>131066</td>
-      <td>1015</td>
-      <td>...</td>
+      <td>132081</td>
       <td>0</td>
-      <td>18519</td>
-      <td>112547</td>
-      <td>18519</td>
-      <td>112547</td>
-      <td>3890</td>
-      <td>23567</td>
-      <td>10434</td>
-      <td>99.2315</td>
-      <td>99.2315</td>
+      <td>...</td>
+      <td>32167</td>
+      <td>18607</td>
+      <td>113474</td>
+      <td>18607</td>
+      <td>113474</td>
+      <td>3895</td>
+      <td>23609</td>
+      <td>10479</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>13</th>
@@ -14142,19 +15316,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-83_vali...</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-83_vali...</td>
       <td>112389</td>
-      <td>111335</td>
-      <td>1054</td>
-      <td>...</td>
+      <td>112389</td>
       <td>0</td>
-      <td>14632</td>
-      <td>96703</td>
-      <td>14632</td>
-      <td>96703</td>
-      <td>3348</td>
-      <td>20636</td>
-      <td>8388</td>
-      <td>99.0622</td>
-      <td>99.0622</td>
+      <td>...</td>
+      <td>28854</td>
+      <td>14700</td>
+      <td>97689</td>
+      <td>14700</td>
+      <td>97689</td>
+      <td>3349</td>
+      <td>20680</td>
+      <td>8431</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>14</th>
@@ -14166,19 +15340,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-87_vali...</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-87_vali...</td>
       <td>111156</td>
-      <td>110256</td>
-      <td>900</td>
-      <td>...</td>
+      <td>111156</td>
       <td>0</td>
-      <td>14790</td>
-      <td>95466</td>
-      <td>14790</td>
-      <td>95466</td>
-      <td>3393</td>
-      <td>21207</td>
-      <td>8348</td>
-      <td>99.1903</td>
-      <td>99.1903</td>
+      <td>...</td>
+      <td>27624</td>
+      <td>14850</td>
+      <td>96306</td>
+      <td>14850</td>
+      <td>96306</td>
+      <td>3396</td>
+      <td>21262</td>
+      <td>8382</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>15</th>
@@ -14190,19 +15364,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_leaf-flag-mature_val...</td>
       <td>FragPipe_Duncan_PXD004720_leaf-flag-mature_val...</td>
       <td>144641</td>
-      <td>143118</td>
-      <td>1523</td>
-      <td>...</td>
+      <td>144641</td>
       <td>0</td>
-      <td>19328</td>
-      <td>123790</td>
-      <td>19328</td>
-      <td>123790</td>
-      <td>4496</td>
-      <td>25420</td>
-      <td>11221</td>
-      <td>98.9470</td>
-      <td>98.9470</td>
+      <td>...</td>
+      <td>29882</td>
+      <td>19405</td>
+      <td>125236</td>
+      <td>19405</td>
+      <td>125236</td>
+      <td>4500</td>
+      <td>25458</td>
+      <td>11250</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>16</th>
@@ -14214,19 +15388,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_leaf-flag-senescing_...</td>
       <td>FragPipe_Duncan_PXD004720_leaf-flag-senescing_...</td>
       <td>45680</td>
-      <td>45054</td>
-      <td>626</td>
-      <td>...</td>
+      <td>45680</td>
       <td>0</td>
-      <td>4522</td>
-      <td>40532</td>
-      <td>4522</td>
-      <td>40532</td>
-      <td>1203</td>
-      <td>10035</td>
-      <td>2386</td>
-      <td>98.6296</td>
-      <td>98.6296</td>
+      <td>...</td>
+      <td>20842</td>
+      <td>4552</td>
+      <td>41128</td>
+      <td>4552</td>
+      <td>41128</td>
+      <td>1206</td>
+      <td>10079</td>
+      <td>2399</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>17</th>
@@ -14238,19 +15412,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_leaf-flag-young_vali...</td>
       <td>FragPipe_Duncan_PXD004720_leaf-flag-young_vali...</td>
       <td>119922</td>
-      <td>118601</td>
-      <td>1321</td>
-      <td>...</td>
+      <td>119922</td>
       <td>0</td>
-      <td>15118</td>
-      <td>103483</td>
-      <td>15118</td>
-      <td>103483</td>
-      <td>3479</td>
-      <td>19981</td>
-      <td>8922</td>
-      <td>98.8985</td>
-      <td>98.8985</td>
+      <td>...</td>
+      <td>25809</td>
+      <td>15181</td>
+      <td>104741</td>
+      <td>15181</td>
+      <td>104741</td>
+      <td>3482</td>
+      <td>20011</td>
+      <td>8950</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>18</th>
@@ -14262,19 +15436,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_lemma_validated_pept...</td>
       <td>FragPipe_Duncan_PXD004720_lemma_validated_pept...</td>
       <td>146562</td>
-      <td>145101</td>
-      <td>1461</td>
-      <td>...</td>
+      <td>146562</td>
       <td>0</td>
-      <td>21630</td>
-      <td>123471</td>
-      <td>21630</td>
-      <td>123471</td>
-      <td>4944</td>
-      <td>24886</td>
-      <td>12377</td>
-      <td>99.0032</td>
-      <td>99.0032</td>
+      <td>...</td>
+      <td>29915</td>
+      <td>21700</td>
+      <td>124862</td>
+      <td>21700</td>
+      <td>124862</td>
+      <td>4945</td>
+      <td>24927</td>
+      <td>12402</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>19</th>
@@ -14286,19 +15460,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_node_validated_pepti...</td>
       <td>FragPipe_Duncan_PXD004720_node_validated_pepti...</td>
       <td>98731</td>
-      <td>97553</td>
-      <td>1178</td>
-      <td>...</td>
+      <td>98731</td>
       <td>0</td>
-      <td>12673</td>
-      <td>84880</td>
-      <td>12673</td>
-      <td>84880</td>
-      <td>3044</td>
-      <td>18365</td>
-      <td>7066</td>
-      <td>98.8069</td>
-      <td>98.8069</td>
+      <td>...</td>
+      <td>29228</td>
+      <td>12726</td>
+      <td>86005</td>
+      <td>12726</td>
+      <td>86005</td>
+      <td>3047</td>
+      <td>18416</td>
+      <td>7081</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>20</th>
@@ -14310,19 +15484,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_node-secretion_valid...</td>
       <td>FragPipe_Duncan_PXD004720_node-secretion_valid...</td>
       <td>168564</td>
-      <td>166896</td>
-      <td>1668</td>
-      <td>...</td>
+      <td>168564</td>
       <td>0</td>
-      <td>22746</td>
-      <td>144150</td>
-      <td>22746</td>
-      <td>144150</td>
-      <td>5101</td>
-      <td>29152</td>
-      <td>13209</td>
-      <td>99.0105</td>
-      <td>99.0105</td>
+      <td>...</td>
+      <td>33166</td>
+      <td>22830</td>
+      <td>145734</td>
+      <td>22830</td>
+      <td>145734</td>
+      <td>5106</td>
+      <td>29193</td>
+      <td>13247</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>21</th>
@@ -14334,19 +15508,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_palea_validated_pept...</td>
       <td>FragPipe_Duncan_PXD004720_palea_validated_pept...</td>
       <td>116285</td>
-      <td>115047</td>
-      <td>1238</td>
-      <td>...</td>
+      <td>116285</td>
       <td>0</td>
-      <td>20580</td>
-      <td>94467</td>
-      <td>20580</td>
-      <td>94467</td>
-      <td>4570</td>
-      <td>17192</td>
-      <td>12047</td>
-      <td>98.9354</td>
-      <td>98.9354</td>
+      <td>...</td>
+      <td>21503</td>
+      <td>20637</td>
+      <td>95648</td>
+      <td>20637</td>
+      <td>95648</td>
+      <td>4574</td>
+      <td>17224</td>
+      <td>12073</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>22</th>
@@ -14358,19 +15532,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_pericarp_validated_p...</td>
       <td>FragPipe_Duncan_PXD004720_pericarp_validated_p...</td>
       <td>130645</td>
-      <td>129415</td>
-      <td>1230</td>
-      <td>...</td>
+      <td>130645</td>
       <td>0</td>
-      <td>20838</td>
-      <td>108577</td>
-      <td>20838</td>
-      <td>108577</td>
-      <td>4773</td>
-      <td>23564</td>
-      <td>11878</td>
-      <td>99.0585</td>
-      <td>99.0585</td>
+      <td>...</td>
+      <td>25580</td>
+      <td>20924</td>
+      <td>109721</td>
+      <td>20924</td>
+      <td>109721</td>
+      <td>4780</td>
+      <td>23621</td>
+      <td>11925</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>23</th>
@@ -14382,19 +15556,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_pollen_validated_pep...</td>
       <td>FragPipe_Duncan_PXD004720_pollen_validated_pep...</td>
       <td>74334</td>
-      <td>73586</td>
-      <td>748</td>
-      <td>...</td>
+      <td>74334</td>
       <td>0</td>
-      <td>9418</td>
-      <td>64168</td>
-      <td>9418</td>
-      <td>64168</td>
-      <td>2045</td>
-      <td>11486</td>
-      <td>5307</td>
-      <td>98.9937</td>
-      <td>98.9937</td>
+      <td>...</td>
+      <td>15866</td>
+      <td>9467</td>
+      <td>64867</td>
+      <td>9467</td>
+      <td>64867</td>
+      <td>2046</td>
+      <td>11506</td>
+      <td>5323</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>24</th>
@@ -14406,19 +15580,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_rachilla_validated_p...</td>
       <td>FragPipe_Duncan_PXD004720_rachilla_validated_p...</td>
       <td>159219</td>
-      <td>157648</td>
-      <td>1571</td>
-      <td>...</td>
+      <td>159219</td>
       <td>0</td>
-      <td>24647</td>
-      <td>133001</td>
-      <td>24647</td>
-      <td>133001</td>
-      <td>5544</td>
-      <td>25666</td>
-      <td>14382</td>
-      <td>99.0133</td>
-      <td>99.0133</td>
+      <td>...</td>
+      <td>29020</td>
+      <td>24725</td>
+      <td>134494</td>
+      <td>24725</td>
+      <td>134494</td>
+      <td>5547</td>
+      <td>25706</td>
+      <td>14419</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>25</th>
@@ -14430,19 +15604,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_radicle_validated_pe...</td>
       <td>FragPipe_Duncan_PXD004720_radicle_validated_pe...</td>
       <td>193938</td>
-      <td>192432</td>
-      <td>1506</td>
-      <td>...</td>
+      <td>193938</td>
       <td>0</td>
-      <td>32321</td>
-      <td>160111</td>
-      <td>32321</td>
-      <td>160111</td>
-      <td>7017</td>
-      <td>32674</td>
-      <td>18982</td>
-      <td>99.2235</td>
-      <td>99.2235</td>
+      <td>...</td>
+      <td>33385</td>
+      <td>32434</td>
+      <td>161504</td>
+      <td>32434</td>
+      <td>161504</td>
+      <td>7023</td>
+      <td>32738</td>
+      <td>19023</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>26</th>
@@ -14454,19 +15628,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_root-mature_validate...</td>
       <td>FragPipe_Duncan_PXD004720_root-mature_validate...</td>
       <td>96387</td>
-      <td>95329</td>
-      <td>1058</td>
-      <td>...</td>
+      <td>96387</td>
       <td>0</td>
-      <td>10790</td>
-      <td>84539</td>
-      <td>10790</td>
-      <td>84539</td>
-      <td>2558</td>
-      <td>18650</td>
-      <td>6077</td>
-      <td>98.9023</td>
-      <td>98.9023</td>
+      <td>...</td>
+      <td>30952</td>
+      <td>10853</td>
+      <td>85534</td>
+      <td>10853</td>
+      <td>85534</td>
+      <td>2561</td>
+      <td>18716</td>
+      <td>6101</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>27</th>
@@ -14478,19 +15652,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_root-secretion_valid...</td>
       <td>FragPipe_Duncan_PXD004720_root-secretion_valid...</td>
       <td>100085</td>
-      <td>99127</td>
-      <td>958</td>
-      <td>...</td>
+      <td>100085</td>
       <td>0</td>
-      <td>15421</td>
-      <td>83706</td>
-      <td>15421</td>
-      <td>83706</td>
-      <td>3460</td>
-      <td>17736</td>
-      <td>8923</td>
-      <td>99.0428</td>
-      <td>99.0428</td>
+      <td>...</td>
+      <td>25126</td>
+      <td>15505</td>
+      <td>84580</td>
+      <td>15505</td>
+      <td>84580</td>
+      <td>3464</td>
+      <td>17786</td>
+      <td>8962</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>28</th>
@@ -14502,19 +15676,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_root-tip_validated_p...</td>
       <td>FragPipe_Duncan_PXD004720_root-tip_validated_p...</td>
       <td>191262</td>
-      <td>189975</td>
-      <td>1287</td>
-      <td>...</td>
+      <td>191262</td>
       <td>0</td>
-      <td>34893</td>
-      <td>155082</td>
-      <td>34893</td>
-      <td>155082</td>
-      <td>7493</td>
-      <td>31196</td>
-      <td>20981</td>
-      <td>99.3271</td>
-      <td>99.3271</td>
+      <td>...</td>
+      <td>30508</td>
+      <td>34992</td>
+      <td>156270</td>
+      <td>34992</td>
+      <td>156270</td>
+      <td>7495</td>
+      <td>31236</td>
+      <td>21029</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>29</th>
@@ -14526,19 +15700,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_root-vasculature_val...</td>
       <td>FragPipe_Duncan_PXD004720_root-vasculature_val...</td>
       <td>111315</td>
-      <td>110307</td>
-      <td>1008</td>
-      <td>...</td>
+      <td>111315</td>
       <td>0</td>
-      <td>14735</td>
-      <td>95572</td>
-      <td>14735</td>
-      <td>95572</td>
-      <td>3148</td>
-      <td>17733</td>
-      <td>8124</td>
-      <td>99.0945</td>
-      <td>99.0945</td>
+      <td>...</td>
+      <td>23512</td>
+      <td>14786</td>
+      <td>96529</td>
+      <td>14786</td>
+      <td>96529</td>
+      <td>3150</td>
+      <td>17756</td>
+      <td>8152</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>30</th>
@@ -14550,19 +15724,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_spike-immature_valid...</td>
       <td>FragPipe_Duncan_PXD004720_spike-immature_valid...</td>
       <td>188025</td>
-      <td>186379</td>
-      <td>1646</td>
-      <td>...</td>
+      <td>188025</td>
       <td>0</td>
-      <td>33010</td>
-      <td>153369</td>
-      <td>33010</td>
-      <td>153369</td>
-      <td>7001</td>
-      <td>29426</td>
-      <td>19253</td>
-      <td>99.1246</td>
-      <td>99.1246</td>
+      <td>...</td>
+      <td>30611</td>
+      <td>33123</td>
+      <td>154902</td>
+      <td>33123</td>
+      <td>154902</td>
+      <td>7004</td>
+      <td>29483</td>
+      <td>19325</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
     <tr>
       <th>31</th>
@@ -14574,19 +15748,19 @@ display(step12_summary)
       <td>FragPipe_Duncan_PXD004720_stem_validated_pepti...</td>
       <td>FragPipe_Duncan_PXD004720_stem_validated_pepti...</td>
       <td>60181</td>
-      <td>59623</td>
-      <td>558</td>
-      <td>...</td>
+      <td>60181</td>
       <td>0</td>
-      <td>6875</td>
-      <td>52748</td>
-      <td>6875</td>
-      <td>52748</td>
-      <td>1665</td>
-      <td>12579</td>
-      <td>3946</td>
-      <td>99.0728</td>
-      <td>99.0728</td>
+      <td>...</td>
+      <td>23218</td>
+      <td>6927</td>
+      <td>53254</td>
+      <td>6927</td>
+      <td>53254</td>
+      <td>1668</td>
+      <td>12620</td>
+      <td>3963</td>
+      <td>100.0</td>
+      <td>100.0</td>
     </tr>
   </tbody>
 </table>
@@ -14718,58 +15892,128 @@ The resulting combined BED files provide a user-friendly genome-wide peptide evi
 
 ```python
 # ============================================================
-# Step 13 — Create non-redundant combined validated BED tracks (takes 30 min)
+# Step 13 — Create non-redundant combined validated BED tracks
+# (takes approximately 30 minutes)
+#
+# Outputs:
+# 1. Complete non-redundant track containing all valid
+#    sequence identifiers, including ChrUnknown
+# 2. Standalone non-redundant ChrUnknown track
+#
 # Translation-validated + sanity-check-passed projections only
-# Uses SQLite for memory-safe aggregation
+# Uses SQLite for memory-safe aggregation.
+#
+# Existing Step 13 outputs are overwritten.
 # ============================================================
 
-import pandas as pd
 import sqlite3
 from pathlib import Path
+
+import pandas as pd
+
 
 # -----------------------------
 # 1. Input / output paths
 # -----------------------------
+
 tables_dir = Path("python_outputs/tables")
 bed_dir = Path("python_outputs/bed_validated")
 
-bed_dir.mkdir(parents=True, exist_ok=True)
-tables_dir.mkdir(parents=True, exist_ok=True)
+bed_dir.mkdir(
+    parents=True,
+    exist_ok=True
+)
 
-# Step 11 output: translation-validated rows with sanity-check results
-sanity_file = tables_dir / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
+tables_dir.mkdir(
+    parents=True,
+    exist_ok=True
+)
 
-combined_table_out = tables_dir / "wheat_all_tissues_nonredundant_validated_peptides_step13.csv"
-combined_bed6_out = bed_dir / "FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed6"
-combined_bed12_out = bed_dir / "FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed12"
-step13_summary_out = tables_dir / "wheat_all_tissues_nonredundant_validated_bed_summary_step13.csv"
 
-sqlite_db = tables_dir / "wheat_validated_nonredundant_step13.sqlite"
+# Corrected Step 11 output:
+# translation-validated rows with sanity-check results
+sanity_file = (
+    tables_dir
+    / "wheat_projection_translation_validated_sanity_checks_full_step11.csv"
+)
+
+
+# Original complete non-redundant outputs
+combined_table_out = (
+    tables_dir
+    / "wheat_all_tissues_nonredundant_validated_peptides_step13.csv"
+)
+
+combined_bed6_out = (
+    bed_dir
+    / "FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed6"
+)
+
+combined_bed12_out = (
+    bed_dir
+    / "FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed12"
+)
+
+
+# New standalone ChrUnknown non-redundant tracks
+chrunknown_bed6_out = (
+    bed_dir
+    / "FragPipe_allauthors_allsources_alltissues_ChrUnknown_nonredundant_validated_peptides.bed6"
+)
+
+chrunknown_bed12_out = (
+    bed_dir
+    / "FragPipe_allauthors_allsources_alltissues_ChrUnknown_nonredundant_validated_peptides.bed12"
+)
+
+
+# Original Step 13 summary and SQLite filenames
+step13_summary_out = (
+    tables_dir
+    / "wheat_all_tissues_nonredundant_validated_bed_summary_step13.csv"
+)
+
+sqlite_db = (
+    tables_dir
+    / "wheat_validated_nonredundant_step13.sqlite"
+)
 
 chunk_size = 100_000
 
+
 if not sanity_file.exists():
+
     raise FileNotFoundError(
-        f"Step 11 sanity-check file not found:\n{sanity_file}\n\n"
-        "Please run Step 11 first."
+        f"Step 11 sanity-check file not found:\n"
+        f"{sanity_file}\n\n"
+        "Please run the corrected Step 11 first."
     )
 
-# Clear previous outputs if rerunning
-for path in [
+
+# Overwrite previous Step 13 outputs.
+for output_path in [
     combined_table_out,
     combined_bed6_out,
     combined_bed12_out,
+    chrunknown_bed6_out,
+    chrunknown_bed12_out,
     step13_summary_out,
     sqlite_db
 ]:
-    if path.exists():
-        path.unlink()
+
+    if output_path.exists():
+        output_path.unlink()
 
 
 # -----------------------------
 # 2. Helper functions
 # -----------------------------
+
 def clean_bed_name(value):
+    """
+    Clean BED name field for BED/JBrowse compatibility.
+    """
+
     return (
         str(value)
         .replace(" ", "_")
@@ -14777,26 +16021,126 @@ def clean_bed_name(value):
         .replace(",", "|")
         .replace("\t", "_")
         .replace("\n", "_")
+        .replace("\r", "_")
     )
 
 
 def make_bed_score(data):
     """
     Create BED score between 0 and 1000.
+
+    Priority:
+    1. Probability scaled to 0–1000, when available
+    2. Default score of 1000
     """
+
     if "Probability" in data.columns:
-        score = pd.to_numeric(data["Probability"], errors="coerce") * 1000
-        score = score.fillna(1000).clip(0, 1000).round().astype(int)
+
+        score = (
+            pd.to_numeric(
+                data["Probability"],
+                errors="coerce"
+            )
+            * 1000
+        )
+
+        score = (
+            score
+            .fillna(1000)
+            .clip(0, 1000)
+            .round()
+            .astype(int)
+        )
+
     else:
-        score = pd.Series([1000] * len(data), index=data.index)
+
+        score = pd.Series(
+            1000,
+            index=data.index,
+            dtype="int64"
+        )
 
     return score
 
 
+def make_bed6(nonredundant):
+    """
+    Build BED6 DataFrame.
+    """
+
+    return pd.DataFrame({
+        "chrom":
+            nonredundant["Chromosome"],
+
+        "chromStart":
+            nonredundant["BED_start_0based"],
+
+        "chromEnd":
+            nonredundant["BED_end_0based_exclusive"],
+
+        "name":
+            nonredundant["BED_name"],
+
+        "score":
+            nonredundant["Max_BED_score"],
+
+        "strand":
+            nonredundant["Strand"]
+    })
+
+
+def make_bed12(nonredundant):
+    """
+    Build BED12 DataFrame.
+    """
+
+    return pd.DataFrame({
+        "chrom":
+            nonredundant["Chromosome"],
+
+        "chromStart":
+            nonredundant["BED_start_0based"],
+
+        "chromEnd":
+            nonredundant["BED_end_0based_exclusive"],
+
+        "name":
+            nonredundant["BED_name"],
+
+        "score":
+            nonredundant["Max_BED_score"],
+
+        "strand":
+            nonredundant["Strand"],
+
+        "thickStart":
+            nonredundant["BED_start_0based"],
+
+        "thickEnd":
+            nonredundant["BED_end_0based_exclusive"],
+
+        "itemRgb":
+            "0",
+
+        "blockCount":
+            nonredundant["BED_block_count"],
+
+        "blockSizes":
+            nonredundant["BED_block_sizes"],
+
+        "blockStarts":
+            nonredundant["BED_block_starts"]
+    })
+
+
 # -----------------------------
-# 3. Inspect Step 11 columns
+# 3. Inspect corrected Step 11 columns
 # -----------------------------
-header = pd.read_csv(sanity_file, nrows=0)
+
+header = pd.read_csv(
+    sanity_file,
+    nrows=0
+)
 
 required_cols = [
     "Chromosome",
@@ -14810,34 +16154,52 @@ required_cols = [
     "BED_block_starts",
     "Source",
     "Tissue",
-    "Sanity_check_status"
+    "Sanity_check_status",
+    "All_sanity_checks_passed",
+    "Check_chromosome_and_strand"
 ]
 
 missing_required = [
-    col for col in required_cols
-    if col not in header.columns
+    column
+    for column in required_cols
+    if column not in header.columns
 ]
 
 if missing_required:
+
     raise KeyError(
-        f"Missing required Step 11 column(s): {missing_required}"
+        "Missing required corrected Step 11 column(s): "
+        f"{missing_required}"
     )
 
-# Use best available gene/model label
+
+# Best available gene/model label
 if "GeneModel" in header.columns:
+
     gene_label_col = "GeneModel"
+
 elif "GeneID" in header.columns:
+
     gene_label_col = "GeneID"
+
 else:
+
     gene_label_col = None
 
-# Use best available peptide display label
+
+# Best available peptide display label
 if "Peptide_intron_gapped" in header.columns:
+
     peptide_label_col = "Peptide_intron_gapped"
+
 elif "Peptide_intron_gapped_compact" in header.columns:
+
     peptide_label_col = "Peptide_intron_gapped_compact"
+
 else:
+
     peptide_label_col = "Peptide"
+
 
 optional_cols = []
 
@@ -14850,59 +16212,161 @@ if gene_label_col is not None:
 if peptide_label_col not in required_cols:
     optional_cols.append(peptide_label_col)
 
-usecols = list(dict.fromkeys(required_cols + optional_cols))
+
+usecols = list(
+    dict.fromkeys(
+        required_cols
+        + optional_cols
+    )
+)
+
 
 print("Step 13 input file:")
-print(sanity_file)
-print(f"Using gene/model label column: {gene_label_col}")
-print(f"Using peptide label column: {peptide_label_col}")
+print(f"  {sanity_file}")
+
+print(
+    "Using gene/model label column: "
+    f"{gene_label_col}"
+)
+
+print(
+    "Using peptide display column: "
+    f"{peptide_label_col}"
+)
 
 
 # -----------------------------
 # 4. Load sanity-passed rows into SQLite
 # -----------------------------
-conn = sqlite3.connect(sqlite_db)
+
+conn = sqlite3.connect(
+    sqlite_db
+)
 
 total_rows_read = 0
 total_rows_passed = 0
+total_chrunknown_rows_loaded = 0
 
-print("\nLoading sanity-passed rows into SQLite...")
 
-for chunk_i, chunk in enumerate(
+print(
+    "\nLoading corrected Step 11 sanity-passed rows "
+    "into SQLite..."
+)
+
+
+for chunk_number, chunk in enumerate(
+
     pd.read_csv(
         sanity_file,
         usecols=usecols,
         chunksize=chunk_size,
         low_memory=False
     ),
+
     start=1
 ):
 
-    total_rows_read += len(chunk)
+    rows_in_chunk = len(
+        chunk
+    )
 
-    # Keep only rows passing both validation layers:
-    # Step 10 translation validation + Step 11 sanity checks
+    total_rows_read += rows_in_chunk
+
+
+    # Retain only rows passing both validation layers.
+    passed_mask = (
+        chunk[
+            "Sanity_check_status"
+        ]
+        .astype(str)
+        .str.strip()
+        .eq("passed")
+        &
+        chunk[
+            "All_sanity_checks_passed"
+        ]
+        .fillna(False)
+        .astype(bool)
+    )
+
     chunk = chunk[
-        chunk["Sanity_check_status"].astype(str) == "passed"
+        passed_mask
     ].copy()
 
+
     if chunk.empty:
-        print(f"Chunk {chunk_i}: read {chunk_size:,} rows | no passed rows")
+
+        print(
+            f"Chunk {chunk_number}: "
+            f"read {rows_in_chunk:,} rows | "
+            "no passed rows"
+        )
+
         continue
 
-    total_rows_passed += len(chunk)
 
-    # Standardise fields used downstream
+    total_rows_passed += len(
+        chunk
+    )
+
+
+    # Standardise core text fields.
+    chunk["Chromosome"] = (
+        chunk["Chromosome"]
+        .astype(str)
+        .str.strip()
+    )
+
+    chunk["Strand"] = (
+        chunk["Strand"]
+        .astype(str)
+        .str.strip()
+    )
+
+
+    total_chrunknown_rows_loaded += int(
+        chunk[
+            "Chromosome"
+        ]
+        .eq("ChrUnknown")
+        .sum()
+    )
+
+
     if gene_label_col is None:
+
         chunk["Gene_label"] = "NA"
+
     else:
-        chunk["Gene_label"] = chunk[gene_label_col].astype(str)
 
-    chunk["Peptide_label"] = chunk[peptide_label_col].astype(str)
+        chunk["Gene_label"] = (
+            chunk[
+                gene_label_col
+            ]
+            .fillna("NA")
+            .astype(str)
+        )
 
-    chunk["BED_score"] = make_bed_score(chunk)
 
-    # Keep only columns needed for non-redundant aggregation
+    chunk["Peptide_label"] = (
+        chunk[
+            peptide_label_col
+        ]
+        .fillna(
+            chunk["Peptide"]
+        )
+        .astype(str)
+    )
+
+
+    chunk["BED_score"] = (
+        make_bed_score(
+            chunk
+        )
+    )
+
+
+    # Retain only fields required for nonredundant aggregation.
     insert_cols = [
         "Chromosome",
         "BED_start_0based",
@@ -14920,10 +16384,12 @@ for chunk_i, chunk in enumerate(
         "BED_score"
     ]
 
-    chunk = chunk[insert_cols].copy()
+    chunk = chunk[
+        insert_cols
+    ].copy()
 
-    # SQLite is happier with simple string/int/float fields
-    for col in [
+
+    text_cols = [
         "Chromosome",
         "Strand",
         "Peptide",
@@ -14934,8 +16400,15 @@ for chunk_i, chunk in enumerate(
         "BED_block_starts",
         "Source",
         "Tissue"
-    ]:
-        chunk[col] = chunk[col].astype(str)
+    ]
+
+    for column in text_cols:
+
+        chunk[column] = (
+            chunk[column]
+            .astype(str)
+        )
+
 
     numeric_cols = [
         "BED_start_0based",
@@ -14944,8 +16417,13 @@ for chunk_i, chunk in enumerate(
         "BED_score"
     ]
 
-    for col in numeric_cols:
-        chunk[col] = pd.to_numeric(chunk[col], errors="coerce")
+    for column in numeric_cols:
+
+        chunk[column] = pd.to_numeric(
+            chunk[column],
+            errors="coerce"
+        )
+
 
     chunk = chunk.dropna(
         subset=[
@@ -14959,6 +16437,7 @@ for chunk_i, chunk in enumerate(
         ]
     ).copy()
 
+
     chunk.to_sql(
         "validated_projection_rows",
         conn,
@@ -14966,22 +16445,50 @@ for chunk_i, chunk in enumerate(
         index=False
     )
 
+
     print(
-        f"Chunk {chunk_i}: cumulative rows read {total_rows_read:,} | "
-        f"cumulative sanity-passed rows loaded {total_rows_passed:,}"
+        f"Chunk {chunk_number}: "
+        f"cumulative rows read {total_rows_read:,} | "
+        f"passed rows loaded {total_rows_passed:,} | "
+        f"ChrUnknown rows loaded "
+        f"{total_chrunknown_rows_loaded:,}"
     )
+
 
 if total_rows_passed == 0:
+
     conn.close()
+
     raise ValueError(
-        "No sanity-passed rows were found in the Step 11 output."
+        "No sanity-passed rows were found in "
+        "the corrected Step 11 output."
+    )
+
+
+if total_chrunknown_rows_loaded != 77_543:
+
+    print(
+        "\nWARNING: corrected Step 11 was expected to contain "
+        "77,543 passed ChrUnknown rows, but "
+        f"{total_chrunknown_rows_loaded:,} were loaded."
+    )
+
+else:
+
+    print(
+        "\nChrUnknown input check passed: "
+        "77,543 validated rows loaded into SQLite."
     )
 
 
 # -----------------------------
-# 5. Create indexes to speed up grouping
+# 5. Create SQLite indexes
 # -----------------------------
-print("\nCreating SQLite indexes...")
+
+print(
+    "\nCreating SQLite indexes..."
+)
+
 
 conn.execute("""
 CREATE INDEX IF NOT EXISTS idx_validated_projection_dedup
@@ -15000,35 +16507,63 @@ ON validated_projection_rows (
 )
 """)
 
+
+conn.execute("""
+CREATE INDEX IF NOT EXISTS idx_validated_projection_chromosome
+ON validated_projection_rows (
+    Chromosome
+)
+""")
+
+
 conn.commit()
 
 
 # -----------------------------
-# 6. Build non-redundant table in SQLite
+# 6. Build complete nonredundant table
 # -----------------------------
-print("\nBuilding non-redundant validated feature table...")
 
-conn.execute("DROP TABLE IF EXISTS nonredundant_validated_peptides")
+print(
+    "\nBuilding complete nonredundant validated "
+    "feature table..."
+)
+
+
+conn.execute(
+    "DROP TABLE IF EXISTS "
+    "nonredundant_validated_peptides"
+)
+
 
 conn.execute("""
 CREATE TABLE nonredundant_validated_peptides AS
 SELECT
     Chromosome,
-    CAST(BED_start_0based AS INTEGER) AS BED_start_0based,
-    CAST(BED_end_0based_exclusive AS INTEGER) AS BED_end_0based_exclusive,
+    CAST(BED_start_0based AS INTEGER)
+        AS BED_start_0based,
+    CAST(BED_end_0based_exclusive AS INTEGER)
+        AS BED_end_0based_exclusive,
     Strand,
     Peptide,
     Peptide_label,
     ProteinID,
     Gene_label,
-    CAST(BED_block_count AS INTEGER) AS BED_block_count,
+    CAST(BED_block_count AS INTEGER)
+        AS BED_block_count,
     BED_block_sizes,
     BED_block_starts,
-    GROUP_CONCAT(DISTINCT Source) AS Sources,
-    GROUP_CONCAT(DISTINCT Tissue) AS Tissues,
-    COUNT(DISTINCT Tissue) AS Tissue_count,
-    COUNT(*) AS Observation_count,
-    MAX(CAST(BED_score AS INTEGER)) AS Max_BED_score
+    GROUP_CONCAT(DISTINCT Source)
+        AS Sources,
+    GROUP_CONCAT(DISTINCT Tissue)
+        AS Tissues,
+    COUNT(DISTINCT Source || '|' || Tissue)
+        AS Source_tissue_count,
+    COUNT(DISTINCT Tissue)
+        AS Tissue_count,
+    COUNT(*)
+        AS Observation_count,
+    MAX(CAST(BED_score AS INTEGER))
+        AS Max_BED_score
 FROM validated_projection_rows
 GROUP BY
     Chromosome,
@@ -15044,26 +16579,41 @@ GROUP BY
     BED_block_starts
 """)
 
+
 conn.commit()
 
 
 # -----------------------------
-# 7. Export combined table and BED files in chunks
+# 7. Export complete table and both track sets
 # -----------------------------
-print("\nExporting combined non-redundant table and BED files...")
+
+print(
+    "\nExporting complete nonredundant table, "
+    "complete BED tracks and ChrUnknown-only BED tracks..."
+)
+
 
 combined_header_written = False
-bed6_header_written = False
-bed12_header_written = False
 
 total_nonredundant_rows = 0
+total_chrunknown_nonredundant_rows = 0
+
 unique_peptides = set()
 unique_proteins = set()
 unique_genes = set()
-unique_chromosomes = set()
+unique_sequence_ids = set()
+
+chrunknown_unique_peptides = set()
+chrunknown_unique_proteins = set()
+chrunknown_unique_genes = set()
+
 multi_block_count = 0
 within_exon_count = 0
 bed_labels_with_introns = 0
+
+chrunknown_multi_block_count = 0
+chrunknown_within_exon_count = 0
+
 
 sql_query = """
 SELECT
@@ -15080,6 +16630,7 @@ SELECT
     BED_block_starts,
     Sources,
     Tissues,
+    Source_tissue_count,
     Tissue_count,
     Observation_count,
     Max_BED_score
@@ -15093,33 +16644,88 @@ ORDER BY
     ProteinID
 """
 
-for chunk_i, nonredundant in enumerate(
-    pd.read_sql_query(sql_query, conn, chunksize=chunk_size),
+
+for chunk_number, nonredundant in enumerate(
+
+    pd.read_sql_query(
+        sql_query,
+        conn,
+        chunksize=chunk_size
+    ),
+
     start=1
 ):
+
+    number_rows = len(
+        nonredundant
+    )
+
 
     nonredundant.insert(
         0,
         "Index",
-        range(total_nonredundant_rows + 1, total_nonredundant_rows + len(nonredundant) + 1)
+        range(
+            total_nonredundant_rows + 1,
+            total_nonredundant_rows + number_rows + 1
+        )
     )
+
 
     nonredundant["BED_name"] = (
-        nonredundant["Peptide_label"].astype(str) + "|" +
-        nonredundant["ProteinID"].astype(str) + "|" +
-        nonredundant["Gene_label"].astype(str) + "|" +
-        "validated=translation+sanity" + "|" +
-        "tissues=" + nonredundant["Tissue_count"].astype(str)
+        nonredundant[
+            "Peptide_label"
+        ].astype(str)
+        + "|"
+        + nonredundant[
+            "ProteinID"
+        ].astype(str)
+        + "|"
+        + nonredundant[
+            "Gene_label"
+        ].astype(str)
+        + "|validated=translation+sanity"
+        + "|source_tissues="
+        + nonredundant[
+            "Source_tissue_count"
+        ].astype(str)
     )
 
-    nonredundant["BED_name"] = nonredundant["BED_name"].apply(clean_bed_name)
 
-    nonredundant["BED_start_0based"] = nonredundant["BED_start_0based"].astype(int)
-    nonredundant["BED_end_0based_exclusive"] = nonredundant["BED_end_0based_exclusive"].astype(int)
-    nonredundant["BED_block_count"] = nonredundant["BED_block_count"].astype(int)
-    nonredundant["Max_BED_score"] = nonredundant["Max_BED_score"].astype(int)
+    nonredundant["BED_name"] = (
+        nonredundant[
+            "BED_name"
+        ]
+        .apply(
+            clean_bed_name
+        )
+    )
 
-    # Save combined table incrementally
+
+    integer_columns = [
+        "BED_start_0based",
+        "BED_end_0based_exclusive",
+        "BED_block_count",
+        "Source_tissue_count",
+        "Tissue_count",
+        "Observation_count",
+        "Max_BED_score"
+    ]
+
+    for column in integer_columns:
+
+        nonredundant[column] = (
+            pd.to_numeric(
+                nonredundant[column],
+                errors="raise"
+            )
+            .astype(int)
+        )
+
+
+    # -----------------------------------------
+    # Complete nonredundant CSV table
+    # -----------------------------------------
+
     nonredundant.to_csv(
         combined_table_out,
         index=False,
@@ -15129,17 +16735,21 @@ for chunk_i, nonredundant in enumerate(
 
     combined_header_written = True
 
-    # BED6
-    bed6 = nonredundant[[
-        "Chromosome",
-        "BED_start_0based",
-        "BED_end_0based_exclusive",
-        "BED_name",
-        "Max_BED_score",
-        "Strand"
-    ]].copy()
 
-    bed6.to_csv(
+    # -----------------------------------------
+    # Complete nonredundant BED6/BED12 tracks
+    # -----------------------------------------
+
+    complete_bed6 = make_bed6(
+        nonredundant
+    )
+
+    complete_bed12 = make_bed12(
+        nonredundant
+    )
+
+
+    complete_bed6.to_csv(
         combined_bed6_out,
         sep="\t",
         header=False,
@@ -15147,23 +16757,8 @@ for chunk_i, nonredundant in enumerate(
         mode="a"
     )
 
-    # BED12
-    bed12 = pd.DataFrame({
-        "chrom": nonredundant["Chromosome"],
-        "chromStart": nonredundant["BED_start_0based"],
-        "chromEnd": nonredundant["BED_end_0based_exclusive"],
-        "name": nonredundant["BED_name"],
-        "score": nonredundant["Max_BED_score"],
-        "strand": nonredundant["Strand"],
-        "thickStart": nonredundant["BED_start_0based"],
-        "thickEnd": nonredundant["BED_end_0based_exclusive"],
-        "itemRgb": "0",
-        "blockCount": nonredundant["BED_block_count"],
-        "blockSizes": nonredundant["BED_block_sizes"],
-        "blockStarts": nonredundant["BED_block_starts"]
-    })
 
-    bed12.to_csv(
+    complete_bed12.to_csv(
         combined_bed12_out,
         sep="\t",
         header=False,
@@ -15171,207 +16766,623 @@ for chunk_i, nonredundant in enumerate(
         mode="a"
     )
 
-    # Summary counters
-    total_nonredundant_rows += len(nonredundant)
 
-    unique_peptides.update(nonredundant["Peptide"].dropna().astype(str).unique())
-    unique_proteins.update(nonredundant["ProteinID"].dropna().astype(str).unique())
-    unique_genes.update(nonredundant["Gene_label"].dropna().astype(str).unique())
-    unique_chromosomes.update(nonredundant["Chromosome"].dropna().astype(str).unique())
+    # -----------------------------------------
+    # Standalone nonredundant ChrUnknown tracks
+    # -----------------------------------------
 
-    multi_block_count += int((nonredundant["BED_block_count"] > 1).sum())
-    
-    within_exon_count += int((nonredundant["BED_block_count"] == 1).sum())
+    chrunknown = nonredundant[
+        nonredundant[
+            "Chromosome"
+        ]
+        .astype(str)
+        .str.strip()
+        .eq("ChrUnknown")
+    ].copy()
+
+
+    if not chrunknown.empty:
+
+        chrunknown_bed6 = make_bed6(
+            chrunknown
+        )
+
+        chrunknown_bed12 = make_bed12(
+            chrunknown
+        )
+
+
+        chrunknown_bed6.to_csv(
+            chrunknown_bed6_out,
+            sep="\t",
+            header=False,
+            index=False,
+            mode="a"
+        )
+
+
+        chrunknown_bed12.to_csv(
+            chrunknown_bed12_out,
+            sep="\t",
+            header=False,
+            index=False,
+            mode="a"
+        )
+
+
+        total_chrunknown_nonredundant_rows += len(
+            chrunknown
+        )
+
+
+        chrunknown_unique_peptides.update(
+            chrunknown[
+                "Peptide"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
+
+
+        chrunknown_unique_proteins.update(
+            chrunknown[
+                "ProteinID"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
+
+
+        chrunknown_unique_genes.update(
+            chrunknown[
+                "Gene_label"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+        )
+
+
+        chrunknown_multi_block_count += int(
+            (
+                chrunknown[
+                    "BED_block_count"
+                ]
+                > 1
+            ).sum()
+        )
+
+
+        chrunknown_within_exon_count += int(
+            (
+                chrunknown[
+                    "BED_block_count"
+                ]
+                == 1
+            ).sum()
+        )
+
+
+    # -----------------------------------------
+    # Overall summary counters
+    # -----------------------------------------
+
+    total_nonredundant_rows += number_rows
+
+
+    unique_peptides.update(
+        nonredundant[
+            "Peptide"
+        ]
+        .dropna()
+        .astype(str)
+        .unique()
+    )
+
+
+    unique_proteins.update(
+        nonredundant[
+            "ProteinID"
+        ]
+        .dropna()
+        .astype(str)
+        .unique()
+    )
+
+
+    unique_genes.update(
+        nonredundant[
+            "Gene_label"
+        ]
+        .dropna()
+        .astype(str)
+        .unique()
+    )
+
+
+    unique_sequence_ids.update(
+        nonredundant[
+            "Chromosome"
+        ]
+        .dropna()
+        .astype(str)
+        .unique()
+    )
+
+
+    multi_block_count += int(
+        (
+            nonredundant[
+                "BED_block_count"
+            ]
+            > 1
+        ).sum()
+    )
+
+
+    within_exon_count += int(
+        (
+            nonredundant[
+                "BED_block_count"
+            ]
+            == 1
+        ).sum()
+    )
+
 
     bed_labels_with_introns += int(
-        nonredundant["BED_name"]
+        nonredundant[
+            "BED_name"
+        ]
         .astype(str)
-        .str.contains("-", regex=False)
+        .str.contains(
+            "-",
+            regex=False
+        )
         .sum()
     )
 
+
     print(
-        f"Export chunk {chunk_i}: cumulative non-redundant rows "
-        f"{total_nonredundant_rows:,}"
+        f"Export chunk {chunk_number}: "
+        f"cumulative complete nonredundant rows "
+        f"{total_nonredundant_rows:,} | "
+        f"ChrUnknown nonredundant rows "
+        f"{total_chrunknown_nonredundant_rows:,}"
     )
 
 
 # -----------------------------
-# 8. Summary table
+# 8. Integrity checks
 # -----------------------------
+
+if not combined_header_written:
+
+    conn.close()
+
+    raise ValueError(
+        "No complete nonredundant rows were exported."
+    )
+
+
+if not chrunknown_bed6_out.exists():
+
+    conn.close()
+
+    raise ValueError(
+        "No ChrUnknown BED6 track was created. "
+        "Check the corrected Step 11 input."
+    )
+
+
+if not chrunknown_bed12_out.exists():
+
+    conn.close()
+
+    raise ValueError(
+        "No ChrUnknown BED12 track was created. "
+        "Check the corrected Step 11 input."
+    )
+
+
+# Confirm SQLite count agrees with exported ChrUnknown count.
+sqlite_chrunknown_count = conn.execute("""
+SELECT COUNT(*)
+FROM nonredundant_validated_peptides
+WHERE Chromosome = 'ChrUnknown'
+""").fetchone()[0]
+
+
+if (
+    sqlite_chrunknown_count
+    != total_chrunknown_nonredundant_rows
+):
+
+    conn.close()
+
+    raise ValueError(
+        "ChrUnknown nonredundant row-count mismatch:\n"
+        f"SQLite rows: "
+        f"{sqlite_chrunknown_count:,}\n"
+        f"Exported rows: "
+        f"{total_chrunknown_nonredundant_rows:,}"
+    )
+
+
+# -----------------------------
+# 9. Summary table
+# -----------------------------
+
 step13_summary = pd.DataFrame([{
-    "Validated_rows_before_deduplication": total_rows_passed,
-    "Nonredundant_validated_rows": total_nonredundant_rows,
-    "Redundant_validated_rows_removed": total_rows_passed - total_nonredundant_rows,
-    "Unique_peptides": len(unique_peptides),
-    "Unique_proteins": len(unique_proteins),
-    "Unique_gene_models": len(unique_genes),
-    "Unique_chromosomes": len(unique_chromosomes),
-    "Multi_block_peptides": multi_block_count,
-    "Within_exon_peptides": within_exon_count,
-    "BED_labels_with_introns": bed_labels_with_introns,
-    "Combined_table_file": combined_table_out.name,
-    "BED6_file": combined_bed6_out.name,
-    "BED12_file": combined_bed12_out.name,
-    "SQLite_database": sqlite_db.name
+
+    "Validated_rows_before_deduplication":
+        total_rows_passed,
+
+    "Nonredundant_validated_rows":
+        total_nonredundant_rows,
+
+    "Redundant_validated_rows_removed":
+        (
+            total_rows_passed
+            - total_nonredundant_rows
+        ),
+
+    "Unique_peptides":
+        len(
+            unique_peptides
+        ),
+
+    "Unique_proteins":
+        len(
+            unique_proteins
+        ),
+
+    "Unique_gene_models":
+        len(
+            unique_genes
+        ),
+
+    # Retain original summary column name for compatibility.
+    # This now includes the 21 chromosomes plus ChrUnknown.
+    "Unique_chromosomes":
+        len(
+            unique_sequence_ids
+        ),
+
+    "Multi_block_peptides":
+        multi_block_count,
+
+    "Within_exon_peptides":
+        within_exon_count,
+
+    "BED_labels_with_introns":
+        bed_labels_with_introns,
+
+    "ChrUnknown_validated_rows_before_deduplication":
+        total_chrunknown_rows_loaded,
+
+    "ChrUnknown_nonredundant_validated_rows":
+        total_chrunknown_nonredundant_rows,
+
+    "ChrUnknown_redundant_rows_removed":
+        (
+            total_chrunknown_rows_loaded
+            - total_chrunknown_nonredundant_rows
+        ),
+
+    "ChrUnknown_unique_peptides":
+        len(
+            chrunknown_unique_peptides
+        ),
+
+    "ChrUnknown_unique_proteins":
+        len(
+            chrunknown_unique_proteins
+        ),
+
+    "ChrUnknown_unique_gene_models":
+        len(
+            chrunknown_unique_genes
+        ),
+
+    "ChrUnknown_multi_block_peptides":
+        chrunknown_multi_block_count,
+
+    "ChrUnknown_within_exon_peptides":
+        chrunknown_within_exon_count,
+
+    "Combined_table_file":
+        combined_table_out.name,
+
+    "BED6_file":
+        combined_bed6_out.name,
+
+    "BED12_file":
+        combined_bed12_out.name,
+
+    "ChrUnknown_BED6_file":
+        chrunknown_bed6_out.name,
+
+    "ChrUnknown_BED12_file":
+        chrunknown_bed12_out.name,
+
+    "SQLite_database":
+        sqlite_db.name
 }])
 
-step13_summary.to_csv(step13_summary_out, index=False)
+
+step13_summary.to_csv(
+    step13_summary_out,
+    index=False
+)
+
 
 conn.close()
 
-print("\n===== STEP 13 COMBINED VALIDATED BED SUMMARY =====")
-print(f"Validated rows before deduplication: {total_rows_passed:,}")
-print(f"Non-redundant validated rows: {total_nonredundant_rows:,}")
-print(f"Redundant validated rows removed: {total_rows_passed - total_nonredundant_rows:,}")
 
-print(f"\nCombined non-redundant table saved: {combined_table_out}")
-print(f"Combined BED6 saved: {combined_bed6_out}")
-print(f"Combined BED12 saved: {combined_bed12_out}")
-print(f"Step 13 summary saved: {step13_summary_out}")
-print(f"Temporary SQLite database saved: {sqlite_db}")
+# -----------------------------
+# 10. Final summary
+# -----------------------------
 
-display(step13_summary)
+print(
+    "\n===== STEP 13 COMBINED VALIDATED BED SUMMARY ====="
+)
+
+print(
+    "Validated rows before deduplication: "
+    f"{total_rows_passed:,}"
+)
+
+print(
+    "Complete nonredundant validated rows: "
+    f"{total_nonredundant_rows:,}"
+)
+
+print(
+    "Redundant validated rows removed: "
+    f"{total_rows_passed - total_nonredundant_rows:,}"
+)
+
+print(
+    "Sequence identifiers represented: "
+    f"{len(unique_sequence_ids):,}"
+)
+
+print(
+    "\n===== ChrUnknown NONREDUNDANT TRACK ====="
+)
+
+print(
+    "ChrUnknown validated rows before deduplication: "
+    f"{total_chrunknown_rows_loaded:,}"
+)
+
+print(
+    "ChrUnknown nonredundant validated rows: "
+    f"{total_chrunknown_nonredundant_rows:,}"
+)
+
+print(
+    "ChrUnknown redundant rows removed: "
+    f"{total_chrunknown_rows_loaded - total_chrunknown_nonredundant_rows:,}"
+)
+
+print(
+    "ChrUnknown unique peptide sequences: "
+    f"{len(chrunknown_unique_peptides):,}"
+)
+
+print(
+    "ChrUnknown unique protein accessions: "
+    f"{len(chrunknown_unique_proteins):,}"
+)
+
+print(
+    "ChrUnknown unique gene models: "
+    f"{len(chrunknown_unique_genes):,}"
+)
+
+print(
+    "\nComplete nonredundant table saved:"
+    f"\n  {combined_table_out}"
+)
+
+print(
+    "Complete combined BED6 saved:"
+    f"\n  {combined_bed6_out}"
+)
+
+print(
+    "Complete combined BED12 saved:"
+    f"\n  {combined_bed12_out}"
+)
+
+print(
+    "Standalone ChrUnknown BED6 saved:"
+    f"\n  {chrunknown_bed6_out}"
+)
+
+print(
+    "Standalone ChrUnknown BED12 saved:"
+    f"\n  {chrunknown_bed12_out}"
+)
+
+print(
+    "Step 13 summary saved:"
+    f"\n  {step13_summary_out}"
+)
+
+print(
+    "SQLite database saved:"
+    f"\n  {sqlite_db}"
+)
+
+
+display(
+    step13_summary
+)
 ```
 
     Step 13 input file:
-    python_outputs\tables\wheat_projection_translation_validated_sanity_checks_full_step11.csv
+      python_outputs\tables\wheat_projection_translation_validated_sanity_checks_full_step11.csv
     Using gene/model label column: GeneModel
-    Using peptide label column: Peptide_intron_gapped
+    Using peptide display column: Peptide_intron_gapped
     
-    Loading sanity-passed rows into SQLite...
-    Chunk 1: cumulative rows read 100,000 | cumulative sanity-passed rows loaded 99,103
-    Chunk 2: cumulative rows read 200,000 | cumulative sanity-passed rows loaded 198,145
-    Chunk 3: cumulative rows read 300,000 | cumulative sanity-passed rows loaded 297,110
-    Chunk 4: cumulative rows read 400,000 | cumulative sanity-passed rows loaded 396,182
-    Chunk 5: cumulative rows read 500,000 | cumulative sanity-passed rows loaded 495,323
-    Chunk 6: cumulative rows read 600,000 | cumulative sanity-passed rows loaded 594,161
-    Chunk 7: cumulative rows read 700,000 | cumulative sanity-passed rows loaded 693,188
-    Chunk 8: cumulative rows read 800,000 | cumulative sanity-passed rows loaded 792,324
-    Chunk 9: cumulative rows read 900,000 | cumulative sanity-passed rows loaded 891,548
-    Chunk 10: cumulative rows read 1,000,000 | cumulative sanity-passed rows loaded 990,802
-    Chunk 11: cumulative rows read 1,100,000 | cumulative sanity-passed rows loaded 1,089,962
-    Chunk 12: cumulative rows read 1,200,000 | cumulative sanity-passed rows loaded 1,189,050
-    Chunk 13: cumulative rows read 1,300,000 | cumulative sanity-passed rows loaded 1,288,243
-    Chunk 14: cumulative rows read 1,400,000 | cumulative sanity-passed rows loaded 1,387,148
-    Chunk 15: cumulative rows read 1,500,000 | cumulative sanity-passed rows loaded 1,485,985
-    Chunk 16: cumulative rows read 1,600,000 | cumulative sanity-passed rows loaded 1,584,882
-    Chunk 17: cumulative rows read 1,700,000 | cumulative sanity-passed rows loaded 1,683,861
-    Chunk 18: cumulative rows read 1,800,000 | cumulative sanity-passed rows loaded 1,782,920
-    Chunk 19: cumulative rows read 1,900,000 | cumulative sanity-passed rows loaded 1,881,887
-    Chunk 20: cumulative rows read 2,000,000 | cumulative sanity-passed rows loaded 1,980,697
-    Chunk 21: cumulative rows read 2,100,000 | cumulative sanity-passed rows loaded 2,079,622
-    Chunk 22: cumulative rows read 2,200,000 | cumulative sanity-passed rows loaded 2,178,640
-    Chunk 23: cumulative rows read 2,300,000 | cumulative sanity-passed rows loaded 2,277,678
-    Chunk 24: cumulative rows read 2,400,000 | cumulative sanity-passed rows loaded 2,376,733
-    Chunk 25: cumulative rows read 2,500,000 | cumulative sanity-passed rows loaded 2,475,723
-    Chunk 26: cumulative rows read 2,600,000 | cumulative sanity-passed rows loaded 2,574,929
-    Chunk 27: cumulative rows read 2,700,000 | cumulative sanity-passed rows loaded 2,674,151
-    Chunk 28: cumulative rows read 2,800,000 | cumulative sanity-passed rows loaded 2,773,059
-    Chunk 29: cumulative rows read 2,900,000 | cumulative sanity-passed rows loaded 2,872,135
-    Chunk 30: cumulative rows read 3,000,000 | cumulative sanity-passed rows loaded 2,971,428
-    Chunk 31: cumulative rows read 3,100,000 | cumulative sanity-passed rows loaded 3,070,748
-    Chunk 32: cumulative rows read 3,200,000 | cumulative sanity-passed rows loaded 3,169,833
-    Chunk 33: cumulative rows read 3,300,000 | cumulative sanity-passed rows loaded 3,268,969
-    Chunk 34: cumulative rows read 3,400,000 | cumulative sanity-passed rows loaded 3,368,066
-    Chunk 35: cumulative rows read 3,500,000 | cumulative sanity-passed rows loaded 3,467,214
-    Chunk 36: cumulative rows read 3,600,000 | cumulative sanity-passed rows loaded 3,566,383
-    Chunk 37: cumulative rows read 3,700,000 | cumulative sanity-passed rows loaded 3,665,497
-    Chunk 38: cumulative rows read 3,800,000 | cumulative sanity-passed rows loaded 3,764,679
-    Chunk 39: cumulative rows read 3,900,000 | cumulative sanity-passed rows loaded 3,863,736
-    Chunk 40: cumulative rows read 4,000,000 | cumulative sanity-passed rows loaded 3,962,693
-    Chunk 41: cumulative rows read 4,100,000 | cumulative sanity-passed rows loaded 4,061,690
-    Chunk 42: cumulative rows read 4,200,000 | cumulative sanity-passed rows loaded 4,160,797
-    Chunk 43: cumulative rows read 4,300,000 | cumulative sanity-passed rows loaded 4,259,839
-    Chunk 44: cumulative rows read 4,400,000 | cumulative sanity-passed rows loaded 4,358,967
-    Chunk 45: cumulative rows read 4,500,000 | cumulative sanity-passed rows loaded 4,457,786
-    Chunk 46: cumulative rows read 4,600,000 | cumulative sanity-passed rows loaded 4,556,649
-    Chunk 47: cumulative rows read 4,700,000 | cumulative sanity-passed rows loaded 4,655,597
-    Chunk 48: cumulative rows read 4,800,000 | cumulative sanity-passed rows loaded 4,754,683
-    Chunk 49: cumulative rows read 4,900,000 | cumulative sanity-passed rows loaded 4,853,691
-    Chunk 50: cumulative rows read 5,000,000 | cumulative sanity-passed rows loaded 4,952,890
-    Chunk 51: cumulative rows read 5,100,000 | cumulative sanity-passed rows loaded 5,052,029
-    Chunk 52: cumulative rows read 5,200,000 | cumulative sanity-passed rows loaded 5,151,156
-    Chunk 53: cumulative rows read 5,300,000 | cumulative sanity-passed rows loaded 5,250,257
-    Chunk 54: cumulative rows read 5,400,000 | cumulative sanity-passed rows loaded 5,349,355
-    Chunk 55: cumulative rows read 5,500,000 | cumulative sanity-passed rows loaded 5,448,421
-    Chunk 56: cumulative rows read 5,600,000 | cumulative sanity-passed rows loaded 5,547,603
-    Chunk 57: cumulative rows read 5,700,000 | cumulative sanity-passed rows loaded 5,646,659
-    Chunk 58: cumulative rows read 5,800,000 | cumulative sanity-passed rows loaded 5,745,807
-    Chunk 59: cumulative rows read 5,900,000 | cumulative sanity-passed rows loaded 5,844,747
-    Chunk 60: cumulative rows read 6,000,000 | cumulative sanity-passed rows loaded 5,943,707
-    Chunk 61: cumulative rows read 6,100,000 | cumulative sanity-passed rows loaded 6,042,704
-    Chunk 62: cumulative rows read 6,200,000 | cumulative sanity-passed rows loaded 6,141,780
-    Chunk 63: cumulative rows read 6,300,000 | cumulative sanity-passed rows loaded 6,240,726
-    Chunk 64: cumulative rows read 6,400,000 | cumulative sanity-passed rows loaded 6,339,436
-    Chunk 65: cumulative rows read 6,500,000 | cumulative sanity-passed rows loaded 6,438,416
-    Chunk 66: cumulative rows read 6,600,000 | cumulative sanity-passed rows loaded 6,537,413
-    Chunk 67: cumulative rows read 6,700,000 | cumulative sanity-passed rows loaded 6,636,451
-    Chunk 68: cumulative rows read 6,800,000 | cumulative sanity-passed rows loaded 6,735,610
-    Chunk 69: cumulative rows read 6,900,000 | cumulative sanity-passed rows loaded 6,834,809
-    Chunk 70: cumulative rows read 7,000,000 | cumulative sanity-passed rows loaded 6,933,962
-    Chunk 71: cumulative rows read 7,100,000 | cumulative sanity-passed rows loaded 7,033,103
-    Chunk 72: cumulative rows read 7,200,000 | cumulative sanity-passed rows loaded 7,132,162
-    Chunk 73: cumulative rows read 7,300,000 | cumulative sanity-passed rows loaded 7,231,302
-    Chunk 74: cumulative rows read 7,400,000 | cumulative sanity-passed rows loaded 7,330,455
-    Chunk 75: cumulative rows read 7,500,000 | cumulative sanity-passed rows loaded 7,429,442
-    Chunk 76: cumulative rows read 7,600,000 | cumulative sanity-passed rows loaded 7,528,490
-    Chunk 77: cumulative rows read 7,700,000 | cumulative sanity-passed rows loaded 7,627,591
-    Chunk 78: cumulative rows read 7,800,000 | cumulative sanity-passed rows loaded 7,726,410
-    Chunk 79: cumulative rows read 7,900,000 | cumulative sanity-passed rows loaded 7,825,347
-    Chunk 80: cumulative rows read 8,000,000 | cumulative sanity-passed rows loaded 7,924,564
-    Chunk 81: cumulative rows read 8,100,000 | cumulative sanity-passed rows loaded 8,023,675
-    Chunk 82: cumulative rows read 8,200,000 | cumulative sanity-passed rows loaded 8,122,670
-    Chunk 83: cumulative rows read 8,214,230 | cumulative sanity-passed rows loaded 8,136,687
+    Loading corrected Step 11 sanity-passed rows into SQLite...
+    Chunk 1: cumulative rows read 100,000 | passed rows loaded 100,000 | ChrUnknown rows loaded 897
+    Chunk 2: cumulative rows read 200,000 | passed rows loaded 200,000 | ChrUnknown rows loaded 1,855
+    Chunk 3: cumulative rows read 300,000 | passed rows loaded 300,000 | ChrUnknown rows loaded 2,890
+    Chunk 4: cumulative rows read 400,000 | passed rows loaded 400,000 | ChrUnknown rows loaded 3,818
+    Chunk 5: cumulative rows read 500,000 | passed rows loaded 500,000 | ChrUnknown rows loaded 4,677
+    Chunk 6: cumulative rows read 600,000 | passed rows loaded 600,000 | ChrUnknown rows loaded 5,839
+    Chunk 7: cumulative rows read 700,000 | passed rows loaded 700,000 | ChrUnknown rows loaded 6,812
+    Chunk 8: cumulative rows read 800,000 | passed rows loaded 800,000 | ChrUnknown rows loaded 7,676
+    Chunk 9: cumulative rows read 900,000 | passed rows loaded 900,000 | ChrUnknown rows loaded 8,452
+    Chunk 10: cumulative rows read 1,000,000 | passed rows loaded 1,000,000 | ChrUnknown rows loaded 9,198
+    Chunk 11: cumulative rows read 1,100,000 | passed rows loaded 1,100,000 | ChrUnknown rows loaded 10,038
+    Chunk 12: cumulative rows read 1,200,000 | passed rows loaded 1,200,000 | ChrUnknown rows loaded 10,950
+    Chunk 13: cumulative rows read 1,300,000 | passed rows loaded 1,300,000 | ChrUnknown rows loaded 11,757
+    Chunk 14: cumulative rows read 1,400,000 | passed rows loaded 1,400,000 | ChrUnknown rows loaded 12,852
+    Chunk 15: cumulative rows read 1,500,000 | passed rows loaded 1,500,000 | ChrUnknown rows loaded 14,015
+    Chunk 16: cumulative rows read 1,600,000 | passed rows loaded 1,600,000 | ChrUnknown rows loaded 15,118
+    Chunk 17: cumulative rows read 1,700,000 | passed rows loaded 1,700,000 | ChrUnknown rows loaded 16,139
+    Chunk 18: cumulative rows read 1,800,000 | passed rows loaded 1,800,000 | ChrUnknown rows loaded 17,080
+    Chunk 19: cumulative rows read 1,900,000 | passed rows loaded 1,900,000 | ChrUnknown rows loaded 18,113
+    Chunk 20: cumulative rows read 2,000,000 | passed rows loaded 2,000,000 | ChrUnknown rows loaded 19,303
+    Chunk 21: cumulative rows read 2,100,000 | passed rows loaded 2,100,000 | ChrUnknown rows loaded 20,378
+    Chunk 22: cumulative rows read 2,200,000 | passed rows loaded 2,200,000 | ChrUnknown rows loaded 21,360
+    Chunk 23: cumulative rows read 2,300,000 | passed rows loaded 2,300,000 | ChrUnknown rows loaded 22,322
+    Chunk 24: cumulative rows read 2,400,000 | passed rows loaded 2,400,000 | ChrUnknown rows loaded 23,267
+    Chunk 25: cumulative rows read 2,500,000 | passed rows loaded 2,500,000 | ChrUnknown rows loaded 24,277
+    Chunk 26: cumulative rows read 2,600,000 | passed rows loaded 2,600,000 | ChrUnknown rows loaded 25,071
+    Chunk 27: cumulative rows read 2,700,000 | passed rows loaded 2,700,000 | ChrUnknown rows loaded 25,849
+    Chunk 28: cumulative rows read 2,800,000 | passed rows loaded 2,800,000 | ChrUnknown rows loaded 26,941
+    Chunk 29: cumulative rows read 2,900,000 | passed rows loaded 2,900,000 | ChrUnknown rows loaded 27,865
+    Chunk 30: cumulative rows read 3,000,000 | passed rows loaded 3,000,000 | ChrUnknown rows loaded 28,572
+    Chunk 31: cumulative rows read 3,100,000 | passed rows loaded 3,100,000 | ChrUnknown rows loaded 29,252
+    Chunk 32: cumulative rows read 3,200,000 | passed rows loaded 3,200,000 | ChrUnknown rows loaded 30,167
+    Chunk 33: cumulative rows read 3,300,000 | passed rows loaded 3,300,000 | ChrUnknown rows loaded 31,031
+    Chunk 34: cumulative rows read 3,400,000 | passed rows loaded 3,400,000 | ChrUnknown rows loaded 31,934
+    Chunk 35: cumulative rows read 3,500,000 | passed rows loaded 3,500,000 | ChrUnknown rows loaded 32,786
+    Chunk 36: cumulative rows read 3,600,000 | passed rows loaded 3,600,000 | ChrUnknown rows loaded 33,617
+    Chunk 37: cumulative rows read 3,700,000 | passed rows loaded 3,700,000 | ChrUnknown rows loaded 34,503
+    Chunk 38: cumulative rows read 3,800,000 | passed rows loaded 3,800,000 | ChrUnknown rows loaded 35,321
+    Chunk 39: cumulative rows read 3,900,000 | passed rows loaded 3,900,000 | ChrUnknown rows loaded 36,264
+    Chunk 40: cumulative rows read 4,000,000 | passed rows loaded 4,000,000 | ChrUnknown rows loaded 37,307
+    Chunk 41: cumulative rows read 4,100,000 | passed rows loaded 4,100,000 | ChrUnknown rows loaded 38,310
+    Chunk 42: cumulative rows read 4,200,000 | passed rows loaded 4,200,000 | ChrUnknown rows loaded 39,203
+    Chunk 43: cumulative rows read 4,300,000 | passed rows loaded 4,300,000 | ChrUnknown rows loaded 40,161
+    Chunk 44: cumulative rows read 4,400,000 | passed rows loaded 4,400,000 | ChrUnknown rows loaded 41,033
+    Chunk 45: cumulative rows read 4,500,000 | passed rows loaded 4,500,000 | ChrUnknown rows loaded 42,214
+    Chunk 46: cumulative rows read 4,600,000 | passed rows loaded 4,600,000 | ChrUnknown rows loaded 43,351
+    Chunk 47: cumulative rows read 4,700,000 | passed rows loaded 4,700,000 | ChrUnknown rows loaded 44,403
+    Chunk 48: cumulative rows read 4,800,000 | passed rows loaded 4,800,000 | ChrUnknown rows loaded 45,317
+    Chunk 49: cumulative rows read 4,900,000 | passed rows loaded 4,900,000 | ChrUnknown rows loaded 46,309
+    Chunk 50: cumulative rows read 5,000,000 | passed rows loaded 5,000,000 | ChrUnknown rows loaded 47,110
+    Chunk 51: cumulative rows read 5,100,000 | passed rows loaded 5,100,000 | ChrUnknown rows loaded 47,971
+    Chunk 52: cumulative rows read 5,200,000 | passed rows loaded 5,200,000 | ChrUnknown rows loaded 48,844
+    Chunk 53: cumulative rows read 5,300,000 | passed rows loaded 5,300,000 | ChrUnknown rows loaded 49,743
+    Chunk 54: cumulative rows read 5,400,000 | passed rows loaded 5,400,000 | ChrUnknown rows loaded 50,645
+    Chunk 55: cumulative rows read 5,500,000 | passed rows loaded 5,500,000 | ChrUnknown rows loaded 51,579
+    Chunk 56: cumulative rows read 5,600,000 | passed rows loaded 5,600,000 | ChrUnknown rows loaded 52,397
+    Chunk 57: cumulative rows read 5,700,000 | passed rows loaded 5,700,000 | ChrUnknown rows loaded 53,341
+    Chunk 58: cumulative rows read 5,800,000 | passed rows loaded 5,800,000 | ChrUnknown rows loaded 54,193
+    Chunk 59: cumulative rows read 5,900,000 | passed rows loaded 5,900,000 | ChrUnknown rows loaded 55,253
+    Chunk 60: cumulative rows read 6,000,000 | passed rows loaded 6,000,000 | ChrUnknown rows loaded 56,293
+    Chunk 61: cumulative rows read 6,100,000 | passed rows loaded 6,100,000 | ChrUnknown rows loaded 57,296
+    Chunk 62: cumulative rows read 6,200,000 | passed rows loaded 6,200,000 | ChrUnknown rows loaded 58,220
+    Chunk 63: cumulative rows read 6,300,000 | passed rows loaded 6,300,000 | ChrUnknown rows loaded 59,274
+    Chunk 64: cumulative rows read 6,400,000 | passed rows loaded 6,400,000 | ChrUnknown rows loaded 60,564
+    Chunk 65: cumulative rows read 6,500,000 | passed rows loaded 6,500,000 | ChrUnknown rows loaded 61,584
+    Chunk 66: cumulative rows read 6,600,000 | passed rows loaded 6,600,000 | ChrUnknown rows loaded 62,587
+    Chunk 67: cumulative rows read 6,700,000 | passed rows loaded 6,700,000 | ChrUnknown rows loaded 63,549
+    Chunk 68: cumulative rows read 6,800,000 | passed rows loaded 6,800,000 | ChrUnknown rows loaded 64,390
+    Chunk 69: cumulative rows read 6,900,000 | passed rows loaded 6,900,000 | ChrUnknown rows loaded 65,191
+    Chunk 70: cumulative rows read 7,000,000 | passed rows loaded 7,000,000 | ChrUnknown rows loaded 66,038
+    Chunk 71: cumulative rows read 7,100,000 | passed rows loaded 7,100,000 | ChrUnknown rows loaded 66,897
+    Chunk 72: cumulative rows read 7,200,000 | passed rows loaded 7,200,000 | ChrUnknown rows loaded 67,838
+    Chunk 73: cumulative rows read 7,300,000 | passed rows loaded 7,300,000 | ChrUnknown rows loaded 68,698
+    Chunk 74: cumulative rows read 7,400,000 | passed rows loaded 7,400,000 | ChrUnknown rows loaded 69,545
+    Chunk 75: cumulative rows read 7,500,000 | passed rows loaded 7,500,000 | ChrUnknown rows loaded 70,558
+    Chunk 76: cumulative rows read 7,600,000 | passed rows loaded 7,600,000 | ChrUnknown rows loaded 71,510
+    Chunk 77: cumulative rows read 7,700,000 | passed rows loaded 7,700,000 | ChrUnknown rows loaded 72,409
+    Chunk 78: cumulative rows read 7,800,000 | passed rows loaded 7,800,000 | ChrUnknown rows loaded 73,590
+    Chunk 79: cumulative rows read 7,900,000 | passed rows loaded 7,900,000 | ChrUnknown rows loaded 74,653
+    Chunk 80: cumulative rows read 8,000,000 | passed rows loaded 8,000,000 | ChrUnknown rows loaded 75,436
+    Chunk 81: cumulative rows read 8,100,000 | passed rows loaded 8,100,000 | ChrUnknown rows loaded 76,325
+    Chunk 82: cumulative rows read 8,200,000 | passed rows loaded 8,200,000 | ChrUnknown rows loaded 77,330
+    Chunk 83: cumulative rows read 8,214,230 | passed rows loaded 8,214,230 | ChrUnknown rows loaded 77,543
+    
+    ChrUnknown input check passed: 77,543 validated rows loaded into SQLite.
     
     Creating SQLite indexes...
     
-    Building non-redundant validated feature table...
+    Building complete nonredundant validated feature table...
     
-    Exporting combined non-redundant table and BED files...
-    Export chunk 1: cumulative non-redundant rows 100,000
-    Export chunk 2: cumulative non-redundant rows 200,000
-    Export chunk 3: cumulative non-redundant rows 300,000
-    Export chunk 4: cumulative non-redundant rows 400,000
-    Export chunk 5: cumulative non-redundant rows 500,000
-    Export chunk 6: cumulative non-redundant rows 600,000
-    Export chunk 7: cumulative non-redundant rows 700,000
-    Export chunk 8: cumulative non-redundant rows 800,000
-    Export chunk 9: cumulative non-redundant rows 900,000
-    Export chunk 10: cumulative non-redundant rows 1,000,000
-    Export chunk 11: cumulative non-redundant rows 1,100,000
-    Export chunk 12: cumulative non-redundant rows 1,200,000
-    Export chunk 13: cumulative non-redundant rows 1,300,000
-    Export chunk 14: cumulative non-redundant rows 1,400,000
-    Export chunk 15: cumulative non-redundant rows 1,500,000
-    Export chunk 16: cumulative non-redundant rows 1,600,000
-    Export chunk 17: cumulative non-redundant rows 1,700,000
-    Export chunk 18: cumulative non-redundant rows 1,800,000
-    Export chunk 19: cumulative non-redundant rows 1,900,000
-    Export chunk 20: cumulative non-redundant rows 2,000,000
-    Export chunk 21: cumulative non-redundant rows 2,100,000
-    Export chunk 22: cumulative non-redundant rows 2,200,000
-    Export chunk 23: cumulative non-redundant rows 2,300,000
-    Export chunk 24: cumulative non-redundant rows 2,400,000
-    Export chunk 25: cumulative non-redundant rows 2,500,000
-    Export chunk 26: cumulative non-redundant rows 2,600,000
-    Export chunk 27: cumulative non-redundant rows 2,700,000
-    Export chunk 28: cumulative non-redundant rows 2,800,000
-    Export chunk 29: cumulative non-redundant rows 2,900,000
-    Export chunk 30: cumulative non-redundant rows 3,000,000
-    Export chunk 31: cumulative non-redundant rows 3,100,000
-    Export chunk 32: cumulative non-redundant rows 3,138,903
+    Exporting complete nonredundant table, complete BED tracks and ChrUnknown-only BED tracks...
+    Export chunk 1: cumulative complete nonredundant rows 100,000 | ChrUnknown nonredundant rows 0
+    Export chunk 2: cumulative complete nonredundant rows 200,000 | ChrUnknown nonredundant rows 0
+    Export chunk 3: cumulative complete nonredundant rows 300,000 | ChrUnknown nonredundant rows 0
+    Export chunk 4: cumulative complete nonredundant rows 400,000 | ChrUnknown nonredundant rows 0
+    Export chunk 5: cumulative complete nonredundant rows 500,000 | ChrUnknown nonredundant rows 0
+    Export chunk 6: cumulative complete nonredundant rows 600,000 | ChrUnknown nonredundant rows 0
+    Export chunk 7: cumulative complete nonredundant rows 700,000 | ChrUnknown nonredundant rows 0
+    Export chunk 8: cumulative complete nonredundant rows 800,000 | ChrUnknown nonredundant rows 0
+    Export chunk 9: cumulative complete nonredundant rows 900,000 | ChrUnknown nonredundant rows 0
+    Export chunk 10: cumulative complete nonredundant rows 1,000,000 | ChrUnknown nonredundant rows 0
+    Export chunk 11: cumulative complete nonredundant rows 1,100,000 | ChrUnknown nonredundant rows 0
+    Export chunk 12: cumulative complete nonredundant rows 1,200,000 | ChrUnknown nonredundant rows 0
+    Export chunk 13: cumulative complete nonredundant rows 1,300,000 | ChrUnknown nonredundant rows 0
+    Export chunk 14: cumulative complete nonredundant rows 1,400,000 | ChrUnknown nonredundant rows 0
+    Export chunk 15: cumulative complete nonredundant rows 1,500,000 | ChrUnknown nonredundant rows 0
+    Export chunk 16: cumulative complete nonredundant rows 1,600,000 | ChrUnknown nonredundant rows 0
+    Export chunk 17: cumulative complete nonredundant rows 1,700,000 | ChrUnknown nonredundant rows 0
+    Export chunk 18: cumulative complete nonredundant rows 1,800,000 | ChrUnknown nonredundant rows 0
+    Export chunk 19: cumulative complete nonredundant rows 1,900,000 | ChrUnknown nonredundant rows 0
+    Export chunk 20: cumulative complete nonredundant rows 2,000,000 | ChrUnknown nonredundant rows 0
+    Export chunk 21: cumulative complete nonredundant rows 2,100,000 | ChrUnknown nonredundant rows 0
+    Export chunk 22: cumulative complete nonredundant rows 2,200,000 | ChrUnknown nonredundant rows 0
+    Export chunk 23: cumulative complete nonredundant rows 2,300,000 | ChrUnknown nonredundant rows 0
+    Export chunk 24: cumulative complete nonredundant rows 2,400,000 | ChrUnknown nonredundant rows 0
+    Export chunk 25: cumulative complete nonredundant rows 2,500,000 | ChrUnknown nonredundant rows 0
+    Export chunk 26: cumulative complete nonredundant rows 2,600,000 | ChrUnknown nonredundant rows 0
+    Export chunk 27: cumulative complete nonredundant rows 2,700,000 | ChrUnknown nonredundant rows 0
+    Export chunk 28: cumulative complete nonredundant rows 2,800,000 | ChrUnknown nonredundant rows 0
+    Export chunk 29: cumulative complete nonredundant rows 2,900,000 | ChrUnknown nonredundant rows 0
+    Export chunk 30: cumulative complete nonredundant rows 3,000,000 | ChrUnknown nonredundant rows 0
+    Export chunk 31: cumulative complete nonredundant rows 3,100,000 | ChrUnknown nonredundant rows 0
+    Export chunk 32: cumulative complete nonredundant rows 3,173,811 | ChrUnknown nonredundant rows 34,908
     
     ===== STEP 13 COMBINED VALIDATED BED SUMMARY =====
-    Validated rows before deduplication: 8,136,687
-    Non-redundant validated rows: 3,138,903
-    Redundant validated rows removed: 4,997,784
+    Validated rows before deduplication: 8,214,230
+    Complete nonredundant validated rows: 3,173,811
+    Redundant validated rows removed: 5,040,419
+    Sequence identifiers represented: 22
     
-    Combined non-redundant table saved: python_outputs\tables\wheat_all_tissues_nonredundant_validated_peptides_step13.csv
-    Combined BED6 saved: python_outputs\bed_validated\FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed6
-    Combined BED12 saved: python_outputs\bed_validated\FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed12
-    Step 13 summary saved: python_outputs\tables\wheat_all_tissues_nonredundant_validated_bed_summary_step13.csv
-    Temporary SQLite database saved: python_outputs\tables\wheat_validated_nonredundant_step13.sqlite
+    ===== ChrUnknown NONREDUNDANT TRACK =====
+    ChrUnknown validated rows before deduplication: 77,543
+    ChrUnknown nonredundant validated rows: 34,908
+    ChrUnknown redundant rows removed: 42,635
+    ChrUnknown unique peptide sequences: 21,184
+    ChrUnknown unique protein accessions: 5,132
+    ChrUnknown unique gene models: 4,974
+    
+    Complete nonredundant table saved:
+      python_outputs\tables\wheat_all_tissues_nonredundant_validated_peptides_step13.csv
+    Complete combined BED6 saved:
+      python_outputs\bed_validated\FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed6
+    Complete combined BED12 saved:
+      python_outputs\bed_validated\FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed12
+    Standalone ChrUnknown BED6 saved:
+      python_outputs\bed_validated\FragPipe_allauthors_allsources_alltissues_ChrUnknown_nonredundant_validated_peptides.bed6
+    Standalone ChrUnknown BED12 saved:
+      python_outputs\bed_validated\FragPipe_allauthors_allsources_alltissues_ChrUnknown_nonredundant_validated_peptides.bed12
+    Step 13 summary saved:
+      python_outputs\tables\wheat_all_tissues_nonredundant_validated_bed_summary_step13.csv
+    SQLite database saved:
+      python_outputs\tables\wheat_validated_nonredundant_step13.sqlite
     
 
 
@@ -15403,32 +17414,47 @@ display(step13_summary)
       <th>Multi_block_peptides</th>
       <th>Within_exon_peptides</th>
       <th>BED_labels_with_introns</th>
+      <th>...</th>
+      <th>ChrUnknown_unique_proteins</th>
+      <th>ChrUnknown_unique_gene_models</th>
+      <th>ChrUnknown_multi_block_peptides</th>
+      <th>ChrUnknown_within_exon_peptides</th>
       <th>Combined_table_file</th>
       <th>BED6_file</th>
       <th>BED12_file</th>
+      <th>ChrUnknown_BED6_file</th>
+      <th>ChrUnknown_BED12_file</th>
       <th>SQLite_database</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>8136687</td>
-      <td>3138903</td>
-      <td>4997784</td>
-      <td>1089379</td>
-      <td>267166</td>
-      <td>238590</td>
-      <td>21</td>
-      <td>363232</td>
-      <td>2775671</td>
-      <td>193493</td>
+      <td>8214230</td>
+      <td>3173811</td>
+      <td>5040419</td>
+      <td>1095523</td>
+      <td>272298</td>
+      <td>243564</td>
+      <td>22</td>
+      <td>365259</td>
+      <td>2808552</td>
+      <td>194538</td>
+      <td>...</td>
+      <td>5132</td>
+      <td>4974</td>
+      <td>2027</td>
+      <td>32881</td>
       <td>wheat_all_tissues_nonredundant_validated_pepti...</td>
       <td>FragPipe_allauthors_allsources_alltissues_nonr...</td>
       <td>FragPipe_allauthors_allsources_alltissues_nonr...</td>
+      <td>FragPipe_allauthors_allsources_alltissues_ChrU...</td>
+      <td>FragPipe_allauthors_allsources_alltissues_ChrU...</td>
       <td>wheat_validated_nonredundant_step13.sqlite</td>
     </tr>
   </tbody>
 </table>
+<p>1 rows × 24 columns</p>
 </div>
 
 
@@ -15520,7 +17546,7 @@ apollo_dir = Path("python_outputs/bed_validated_Apollo")
 apollo_dir.mkdir(parents=True, exist_ok=True)
 
 # Date suffix for public upload files
-date_suffix = "20260602"
+date_suffix = "20260805"
 
 # -----------------------------
 # 2. Collect all BED files
@@ -15564,7 +17590,24 @@ def parse_standard_bed_filename(filename):
     """
 
     # -----------------------------
-    # A. Combined all-authors/all-sources/all-tissues non-redundant BED files
+    # A. Standalone ChrUnknown non-redundant BED files
+    # -----------------------------
+    chrunknown_combined_match = re.match(
+        r"FragPipe_allauthors_allsources_alltissues_ChrUnknown_"
+        r"nonredundant_validated_peptides\.bed(?P<BedType>6|12)$",
+        filename
+    )
+
+    if chrunknown_combined_match is not None:
+        return {
+            "Author": "Vincent",
+            "Source": "allsources",
+            "Tissue": "ChrUnknown_nonredundant",
+            "TrackType": "annotation_ChrUnknown_nonredundant"
+        }
+        
+    # -----------------------------
+    # B. Combined all-authors/all-sources/all-tissues non-redundant BED files
     # -----------------------------
     combined_match = re.match(
         r"FragPipe_allauthors_allsources_alltissues_+nonredundant_validated_peptides\.bed(?P<BedType>6|12)$",
@@ -15580,7 +17623,7 @@ def parse_standard_bed_filename(filename):
         }
 
     # -----------------------------
-    # B. Individual source/tissue validated BED files
+    # C. Individual source/tissue validated BED files
     # -----------------------------
     individual_match = re.match(
         r"FragPipe_(?P<Author>[^_]+)_(?P<Source>MSV\d+|PXD\d+)_(?P<Tissue>.+?)_(?:validated_)?peptides\.bed(?P<BedType>6|12)$",
@@ -15701,211 +17744,217 @@ print(f"BED files skipped: {skipped_count:,}")
 print(f"Output directory: {apollo_dir}")
 ```
 
-    BED files found: 66
+    BED files found: 68
     Input directory:  python_outputs\bed_validated
     Output directory: python_outputs\bed_validated_Apollo
     Copied:
+      FragPipe_allauthors_allsources_alltissues_ChrUnknown_nonredundant_validated_peptides.bed12
+      -> Vincent_allsources_ChrUnknown_nonredundant_proteogenomics_validated_20260805.bed12
+    Copied:
+      FragPipe_allauthors_allsources_alltissues_ChrUnknown_nonredundant_validated_peptides.bed6
+      -> Vincent_allsources_ChrUnknown_nonredundant_proteogenomics_validated_20260805.bed6
+    Copied:
       FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed12
-      -> Vincent_allsources_alltissues_nonredundant_nonredundant_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_allsources_alltissues_nonredundant_nonredundant_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_allauthors_allsources_alltissues_nonredundant_validated_peptides.bed6
-      -> Vincent_allsources_alltissues_nonredundant_nonredundant_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_allsources_alltissues_nonredundant_nonredundant_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_anther_validated_peptides.bed12
-      -> Vincent_PXD004720_anther_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_anther_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_anther_validated_peptides.bed6
-      -> Vincent_PXD004720_anther_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_anther_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_boot_validated_peptides.bed12
-      -> Vincent_PXD004720_boot_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_boot_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_boot_validated_peptides.bed6
-      -> Vincent_PXD004720_boot_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_boot_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_coleoptile_validated_peptides.bed12
-      -> Vincent_PXD004720_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_coleoptile_validated_peptides.bed6
-      -> Vincent_PXD004720_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_embryo_validated_peptides.bed12
-      -> Vincent_PXD004720_embryo_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_embryo_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_embryo_validated_peptides.bed6
-      -> Vincent_PXD004720_embryo_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_embryo_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_endosperm_validated_peptides.bed12
-      -> Vincent_PXD004720_endosperm_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_endosperm_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_endosperm_validated_peptides.bed6
-      -> Vincent_PXD004720_endosperm_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_endosperm_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_glume_validated_peptides.bed12
-      -> Vincent_PXD004720_glume_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_glume_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_glume_validated_peptides.bed6
-      -> Vincent_PXD004720_glume_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_glume_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-70_validated_peptides.bed12
-      -> Vincent_PXD004720_grain_zadoks_70_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_grain_zadoks_70_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-70_validated_peptides.bed6
-      -> Vincent_PXD004720_grain_zadoks_70_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_grain_zadoks_70_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-71_validated_peptides.bed12
-      -> Vincent_PXD004720_grain_zadoks_71_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_grain_zadoks_71_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-71_validated_peptides.bed6
-      -> Vincent_PXD004720_grain_zadoks_71_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_grain_zadoks_71_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-75_validated_peptides.bed12
-      -> Vincent_PXD004720_grain_zadoks_75_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_grain_zadoks_75_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-75_validated_peptides.bed6
-      -> Vincent_PXD004720_grain_zadoks_75_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_grain_zadoks_75_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-83_validated_peptides.bed12
-      -> Vincent_PXD004720_grain_zadoks_83_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_grain_zadoks_83_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-83_validated_peptides.bed6
-      -> Vincent_PXD004720_grain_zadoks_83_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_grain_zadoks_83_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-87_validated_peptides.bed12
-      -> Vincent_PXD004720_grain_zadoks_87_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_grain_zadoks_87_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_grain-zadoks-87_validated_peptides.bed6
-      -> Vincent_PXD004720_grain_zadoks_87_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_grain_zadoks_87_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_leaf-flag-mature_validated_peptides.bed12
-      -> Vincent_PXD004720_leaf_flag_mature_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_leaf_flag_mature_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_leaf-flag-mature_validated_peptides.bed6
-      -> Vincent_PXD004720_leaf_flag_mature_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_leaf_flag_mature_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_leaf-flag-senescing_validated_peptides.bed12
-      -> Vincent_PXD004720_leaf_flag_senescing_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_leaf_flag_senescing_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_leaf-flag-senescing_validated_peptides.bed6
-      -> Vincent_PXD004720_leaf_flag_senescing_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_leaf_flag_senescing_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_leaf-flag-young_validated_peptides.bed12
-      -> Vincent_PXD004720_leaf_flag_young_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_leaf_flag_young_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_leaf-flag-young_validated_peptides.bed6
-      -> Vincent_PXD004720_leaf_flag_young_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_leaf_flag_young_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_lemma_validated_peptides.bed12
-      -> Vincent_PXD004720_lemma_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_lemma_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_lemma_validated_peptides.bed6
-      -> Vincent_PXD004720_lemma_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_lemma_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_node-secretion_validated_peptides.bed12
-      -> Vincent_PXD004720_node_secretion_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_node_secretion_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_node-secretion_validated_peptides.bed6
-      -> Vincent_PXD004720_node_secretion_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_node_secretion_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_node_validated_peptides.bed12
-      -> Vincent_PXD004720_node_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_node_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_node_validated_peptides.bed6
-      -> Vincent_PXD004720_node_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_node_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_palea_validated_peptides.bed12
-      -> Vincent_PXD004720_palea_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_palea_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_palea_validated_peptides.bed6
-      -> Vincent_PXD004720_palea_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_palea_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_pericarp_validated_peptides.bed12
-      -> Vincent_PXD004720_pericarp_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_pericarp_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_pericarp_validated_peptides.bed6
-      -> Vincent_PXD004720_pericarp_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_pericarp_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_pollen_validated_peptides.bed12
-      -> Vincent_PXD004720_pollen_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_pollen_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_pollen_validated_peptides.bed6
-      -> Vincent_PXD004720_pollen_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_pollen_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_rachilla_validated_peptides.bed12
-      -> Vincent_PXD004720_rachilla_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_rachilla_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_rachilla_validated_peptides.bed6
-      -> Vincent_PXD004720_rachilla_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_rachilla_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_radicle_validated_peptides.bed12
-      -> Vincent_PXD004720_radicle_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_radicle_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_radicle_validated_peptides.bed6
-      -> Vincent_PXD004720_radicle_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_radicle_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_root-mature_validated_peptides.bed12
-      -> Vincent_PXD004720_root_mature_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_root_mature_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_root-mature_validated_peptides.bed6
-      -> Vincent_PXD004720_root_mature_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_root_mature_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_root-secretion_validated_peptides.bed12
-      -> Vincent_PXD004720_root_secretion_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_root_secretion_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_root-secretion_validated_peptides.bed6
-      -> Vincent_PXD004720_root_secretion_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_root_secretion_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_root-tip_validated_peptides.bed12
-      -> Vincent_PXD004720_root_tip_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_root_tip_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_root-tip_validated_peptides.bed6
-      -> Vincent_PXD004720_root_tip_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_root_tip_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_root-vasculature_validated_peptides.bed12
-      -> Vincent_PXD004720_root_vasculature_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_root_vasculature_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_root-vasculature_validated_peptides.bed6
-      -> Vincent_PXD004720_root_vasculature_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_root_vasculature_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_spike-immature_validated_peptides.bed12
-      -> Vincent_PXD004720_spike_immature_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_spike_immature_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_spike-immature_validated_peptides.bed6
-      -> Vincent_PXD004720_spike_immature_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_spike_immature_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Duncan_PXD004720_stem_validated_peptides.bed12
-      -> Vincent_PXD004720_stem_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD004720_stem_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Duncan_PXD004720_stem_validated_peptides.bed6
-      -> Vincent_PXD004720_stem_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD004720_stem_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Liu_PXD050500_coleoptile_validated_peptides.bed12
-      -> Vincent_PXD050500_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD050500_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Liu_PXD050500_coleoptile_validated_peptides.bed6
-      -> Vincent_PXD050500_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD050500_coleoptile_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Liu_PXD050500_node_validated_peptides.bed12
-      -> Vincent_PXD050500_node_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD050500_node_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Liu_PXD050500_node_validated_peptides.bed6
-      -> Vincent_PXD050500_node_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD050500_node_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Liu_PXD050500_radicle_validated_peptides.bed12
-      -> Vincent_PXD050500_radicle_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_PXD050500_radicle_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Liu_PXD050500_radicle_validated_peptides.bed6
-      -> Vincent_PXD050500_radicle_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_PXD050500_radicle_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     Copied:
       FragPipe_Vincent_MSV000090572_stored-grain_validated_peptides.bed12
-      -> Vincent_MSV000090572_stored_grain_projected-peptides_annotation-proteogenomics_validated_20260602.bed12
+      -> Vincent_MSV000090572_stored_grain_projected-peptides_annotation-proteogenomics_validated_20260805.bed12
     Copied:
       FragPipe_Vincent_MSV000090572_stored-grain_validated_peptides.bed6
-      -> Vincent_MSV000090572_stored_grain_projected-peptides_annotation-proteogenomics_validated_20260602.bed6
+      -> Vincent_MSV000090572_stored_grain_projected-peptides_annotation-proteogenomics_validated_20260805.bed6
     
     Renaming manifest saved: python_outputs\tables\wheat_bed_Apollo_validated_renaming_manifest_step14.csv
     
-    Apollo BED files prepared: 66
+    Apollo BED files prepared: 68
     BED files skipped: 0
     Output directory: python_outputs\bed_validated_Apollo
     
@@ -16356,7 +18405,7 @@ display(source_summary)
     
     Loading fully validated peptide projection rows from Step 11...
     
-    Fully validated peptide rows loaded: 8,136,687
+    Fully validated peptide rows loaded: 8,214,230
     
     Tissue-level summary saved: python_outputs\tables\wheat_tissue_level_summary_step15.csv
     Gene model summary saved: python_outputs\tables\wheat_gene_model_summary_step15.csv
@@ -16412,22 +18461,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>stored_grain</td>
       <td>single</td>
-      <td>29430</td>
-      <td>9070</td>
-      <td>16819</td>
-      <td>14263</td>
-      <td>9017</td>
-      <td>5246</td>
-      <td>5.3469</td>
-      <td>8.4339</td>
-      <td>3.2821</td>
-      <td>21</td>
-      <td>3248</td>
-      <td>26182</td>
-      <td>13553</td>
-      <td>3266</td>
-      <td>11525</td>
-      <td>2738</td>
+      <td>29892</td>
+      <td>9126</td>
+      <td>17110</td>
+      <td>14536</td>
+      <td>9126</td>
+      <td>5410</td>
+      <td>5.4493</td>
+      <td>8.5358</td>
+      <td>3.3847</td>
+      <td>22</td>
+      <td>3262</td>
+      <td>26630</td>
+      <td>13795</td>
+      <td>3315</td>
+      <td>11749</td>
+      <td>2787</td>
     </tr>
     <tr>
       <th>1</th>
@@ -16435,22 +18484,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>anther</td>
       <td>single</td>
-      <td>161955</td>
-      <td>33926</td>
-      <td>35808</td>
-      <td>28408</td>
-      <td>21220</td>
-      <td>7188</td>
-      <td>10.6496</td>
-      <td>19.8477</td>
-      <td>4.4971</td>
-      <td>21</td>
-      <td>27584</td>
-      <td>134371</td>
-      <td>19159</td>
-      <td>16649</td>
-      <td>15795</td>
-      <td>12613</td>
+      <td>163467</td>
+      <td>33982</td>
+      <td>36275</td>
+      <td>28845</td>
+      <td>21409</td>
+      <td>7436</td>
+      <td>10.8134</td>
+      <td>20.0245</td>
+      <td>4.6522</td>
+      <td>22</td>
+      <td>27708</td>
+      <td>135759</td>
+      <td>19459</td>
+      <td>16816</td>
+      <td>16079</td>
+      <td>12766</td>
     </tr>
     <tr>
       <th>2</th>
@@ -16458,22 +18507,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>boot</td>
       <td>single</td>
-      <td>13024</td>
-      <td>3585</td>
-      <td>9028</td>
-      <td>7191</td>
-      <td>5377</td>
-      <td>1814</td>
-      <td>2.6958</td>
-      <td>5.0293</td>
-      <td>1.1349</td>
-      <td>21</td>
-      <td>2718</td>
-      <td>10306</td>
-      <td>7123</td>
-      <td>1905</td>
-      <td>5744</td>
-      <td>1447</td>
+      <td>13137</td>
+      <td>3599</td>
+      <td>9126</td>
+      <td>7279</td>
+      <td>5415</td>
+      <td>1864</td>
+      <td>2.7288</td>
+      <td>5.0648</td>
+      <td>1.1662</td>
+      <td>22</td>
+      <td>2723</td>
+      <td>10414</td>
+      <td>7208</td>
+      <td>1918</td>
+      <td>5820</td>
+      <td>1459</td>
     </tr>
     <tr>
       <th>3</th>
@@ -16481,22 +18530,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>coleoptile</td>
       <td>single</td>
-      <td>201259</td>
-      <td>40804</td>
-      <td>45180</td>
-      <td>35610</td>
-      <td>26512</td>
-      <td>9098</td>
-      <td>13.3495</td>
-      <td>24.7975</td>
-      <td>5.6920</td>
-      <td>21</td>
-      <td>31158</td>
-      <td>170101</td>
-      <td>22671</td>
-      <td>22509</td>
-      <td>18942</td>
-      <td>16668</td>
+      <td>203264</td>
+      <td>40861</td>
+      <td>45819</td>
+      <td>36208</td>
+      <td>26797</td>
+      <td>9411</td>
+      <td>13.5737</td>
+      <td>25.0641</td>
+      <td>5.8878</td>
+      <td>22</td>
+      <td>31278</td>
+      <td>171986</td>
+      <td>23052</td>
+      <td>22767</td>
+      <td>19309</td>
+      <td>16899</td>
     </tr>
     <tr>
       <th>4</th>
@@ -16504,22 +18553,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>embryo</td>
       <td>single</td>
-      <td>8662</td>
-      <td>2807</td>
-      <td>7035</td>
-      <td>5683</td>
-      <td>4176</td>
-      <td>1507</td>
-      <td>2.1304</td>
-      <td>3.9059</td>
-      <td>0.9428</td>
-      <td>21</td>
-      <td>1394</td>
-      <td>7268</td>
-      <td>6105</td>
-      <td>930</td>
-      <td>4981</td>
-      <td>702</td>
+      <td>8742</td>
+      <td>2815</td>
+      <td>7110</td>
+      <td>5749</td>
+      <td>4204</td>
+      <td>1545</td>
+      <td>2.1552</td>
+      <td>3.9321</td>
+      <td>0.9666</td>
+      <td>22</td>
+      <td>1407</td>
+      <td>7335</td>
+      <td>6175</td>
+      <td>935</td>
+      <td>5043</td>
+      <td>706</td>
     </tr>
     <tr>
       <th>5</th>
@@ -16527,22 +18576,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>endosperm</td>
       <td>single</td>
-      <td>101413</td>
-      <td>19923</td>
-      <td>26770</td>
-      <td>21225</td>
-      <td>15901</td>
-      <td>5324</td>
-      <td>7.9568</td>
-      <td>14.8727</td>
-      <td>3.3309</td>
-      <td>21</td>
-      <td>14186</td>
-      <td>87227</td>
-      <td>15341</td>
-      <td>11429</td>
-      <td>12649</td>
-      <td>8576</td>
+      <td>102289</td>
+      <td>19953</td>
+      <td>27099</td>
+      <td>21529</td>
+      <td>16036</td>
+      <td>5493</td>
+      <td>8.0708</td>
+      <td>14.9990</td>
+      <td>3.4366</td>
+      <td>22</td>
+      <td>14237</td>
+      <td>88052</td>
+      <td>15563</td>
+      <td>11536</td>
+      <td>12857</td>
+      <td>8672</td>
     </tr>
     <tr>
       <th>6</th>
@@ -16550,22 +18599,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>glume</td>
       <td>single</td>
-      <td>142449</td>
-      <td>28467</td>
-      <td>34516</td>
-      <td>27731</td>
-      <td>20326</td>
-      <td>7405</td>
-      <td>10.3958</td>
-      <td>19.0115</td>
-      <td>4.6328</td>
-      <td>21</td>
-      <td>22004</td>
-      <td>120445</td>
-      <td>19283</td>
-      <td>15233</td>
-      <td>15992</td>
-      <td>11739</td>
+      <td>144079</td>
+      <td>28512</td>
+      <td>35014</td>
+      <td>28205</td>
+      <td>20534</td>
+      <td>7671</td>
+      <td>10.5735</td>
+      <td>19.2061</td>
+      <td>4.7992</td>
+      <td>22</td>
+      <td>22077</td>
+      <td>122002</td>
+      <td>19568</td>
+      <td>15446</td>
+      <td>16269</td>
+      <td>11936</td>
     </tr>
     <tr>
       <th>7</th>
@@ -16573,22 +18622,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>grain-zadoks-70</td>
       <td>single</td>
-      <td>124251</td>
-      <td>25979</td>
-      <td>34464</td>
-      <td>27641</td>
-      <td>20426</td>
-      <td>7215</td>
-      <td>10.3621</td>
-      <td>19.1051</td>
-      <td>4.5139</td>
-      <td>21</td>
-      <td>17383</td>
-      <td>106868</td>
-      <td>19676</td>
-      <td>14788</td>
-      <td>16440</td>
-      <td>11201</td>
+      <td>125355</td>
+      <td>26037</td>
+      <td>34929</td>
+      <td>28080</td>
+      <td>20611</td>
+      <td>7469</td>
+      <td>10.5266</td>
+      <td>19.2781</td>
+      <td>4.6729</td>
+      <td>22</td>
+      <td>17442</td>
+      <td>107913</td>
+      <td>19990</td>
+      <td>14939</td>
+      <td>16743</td>
+      <td>11337</td>
     </tr>
     <tr>
       <th>8</th>
@@ -16596,22 +18645,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>grain-zadoks-71</td>
       <td>single</td>
-      <td>177392</td>
-      <td>35753</td>
-      <td>45872</td>
-      <td>35760</td>
-      <td>26757</td>
-      <td>9003</td>
-      <td>13.4057</td>
-      <td>25.0267</td>
-      <td>5.6326</td>
-      <td>21</td>
-      <td>27486</td>
-      <td>149906</td>
-      <td>23771</td>
-      <td>22101</td>
-      <td>19871</td>
-      <td>15889</td>
+      <td>178814</td>
+      <td>35806</td>
+      <td>46422</td>
+      <td>36269</td>
+      <td>26965</td>
+      <td>9304</td>
+      <td>13.5965</td>
+      <td>25.2212</td>
+      <td>5.8209</td>
+      <td>22</td>
+      <td>27602</td>
+      <td>151212</td>
+      <td>24143</td>
+      <td>22279</td>
+      <td>20226</td>
+      <td>16043</td>
     </tr>
     <tr>
       <th>9</th>
@@ -16619,22 +18668,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>grain-zadoks-75</td>
       <td>single</td>
-      <td>131066</td>
-      <td>27248</td>
-      <td>40142</td>
-      <td>31760</td>
-      <td>24064</td>
-      <td>7696</td>
-      <td>11.9062</td>
-      <td>22.5078</td>
-      <td>4.8149</td>
-      <td>21</td>
-      <td>18519</td>
-      <td>112547</td>
-      <td>22566</td>
-      <td>17576</td>
-      <td>18805</td>
-      <td>12955</td>
+      <td>132081</td>
+      <td>27293</td>
+      <td>40582</td>
+      <td>32167</td>
+      <td>24243</td>
+      <td>7924</td>
+      <td>12.0588</td>
+      <td>22.6752</td>
+      <td>4.9575</td>
+      <td>22</td>
+      <td>18607</td>
+      <td>113474</td>
+      <td>22866</td>
+      <td>17716</td>
+      <td>19091</td>
+      <td>13076</td>
     </tr>
     <tr>
       <th>10</th>
@@ -16642,22 +18691,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>grain-zadoks-83</td>
       <td>single</td>
-      <td>111335</td>
-      <td>23796</td>
-      <td>35595</td>
-      <td>28429</td>
-      <td>20984</td>
-      <td>7445</td>
-      <td>10.6575</td>
-      <td>19.6270</td>
-      <td>4.6578</td>
-      <td>21</td>
-      <td>14632</td>
-      <td>96703</td>
-      <td>20876</td>
-      <td>14719</td>
-      <td>17448</td>
-      <td>10981</td>
+      <td>112389</td>
+      <td>23840</td>
+      <td>36046</td>
+      <td>28854</td>
+      <td>21170</td>
+      <td>7684</td>
+      <td>10.8168</td>
+      <td>19.8010</td>
+      <td>4.8074</td>
+      <td>22</td>
+      <td>14700</td>
+      <td>97689</td>
+      <td>21173</td>
+      <td>14873</td>
+      <td>17735</td>
+      <td>11119</td>
     </tr>
     <tr>
       <th>11</th>
@@ -16665,22 +18714,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>grain-zadoks-87</td>
       <td>single</td>
-      <td>110256</td>
-      <td>24426</td>
-      <td>34014</td>
-      <td>27255</td>
-      <td>19859</td>
-      <td>7396</td>
-      <td>10.2174</td>
-      <td>18.5747</td>
-      <td>4.6272</td>
-      <td>21</td>
-      <td>14790</td>
-      <td>95466</td>
-      <td>20572</td>
-      <td>13442</td>
-      <td>17094</td>
-      <td>10161</td>
+      <td>111156</td>
+      <td>24482</td>
+      <td>34405</td>
+      <td>27624</td>
+      <td>20014</td>
+      <td>7610</td>
+      <td>10.3557</td>
+      <td>18.7197</td>
+      <td>4.7611</td>
+      <td>22</td>
+      <td>14850</td>
+      <td>96306</td>
+      <td>20841</td>
+      <td>13564</td>
+      <td>17352</td>
+      <td>10272</td>
     </tr>
     <tr>
       <th>12</th>
@@ -16688,22 +18737,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>leaf-flag-mature</td>
       <td>single</td>
-      <td>143118</td>
-      <td>29691</td>
-      <td>36920</td>
-      <td>29375</td>
-      <td>22215</td>
-      <td>7160</td>
-      <td>11.0121</td>
-      <td>20.7784</td>
-      <td>4.4795</td>
-      <td>21</td>
-      <td>19328</td>
-      <td>123790</td>
-      <td>19082</td>
-      <td>17838</td>
-      <td>15776</td>
-      <td>13599</td>
+      <td>144641</td>
+      <td>29731</td>
+      <td>37453</td>
+      <td>29882</td>
+      <td>22443</td>
+      <td>7439</td>
+      <td>11.2022</td>
+      <td>20.9916</td>
+      <td>4.6541</td>
+      <td>22</td>
+      <td>19405</td>
+      <td>125236</td>
+      <td>19392</td>
+      <td>18061</td>
+      <td>16077</td>
+      <td>13805</td>
     </tr>
     <tr>
       <th>13</th>
@@ -16711,22 +18760,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>leaf-flag-senescing</td>
       <td>single</td>
-      <td>45054</td>
-      <td>11158</td>
-      <td>24893</td>
-      <td>20480</td>
-      <td>14169</td>
-      <td>6311</td>
-      <td>7.6775</td>
-      <td>13.2527</td>
-      <td>3.9484</td>
-      <td>21</td>
-      <td>4522</td>
-      <td>40532</td>
-      <td>18180</td>
-      <td>6713</td>
-      <td>15232</td>
-      <td>5248</td>
+      <td>45680</td>
+      <td>11204</td>
+      <td>25275</td>
+      <td>20842</td>
+      <td>14335</td>
+      <td>6507</td>
+      <td>7.8132</td>
+      <td>13.4080</td>
+      <td>4.0710</td>
+      <td>22</td>
+      <td>4552</td>
+      <td>41128</td>
+      <td>18466</td>
+      <td>6809</td>
+      <td>15506</td>
+      <td>5336</td>
     </tr>
     <tr>
       <th>14</th>
@@ -16734,22 +18783,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>leaf-flag-young</td>
       <td>single</td>
-      <td>118601</td>
-      <td>23264</td>
-      <td>31709</td>
-      <td>25363</td>
-      <td>18662</td>
-      <td>6701</td>
-      <td>9.5081</td>
-      <td>17.4552</td>
-      <td>4.1924</td>
-      <td>21</td>
-      <td>15118</td>
-      <td>103483</td>
-      <td>16944</td>
-      <td>14765</td>
-      <td>13967</td>
-      <td>11396</td>
+      <td>119922</td>
+      <td>23296</td>
+      <td>32180</td>
+      <td>25809</td>
+      <td>18864</td>
+      <td>6945</td>
+      <td>9.6753</td>
+      <td>17.6441</td>
+      <td>4.3450</td>
+      <td>22</td>
+      <td>15181</td>
+      <td>104741</td>
+      <td>17214</td>
+      <td>14966</td>
+      <td>14228</td>
+      <td>11581</td>
     </tr>
     <tr>
       <th>15</th>
@@ -16757,22 +18806,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>lemma</td>
       <td>single</td>
-      <td>145101</td>
-      <td>29611</td>
-      <td>36901</td>
-      <td>29460</td>
-      <td>21621</td>
-      <td>7839</td>
-      <td>11.0440</td>
-      <td>20.2228</td>
-      <td>4.9043</td>
-      <td>21</td>
-      <td>21630</td>
-      <td>123471</td>
-      <td>20192</td>
-      <td>16709</td>
-      <td>16683</td>
-      <td>12777</td>
+      <td>146562</td>
+      <td>29653</td>
+      <td>37386</td>
+      <td>29915</td>
+      <td>21824</td>
+      <td>8091</td>
+      <td>11.2145</td>
+      <td>20.4127</td>
+      <td>5.0620</td>
+      <td>22</td>
+      <td>21700</td>
+      <td>124862</td>
+      <td>20460</td>
+      <td>16926</td>
+      <td>16936</td>
+      <td>12979</td>
     </tr>
     <tr>
       <th>16</th>
@@ -16780,22 +18829,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>node</td>
       <td>single</td>
-      <td>97553</td>
-      <td>21227</td>
-      <td>35299</td>
-      <td>28755</td>
-      <td>19676</td>
-      <td>9079</td>
-      <td>10.7797</td>
-      <td>18.4036</td>
-      <td>5.6801</td>
-      <td>21</td>
-      <td>12673</td>
-      <td>84880</td>
-      <td>22424</td>
-      <td>12875</td>
-      <td>18768</td>
-      <td>9987</td>
+      <td>98731</td>
+      <td>21280</td>
+      <td>35794</td>
+      <td>29228</td>
+      <td>19853</td>
+      <td>9375</td>
+      <td>10.9570</td>
+      <td>18.5691</td>
+      <td>5.8653</td>
+      <td>22</td>
+      <td>12726</td>
+      <td>86005</td>
+      <td>22750</td>
+      <td>13044</td>
+      <td>19083</td>
+      <td>10145</td>
     </tr>
     <tr>
       <th>17</th>
@@ -16803,22 +18852,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>node_secretion</td>
       <td>single</td>
-      <td>166896</td>
-      <td>33982</td>
-      <td>41183</td>
-      <td>32619</td>
-      <td>24691</td>
-      <td>7928</td>
-      <td>12.2282</td>
-      <td>23.0943</td>
-      <td>4.9600</td>
-      <td>21</td>
-      <td>22746</td>
-      <td>144150</td>
-      <td>20604</td>
-      <td>20579</td>
-      <td>17206</td>
-      <td>15413</td>
+      <td>168564</td>
+      <td>34026</td>
+      <td>41769</td>
+      <td>33166</td>
+      <td>24936</td>
+      <td>8230</td>
+      <td>12.4333</td>
+      <td>23.3234</td>
+      <td>5.1490</td>
+      <td>22</td>
+      <td>22830</td>
+      <td>145734</td>
+      <td>20940</td>
+      <td>20829</td>
+      <td>17524</td>
+      <td>15642</td>
     </tr>
     <tr>
       <th>18</th>
@@ -16826,22 +18875,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>palea</td>
       <td>single</td>
-      <td>115047</td>
-      <td>21587</td>
-      <td>26907</td>
-      <td>21138</td>
-      <td>16236</td>
-      <td>4902</td>
-      <td>7.9242</td>
-      <td>15.1860</td>
-      <td>3.0669</td>
-      <td>21</td>
-      <td>20580</td>
-      <td>94467</td>
-      <td>13610</td>
-      <td>13297</td>
-      <td>11016</td>
-      <td>10122</td>
+      <td>116285</td>
+      <td>21623</td>
+      <td>27295</td>
+      <td>21503</td>
+      <td>16391</td>
+      <td>5112</td>
+      <td>8.0610</td>
+      <td>15.3310</td>
+      <td>3.1982</td>
+      <td>22</td>
+      <td>20637</td>
+      <td>95648</td>
+      <td>13831</td>
+      <td>13464</td>
+      <td>11226</td>
+      <td>10277</td>
     </tr>
     <tr>
       <th>19</th>
@@ -16849,22 +18898,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>pericarp</td>
       <td>single</td>
-      <td>129415</td>
-      <td>28122</td>
-      <td>31869</td>
-      <td>25198</td>
-      <td>18752</td>
-      <td>6446</td>
-      <td>9.4462</td>
-      <td>17.5393</td>
-      <td>4.0328</td>
-      <td>21</td>
-      <td>20838</td>
-      <td>108577</td>
-      <td>17998</td>
-      <td>13871</td>
-      <td>14815</td>
-      <td>10383</td>
+      <td>130645</td>
+      <td>28184</td>
+      <td>32281</td>
+      <td>25580</td>
+      <td>18912</td>
+      <td>6668</td>
+      <td>9.5894</td>
+      <td>17.6890</td>
+      <td>4.1717</td>
+      <td>22</td>
+      <td>20924</td>
+      <td>109721</td>
+      <td>18276</td>
+      <td>14005</td>
+      <td>15075</td>
+      <td>10505</td>
     </tr>
     <tr>
       <th>20</th>
@@ -16872,22 +18921,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>pollen</td>
       <td>single</td>
-      <td>73586</td>
-      <td>13425</td>
-      <td>19464</td>
-      <td>15612</td>
-      <td>12071</td>
-      <td>3541</td>
-      <td>5.8526</td>
-      <td>11.2904</td>
-      <td>2.2154</td>
-      <td>21</td>
-      <td>9418</td>
-      <td>64168</td>
-      <td>10483</td>
-      <td>8981</td>
-      <td>8572</td>
-      <td>7040</td>
+      <td>74334</td>
+      <td>13446</td>
+      <td>19731</td>
+      <td>15866</td>
+      <td>12172</td>
+      <td>3694</td>
+      <td>5.9478</td>
+      <td>11.3849</td>
+      <td>2.3111</td>
+      <td>22</td>
+      <td>9467</td>
+      <td>64867</td>
+      <td>10660</td>
+      <td>9071</td>
+      <td>8746</td>
+      <td>7120</td>
     </tr>
     <tr>
       <th>21</th>
@@ -16895,22 +18944,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>rachilla</td>
       <td>single</td>
-      <td>157648</td>
-      <td>30965</td>
-      <td>36157</td>
-      <td>28554</td>
-      <td>21237</td>
-      <td>7317</td>
-      <td>10.7043</td>
-      <td>19.8636</td>
-      <td>4.5778</td>
-      <td>21</td>
-      <td>24647</td>
-      <td>133001</td>
-      <td>18868</td>
-      <td>17289</td>
-      <td>15607</td>
-      <td>12947</td>
+      <td>159219</td>
+      <td>31008</td>
+      <td>36663</td>
+      <td>29020</td>
+      <td>21433</td>
+      <td>7587</td>
+      <td>10.8790</td>
+      <td>20.0470</td>
+      <td>4.7467</td>
+      <td>22</td>
+      <td>24725</td>
+      <td>134494</td>
+      <td>19174</td>
+      <td>17489</td>
+      <td>15896</td>
+      <td>13124</td>
     </tr>
     <tr>
       <th>22</th>
@@ -16918,22 +18967,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>radicle</td>
       <td>single</td>
-      <td>192432</td>
-      <td>39419</td>
-      <td>41972</td>
-      <td>32926</td>
-      <td>25482</td>
-      <td>7444</td>
-      <td>12.3433</td>
-      <td>23.8341</td>
-      <td>4.6572</td>
-      <td>21</td>
-      <td>32321</td>
-      <td>160111</td>
-      <td>21659</td>
-      <td>20313</td>
-      <td>18016</td>
-      <td>14910</td>
+      <td>193938</td>
+      <td>39487</td>
+      <td>42476</td>
+      <td>33385</td>
+      <td>25692</td>
+      <td>7693</td>
+      <td>12.5154</td>
+      <td>24.0305</td>
+      <td>4.8130</td>
+      <td>22</td>
+      <td>32434</td>
+      <td>161504</td>
+      <td>21978</td>
+      <td>20498</td>
+      <td>18319</td>
+      <td>15066</td>
     </tr>
     <tr>
       <th>23</th>
@@ -16941,22 +18990,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>root-mature</td>
       <td>single</td>
-      <td>95329</td>
-      <td>21058</td>
-      <td>38007</td>
-      <td>30454</td>
-      <td>21919</td>
-      <td>8535</td>
-      <td>11.4166</td>
-      <td>20.5015</td>
-      <td>5.3398</td>
-      <td>21</td>
-      <td>10790</td>
-      <td>84539</td>
-      <td>25332</td>
-      <td>12675</td>
-      <td>20918</td>
-      <td>9536</td>
+      <td>96387</td>
+      <td>21125</td>
+      <td>38544</td>
+      <td>30952</td>
+      <td>22134</td>
+      <td>8818</td>
+      <td>11.6033</td>
+      <td>20.7026</td>
+      <td>5.5168</td>
+      <td>22</td>
+      <td>10853</td>
+      <td>85534</td>
+      <td>25747</td>
+      <td>12797</td>
+      <td>21312</td>
+      <td>9640</td>
     </tr>
     <tr>
       <th>24</th>
@@ -16964,22 +19013,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>root-secretion</td>
       <td>single</td>
-      <td>99127</td>
-      <td>21057</td>
-      <td>31289</td>
-      <td>24785</td>
-      <td>18527</td>
-      <td>6258</td>
-      <td>9.2914</td>
-      <td>17.3289</td>
-      <td>3.9152</td>
-      <td>21</td>
-      <td>15421</td>
-      <td>83706</td>
-      <td>19452</td>
-      <td>11837</td>
-      <td>15902</td>
-      <td>8883</td>
+      <td>100085</td>
+      <td>21111</td>
+      <td>31657</td>
+      <td>25126</td>
+      <td>18683</td>
+      <td>6443</td>
+      <td>9.4192</td>
+      <td>17.4748</td>
+      <td>4.0310</td>
+      <td>22</td>
+      <td>15505</td>
+      <td>84580</td>
+      <td>19699</td>
+      <td>11958</td>
+      <td>16136</td>
+      <td>8990</td>
     </tr>
     <tr>
       <th>25</th>
@@ -16987,22 +19036,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>root-tip</td>
       <td>single</td>
-      <td>189975</td>
-      <td>38455</td>
-      <td>38884</td>
-      <td>30097</td>
-      <td>23518</td>
-      <td>6579</td>
-      <td>11.2828</td>
-      <td>21.9971</td>
-      <td>4.1160</td>
-      <td>21</td>
-      <td>34893</td>
-      <td>155082</td>
-      <td>18203</td>
-      <td>20681</td>
-      <td>15042</td>
-      <td>15055</td>
+      <td>191262</td>
+      <td>38496</td>
+      <td>39337</td>
+      <td>30508</td>
+      <td>23693</td>
+      <td>6815</td>
+      <td>11.4368</td>
+      <td>22.1608</td>
+      <td>4.2637</td>
+      <td>22</td>
+      <td>34992</td>
+      <td>156270</td>
+      <td>18497</td>
+      <td>20840</td>
+      <td>15314</td>
+      <td>15194</td>
     </tr>
     <tr>
       <th>26</th>
@@ -17010,22 +19059,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>root-vasculature</td>
       <td>single</td>
-      <td>110307</td>
-      <td>20703</td>
-      <td>29966</td>
-      <td>23188</td>
-      <td>18035</td>
-      <td>5153</td>
-      <td>8.6927</td>
-      <td>16.8687</td>
-      <td>3.2239</td>
-      <td>21</td>
-      <td>14735</td>
-      <td>95572</td>
-      <td>16197</td>
-      <td>13769</td>
-      <td>13155</td>
-      <td>10033</td>
+      <td>111315</td>
+      <td>20728</td>
+      <td>30323</td>
+      <td>23512</td>
+      <td>18192</td>
+      <td>5320</td>
+      <td>8.8142</td>
+      <td>17.0155</td>
+      <td>3.3284</td>
+      <td>22</td>
+      <td>14786</td>
+      <td>96529</td>
+      <td>16436</td>
+      <td>13887</td>
+      <td>13380</td>
+      <td>10132</td>
     </tr>
     <tr>
       <th>27</th>
@@ -17033,22 +19082,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>spike-immature</td>
       <td>single</td>
-      <td>186379</td>
-      <td>36176</td>
-      <td>39281</td>
-      <td>30155</td>
-      <td>23319</td>
-      <td>6836</td>
-      <td>11.3045</td>
-      <td>21.8110</td>
-      <td>4.2768</td>
-      <td>21</td>
-      <td>33010</td>
-      <td>153369</td>
-      <td>19203</td>
-      <td>20078</td>
-      <td>15820</td>
-      <td>14335</td>
+      <td>188025</td>
+      <td>36236</td>
+      <td>39779</td>
+      <td>30611</td>
+      <td>23515</td>
+      <td>7096</td>
+      <td>11.4755</td>
+      <td>21.9943</td>
+      <td>4.4395</td>
+      <td>22</td>
+      <td>33123</td>
+      <td>154902</td>
+      <td>19526</td>
+      <td>20253</td>
+      <td>16121</td>
+      <td>14490</td>
     </tr>
     <tr>
       <th>28</th>
@@ -17056,22 +19105,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>stem</td>
       <td>single</td>
-      <td>59623</td>
-      <td>14136</td>
-      <td>28609</td>
-      <td>22899</td>
-      <td>16485</td>
-      <td>6414</td>
-      <td>8.5844</td>
-      <td>15.4189</td>
-      <td>4.0128</td>
-      <td>21</td>
-      <td>6875</td>
-      <td>52748</td>
-      <td>19501</td>
-      <td>9108</td>
-      <td>16101</td>
-      <td>6798</td>
+      <td>60181</td>
+      <td>14177</td>
+      <td>28948</td>
+      <td>23218</td>
+      <td>16618</td>
+      <td>6600</td>
+      <td>8.7040</td>
+      <td>15.5433</td>
+      <td>4.1292</td>
+      <td>22</td>
+      <td>6927</td>
+      <td>53254</td>
+      <td>19771</td>
+      <td>9177</td>
+      <td>16359</td>
+      <td>6859</td>
     </tr>
     <tr>
       <th>29</th>
@@ -17079,22 +19128,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>coleoptile</td>
       <td>single</td>
-      <td>1812027</td>
-      <td>572135</td>
-      <td>229576</td>
-      <td>202118</td>
-      <td>96200</td>
-      <td>105918</td>
-      <td>75.7700</td>
-      <td>89.9789</td>
-      <td>66.2658</td>
-      <td>21</td>
-      <td>226291</td>
-      <td>1585736</td>
-      <td>56878</td>
-      <td>172698</td>
-      <td>54812</td>
-      <td>147306</td>
+      <td>1829196</td>
+      <td>574831</td>
+      <td>233744</td>
+      <td>206142</td>
+      <td>97341</td>
+      <td>108801</td>
+      <td>77.2785</td>
+      <td>91.0461</td>
+      <td>68.0695</td>
+      <td>22</td>
+      <td>227461</td>
+      <td>1601735</td>
+      <td>58234</td>
+      <td>175510</td>
+      <td>56145</td>
+      <td>149997</td>
     </tr>
     <tr>
       <th>30</th>
@@ -17102,22 +19151,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>node</td>
       <td>single</td>
-      <td>1846620</td>
-      <td>584736</td>
-      <td>232885</td>
-      <td>205305</td>
-      <td>96914</td>
-      <td>108391</td>
-      <td>76.9647</td>
-      <td>90.6467</td>
-      <td>67.8130</td>
-      <td>21</td>
-      <td>233388</td>
-      <td>1613232</td>
-      <td>55153</td>
-      <td>177732</td>
-      <td>53071</td>
-      <td>152234</td>
+      <td>1864415</td>
+      <td>587392</td>
+      <td>237191</td>
+      <td>209468</td>
+      <td>98102</td>
+      <td>111366</td>
+      <td>78.5254</td>
+      <td>91.7579</td>
+      <td>69.6743</td>
+      <td>22</td>
+      <td>234600</td>
+      <td>1629815</td>
+      <td>56556</td>
+      <td>180635</td>
+      <td>54455</td>
+      <td>155013</td>
     </tr>
     <tr>
       <th>31</th>
@@ -17125,22 +19174,22 @@ display(source_summary)
       <td>bread wheat</td>
       <td>radicle</td>
       <td>single</td>
-      <td>1040357</td>
-      <td>327065</td>
-      <td>197866</td>
-      <td>171912</td>
-      <td>88814</td>
-      <td>83098</td>
-      <td>64.4464</td>
-      <td>83.0705</td>
-      <td>51.9889</td>
-      <td>21</td>
-      <td>117056</td>
-      <td>923301</td>
-      <td>64917</td>
-      <td>132949</td>
-      <td>61552</td>
-      <td>110360</td>
+      <td>1050178</td>
+      <td>328566</td>
+      <td>201263</td>
+      <td>175179</td>
+      <td>89823</td>
+      <td>85356</td>
+      <td>65.6711</td>
+      <td>84.0143</td>
+      <td>53.4016</td>
+      <td>22</td>
+      <td>117686</td>
+      <td>932492</td>
+      <td>66435</td>
+      <td>134828</td>
+      <td>63043</td>
+      <td>112136</td>
     </tr>
   </tbody>
 </table>
@@ -17185,50 +19234,50 @@ display(source_summary)
     <tr>
       <th>0</th>
       <td>MSV000090572</td>
-      <td>29430</td>
-      <td>3248</td>
-      <td>26182</td>
+      <td>29892</td>
+      <td>3262</td>
+      <td>26630</td>
       <td>1</td>
-      <td>9070</td>
-      <td>16819</td>
-      <td>14263</td>
-      <td>9017</td>
-      <td>5246</td>
-      <td>5.3469</td>
-      <td>8.4339</td>
-      <td>3.2821</td>
+      <td>9126</td>
+      <td>17110</td>
+      <td>14536</td>
+      <td>9126</td>
+      <td>5410</td>
+      <td>5.4493</td>
+      <td>8.5358</td>
+      <td>3.3847</td>
     </tr>
     <tr>
       <th>1</th>
       <td>PXD004720</td>
-      <td>3408253</td>
-      <td>511399</td>
-      <td>2896854</td>
+      <td>3440549</td>
+      <td>513398</td>
+      <td>2927151</td>
       <td>28</td>
-      <td>230992</td>
-      <td>167174</td>
-      <td>143956</td>
-      <td>78729</td>
-      <td>65227</td>
-      <td>53.9662</td>
-      <td>73.6377</td>
-      <td>40.8082</td>
+      <td>231901</td>
+      <td>169983</td>
+      <td>146667</td>
+      <td>79627</td>
+      <td>67040</td>
+      <td>54.9825</td>
+      <td>74.4776</td>
+      <td>41.9425</td>
     </tr>
     <tr>
       <th>2</th>
       <td>PXD050500</td>
-      <td>4699004</td>
-      <td>576735</td>
-      <td>4122269</td>
+      <td>4743789</td>
+      <td>579747</td>
+      <td>4164042</td>
       <td>3</td>
-      <td>971106</td>
-      <td>263295</td>
-      <td>234819</td>
-      <td>102471</td>
-      <td>132348</td>
-      <td>88.0290</td>
-      <td>95.8443</td>
-      <td>82.8013</td>
+      <td>976526</td>
+      <td>268333</td>
+      <td>239699</td>
+      <td>103770</td>
+      <td>135929</td>
+      <td>89.8584</td>
+      <td>97.0593</td>
+      <td>85.0417</td>
     </tr>
   </tbody>
 </table>
@@ -17698,7 +19747,7 @@ display(coverage)
     Protein isoforms: 295,914
     
     Loading fully validated rows from Step 11...
-    Fully validated rows loaded for Step 16: 8,136,687
+    Fully validated rows loaded for Step 16: 8,214,230
     Saved Step 16 validated HC/LC coverage summary: python_outputs\tables\wheat_eda_coverage_HC_LC_validated_step16.csv
     
 
@@ -17750,120 +19799,120 @@ display(coverage)
       <td>PXD004720</td>
       <td>embryo</td>
       <td>PXD004720_embryo</td>
-      <td>5497</td>
-      <td>1538</td>
-      <td>7035</td>
-      <td>4176</td>
-      <td>1507</td>
-      <td>5683</td>
-      <td>2156</td>
+      <td>5534</td>
+      <td>1576</td>
+      <td>7110</td>
+      <td>4204</td>
+      <td>1545</td>
+      <td>5749</td>
+      <td>2160</td>
       <td>...</td>
-      <td>8662</td>
-      <td>1394</td>
-      <td>7268</td>
-      <td>21</td>
-      <td>1.857634</td>
-      <td>0.519746</td>
-      <td>2.377380</td>
-      <td>3.905943</td>
-      <td>0.942830</td>
-      <td>2.130443</td>
+      <td>8742</td>
+      <td>1407</td>
+      <td>7335</td>
+      <td>22</td>
+      <td>1.870138</td>
+      <td>0.532587</td>
+      <td>2.402725</td>
+      <td>3.932132</td>
+      <td>0.966604</td>
+      <td>2.155185</td>
     </tr>
     <tr>
       <th>5</th>
       <td>PXD004720</td>
       <td>boot</td>
       <td>PXD004720_boot</td>
-      <td>7172</td>
-      <td>1856</td>
-      <td>9028</td>
-      <td>5377</td>
-      <td>1814</td>
-      <td>7191</td>
-      <td>2874</td>
+      <td>7219</td>
+      <td>1907</td>
+      <td>9126</td>
+      <td>5415</td>
+      <td>1864</td>
+      <td>7279</td>
+      <td>2877</td>
       <td>...</td>
-      <td>13024</td>
-      <td>2718</td>
-      <td>10306</td>
-      <td>21</td>
-      <td>2.423677</td>
-      <td>0.627209</td>
-      <td>3.050886</td>
-      <td>5.029276</td>
-      <td>1.134899</td>
-      <td>2.695762</td>
+      <td>13137</td>
+      <td>2723</td>
+      <td>10414</td>
+      <td>22</td>
+      <td>2.439560</td>
+      <td>0.644444</td>
+      <td>3.084004</td>
+      <td>5.064818</td>
+      <td>1.166181</td>
+      <td>2.728752</td>
     </tr>
     <tr>
       <th>0</th>
       <td>MSV000090572</td>
       <td>stored_grain</td>
       <td>MSV000090572_stored_grain</td>
-      <td>11481</td>
-      <td>5338</td>
-      <td>16819</td>
-      <td>9017</td>
-      <td>5246</td>
-      <td>14263</td>
-      <td>6348</td>
+      <td>11604</td>
+      <td>5506</td>
+      <td>17110</td>
+      <td>9126</td>
+      <td>5410</td>
+      <td>14536</td>
+      <td>6375</td>
       <td>...</td>
-      <td>29430</td>
-      <td>3248</td>
-      <td>26182</td>
-      <td>21</td>
-      <td>3.879843</td>
-      <td>1.803902</td>
-      <td>5.683746</td>
-      <td>8.433881</td>
-      <td>3.282073</td>
-      <td>5.346914</td>
+      <td>29892</td>
+      <td>3262</td>
+      <td>26630</td>
+      <td>22</td>
+      <td>3.921410</td>
+      <td>1.860676</td>
+      <td>5.782085</td>
+      <td>8.535833</td>
+      <td>3.384677</td>
+      <td>5.449256</td>
     </tr>
     <tr>
       <th>23</th>
       <td>PXD004720</td>
       <td>pollen</td>
       <td>PXD004720_pollen</td>
-      <td>15862</td>
-      <td>3602</td>
-      <td>19464</td>
-      <td>12071</td>
-      <td>3541</td>
-      <td>15612</td>
-      <td>12481</td>
+      <td>15974</td>
+      <td>3757</td>
+      <td>19731</td>
+      <td>12172</td>
+      <td>3694</td>
+      <td>15866</td>
+      <td>12487</td>
       <td>...</td>
-      <td>73586</td>
-      <td>9418</td>
-      <td>64168</td>
-      <td>21</td>
-      <td>5.360341</td>
-      <td>1.217246</td>
-      <td>6.577587</td>
-      <td>11.290383</td>
-      <td>2.215368</td>
-      <td>5.852627</td>
+      <td>74334</td>
+      <td>9467</td>
+      <td>64867</td>
+      <td>22</td>
+      <td>5.398190</td>
+      <td>1.269626</td>
+      <td>6.667816</td>
+      <td>11.384851</td>
+      <td>2.311090</td>
+      <td>5.947847</td>
     </tr>
     <tr>
       <th>16</th>
       <td>PXD004720</td>
       <td>leaf-flag-senescing</td>
       <td>PXD004720_leaf-flag-senescing</td>
-      <td>18454</td>
-      <td>6439</td>
-      <td>24893</td>
-      <td>14169</td>
-      <td>6311</td>
-      <td>20480</td>
-      <td>8777</td>
+      <td>18636</td>
+      <td>6639</td>
+      <td>25275</td>
+      <td>14335</td>
+      <td>6507</td>
+      <td>20842</td>
+      <td>8792</td>
       <td>...</td>
-      <td>45054</td>
-      <td>4522</td>
-      <td>40532</td>
-      <td>21</td>
-      <td>6.236271</td>
-      <td>2.175970</td>
-      <td>8.412241</td>
-      <td>13.252708</td>
-      <td>3.948373</td>
-      <td>7.677543</td>
+      <td>45680</td>
+      <td>4552</td>
+      <td>41128</td>
+      <td>22</td>
+      <td>6.297776</td>
+      <td>2.243557</td>
+      <td>8.541333</td>
+      <td>13.407973</td>
+      <td>4.070997</td>
+      <td>7.813250</td>
     </tr>
   </tbody>
 </table>
@@ -17937,768 +19986,768 @@ display(coverage)
       <td>PXD004720</td>
       <td>embryo</td>
       <td>PXD004720_embryo</td>
-      <td>5497</td>
-      <td>1538</td>
-      <td>7035</td>
-      <td>4176</td>
-      <td>1507</td>
-      <td>5683</td>
-      <td>2156</td>
+      <td>5534</td>
+      <td>1576</td>
+      <td>7110</td>
+      <td>4204</td>
+      <td>1545</td>
+      <td>5749</td>
+      <td>2160</td>
       <td>...</td>
-      <td>8662</td>
-      <td>1394</td>
-      <td>7268</td>
-      <td>21</td>
-      <td>1.857634</td>
-      <td>0.519746</td>
-      <td>2.377380</td>
-      <td>3.905943</td>
-      <td>0.942830</td>
-      <td>2.130443</td>
+      <td>8742</td>
+      <td>1407</td>
+      <td>7335</td>
+      <td>22</td>
+      <td>1.870138</td>
+      <td>0.532587</td>
+      <td>2.402725</td>
+      <td>3.932132</td>
+      <td>0.966604</td>
+      <td>2.155185</td>
     </tr>
     <tr>
       <th>5</th>
       <td>PXD004720</td>
       <td>boot</td>
       <td>PXD004720_boot</td>
-      <td>7172</td>
-      <td>1856</td>
-      <td>9028</td>
-      <td>5377</td>
-      <td>1814</td>
-      <td>7191</td>
-      <td>2874</td>
+      <td>7219</td>
+      <td>1907</td>
+      <td>9126</td>
+      <td>5415</td>
+      <td>1864</td>
+      <td>7279</td>
+      <td>2877</td>
       <td>...</td>
-      <td>13024</td>
-      <td>2718</td>
-      <td>10306</td>
-      <td>21</td>
-      <td>2.423677</td>
-      <td>0.627209</td>
-      <td>3.050886</td>
-      <td>5.029276</td>
-      <td>1.134899</td>
-      <td>2.695762</td>
+      <td>13137</td>
+      <td>2723</td>
+      <td>10414</td>
+      <td>22</td>
+      <td>2.439560</td>
+      <td>0.644444</td>
+      <td>3.084004</td>
+      <td>5.064818</td>
+      <td>1.166181</td>
+      <td>2.728752</td>
     </tr>
     <tr>
       <th>0</th>
       <td>MSV000090572</td>
       <td>stored_grain</td>
       <td>MSV000090572_stored_grain</td>
-      <td>11481</td>
-      <td>5338</td>
-      <td>16819</td>
-      <td>9017</td>
-      <td>5246</td>
-      <td>14263</td>
-      <td>6348</td>
+      <td>11604</td>
+      <td>5506</td>
+      <td>17110</td>
+      <td>9126</td>
+      <td>5410</td>
+      <td>14536</td>
+      <td>6375</td>
       <td>...</td>
-      <td>29430</td>
-      <td>3248</td>
-      <td>26182</td>
-      <td>21</td>
-      <td>3.879843</td>
-      <td>1.803902</td>
-      <td>5.683746</td>
-      <td>8.433881</td>
-      <td>3.282073</td>
-      <td>5.346914</td>
+      <td>29892</td>
+      <td>3262</td>
+      <td>26630</td>
+      <td>22</td>
+      <td>3.921410</td>
+      <td>1.860676</td>
+      <td>5.782085</td>
+      <td>8.535833</td>
+      <td>3.384677</td>
+      <td>5.449256</td>
     </tr>
     <tr>
       <th>23</th>
       <td>PXD004720</td>
       <td>pollen</td>
       <td>PXD004720_pollen</td>
-      <td>15862</td>
-      <td>3602</td>
-      <td>19464</td>
-      <td>12071</td>
-      <td>3541</td>
-      <td>15612</td>
-      <td>12481</td>
+      <td>15974</td>
+      <td>3757</td>
+      <td>19731</td>
+      <td>12172</td>
+      <td>3694</td>
+      <td>15866</td>
+      <td>12487</td>
       <td>...</td>
-      <td>73586</td>
-      <td>9418</td>
-      <td>64168</td>
-      <td>21</td>
-      <td>5.360341</td>
-      <td>1.217246</td>
-      <td>6.577587</td>
-      <td>11.290383</td>
-      <td>2.215368</td>
-      <td>5.852627</td>
+      <td>74334</td>
+      <td>9467</td>
+      <td>64867</td>
+      <td>22</td>
+      <td>5.398190</td>
+      <td>1.269626</td>
+      <td>6.667816</td>
+      <td>11.384851</td>
+      <td>2.311090</td>
+      <td>5.947847</td>
     </tr>
     <tr>
       <th>16</th>
       <td>PXD004720</td>
       <td>leaf-flag-senescing</td>
       <td>PXD004720_leaf-flag-senescing</td>
-      <td>18454</td>
-      <td>6439</td>
-      <td>24893</td>
-      <td>14169</td>
-      <td>6311</td>
-      <td>20480</td>
-      <td>8777</td>
+      <td>18636</td>
+      <td>6639</td>
+      <td>25275</td>
+      <td>14335</td>
+      <td>6507</td>
+      <td>20842</td>
+      <td>8792</td>
       <td>...</td>
-      <td>45054</td>
-      <td>4522</td>
-      <td>40532</td>
-      <td>21</td>
-      <td>6.236271</td>
-      <td>2.175970</td>
-      <td>8.412241</td>
-      <td>13.252708</td>
-      <td>3.948373</td>
-      <td>7.677543</td>
+      <td>45680</td>
+      <td>4552</td>
+      <td>41128</td>
+      <td>22</td>
+      <td>6.297776</td>
+      <td>2.243557</td>
+      <td>8.541333</td>
+      <td>13.407973</td>
+      <td>4.070997</td>
+      <td>7.813250</td>
     </tr>
     <tr>
       <th>21</th>
       <td>PXD004720</td>
       <td>palea</td>
       <td>PXD004720_palea</td>
-      <td>21924</td>
-      <td>4983</td>
-      <td>26907</td>
-      <td>16236</td>
-      <td>4902</td>
-      <td>21138</td>
-      <td>20161</td>
+      <td>22101</td>
+      <td>5194</td>
+      <td>27295</td>
+      <td>16391</td>
+      <td>5112</td>
+      <td>21503</td>
+      <td>20177</td>
       <td>...</td>
-      <td>115047</td>
-      <td>20580</td>
-      <td>94467</td>
-      <td>21</td>
-      <td>7.408909</td>
-      <td>1.683935</td>
-      <td>9.092845</td>
-      <td>15.186037</td>
-      <td>3.066855</td>
-      <td>7.924214</td>
+      <td>116285</td>
+      <td>20637</td>
+      <td>95648</td>
+      <td>22</td>
+      <td>7.468724</td>
+      <td>1.755240</td>
+      <td>9.223964</td>
+      <td>15.331014</td>
+      <td>3.198238</td>
+      <td>8.061045</td>
     </tr>
     <tr>
       <th>8</th>
       <td>PXD004720</td>
       <td>endosperm</td>
       <td>PXD004720_endosperm</td>
-      <td>21338</td>
-      <td>5432</td>
-      <td>26770</td>
-      <td>15901</td>
-      <td>5324</td>
-      <td>21225</td>
-      <td>18115</td>
+      <td>21497</td>
+      <td>5602</td>
+      <td>27099</td>
+      <td>16036</td>
+      <td>5493</td>
+      <td>21529</td>
+      <td>18132</td>
       <td>...</td>
-      <td>101413</td>
-      <td>14186</td>
-      <td>87227</td>
-      <td>21</td>
-      <td>7.210879</td>
-      <td>1.835668</td>
-      <td>9.046547</td>
-      <td>14.872701</td>
-      <td>3.330873</td>
-      <td>7.956829</td>
+      <td>102289</td>
+      <td>14237</td>
+      <td>88052</td>
+      <td>22</td>
+      <td>7.264611</td>
+      <td>1.893118</td>
+      <td>9.157728</td>
+      <td>14.998971</td>
+      <td>3.436605</td>
+      <td>8.070792</td>
     </tr>
     <tr>
       <th>31</th>
       <td>PXD004720</td>
       <td>stem</td>
       <td>PXD004720_stem</td>
-      <td>22040</td>
-      <td>6569</td>
-      <td>28609</td>
-      <td>16485</td>
-      <td>6414</td>
-      <td>22899</td>
-      <td>11542</td>
+      <td>22190</td>
+      <td>6758</td>
+      <td>28948</td>
+      <td>16618</td>
+      <td>6600</td>
+      <td>23218</td>
+      <td>11554</td>
       <td>...</td>
-      <td>59623</td>
-      <td>6875</td>
-      <td>52748</td>
-      <td>21</td>
-      <td>7.448110</td>
-      <td>2.219902</td>
-      <td>9.668012</td>
-      <td>15.418935</td>
-      <td>4.012813</td>
-      <td>8.584378</td>
+      <td>60181</td>
+      <td>6927</td>
+      <td>53254</td>
+      <td>22</td>
+      <td>7.498800</td>
+      <td>2.283772</td>
+      <td>9.782572</td>
+      <td>15.543334</td>
+      <td>4.129181</td>
+      <td>8.703965</td>
     </tr>
     <tr>
       <th>29</th>
       <td>PXD004720</td>
       <td>root-vasculature</td>
       <td>PXD004720_root-vasculature</td>
-      <td>24687</td>
-      <td>5279</td>
-      <td>29966</td>
-      <td>18035</td>
-      <td>5153</td>
-      <td>23188</td>
-      <td>19156</td>
+      <td>24874</td>
+      <td>5449</td>
+      <td>30323</td>
+      <td>18192</td>
+      <td>5320</td>
+      <td>23512</td>
+      <td>19168</td>
       <td>...</td>
-      <td>110307</td>
-      <td>14735</td>
-      <td>95572</td>
-      <td>21</td>
-      <td>8.342627</td>
-      <td>1.783964</td>
-      <td>10.126591</td>
-      <td>16.868698</td>
-      <td>3.223889</td>
-      <td>8.692718</td>
+      <td>111315</td>
+      <td>14786</td>
+      <td>96529</td>
+      <td>22</td>
+      <td>8.405821</td>
+      <td>1.841413</td>
+      <td>10.247234</td>
+      <td>17.015545</td>
+      <td>3.328370</td>
+      <td>8.814179</td>
     </tr>
     <tr>
       <th>27</th>
       <td>PXD004720</td>
       <td>root-secretion</td>
       <td>PXD004720_root-secretion</td>
-      <td>24909</td>
-      <td>6380</td>
-      <td>31289</td>
-      <td>18527</td>
-      <td>6258</td>
-      <td>24785</td>
-      <td>18172</td>
+      <td>25091</td>
+      <td>6566</td>
+      <td>31657</td>
+      <td>18683</td>
+      <td>6443</td>
+      <td>25126</td>
+      <td>18188</td>
       <td>...</td>
-      <td>99127</td>
-      <td>15421</td>
-      <td>83706</td>
-      <td>21</td>
-      <td>8.417648</td>
-      <td>2.156032</td>
-      <td>10.573680</td>
-      <td>17.328881</td>
-      <td>3.915214</td>
-      <td>9.291402</td>
+      <td>100085</td>
+      <td>15505</td>
+      <td>84580</td>
+      <td>22</td>
+      <td>8.479153</td>
+      <td>2.218888</td>
+      <td>10.698041</td>
+      <td>17.474793</td>
+      <td>4.030956</td>
+      <td>9.419236</td>
     </tr>
     <tr>
       <th>22</th>
       <td>PXD004720</td>
       <td>pericarp</td>
       <td>PXD004720_pericarp</td>
-      <td>25288</td>
-      <td>6581</td>
-      <td>31869</td>
-      <td>18752</td>
-      <td>6446</td>
-      <td>25198</td>
-      <td>25729</td>
+      <td>25476</td>
+      <td>6805</td>
+      <td>32281</td>
+      <td>18912</td>
+      <td>6668</td>
+      <td>25580</td>
+      <td>25757</td>
       <td>...</td>
-      <td>129415</td>
-      <td>20838</td>
-      <td>108577</td>
-      <td>21</td>
-      <td>8.545726</td>
-      <td>2.223957</td>
-      <td>10.769683</td>
-      <td>17.539331</td>
-      <td>4.032833</td>
-      <td>9.446227</td>
+      <td>130645</td>
+      <td>20924</td>
+      <td>109721</td>
+      <td>22</td>
+      <td>8.609258</td>
+      <td>2.299655</td>
+      <td>10.908913</td>
+      <td>17.688984</td>
+      <td>4.171724</td>
+      <td>9.589431</td>
     </tr>
     <tr>
       <th>17</th>
       <td>PXD004720</td>
       <td>leaf-flag-young</td>
       <td>PXD004720_leaf-flag-young</td>
-      <td>24866</td>
-      <td>6843</td>
-      <td>31709</td>
-      <td>18662</td>
-      <td>6701</td>
-      <td>25363</td>
-      <td>21754</td>
+      <td>25092</td>
+      <td>7088</td>
+      <td>32180</td>
+      <td>18864</td>
+      <td>6945</td>
+      <td>25809</td>
+      <td>21772</td>
       <td>...</td>
-      <td>118601</td>
-      <td>15118</td>
-      <td>103483</td>
-      <td>21</td>
-      <td>8.403117</td>
-      <td>2.312496</td>
-      <td>10.715613</td>
-      <td>17.455151</td>
-      <td>4.192370</td>
-      <td>9.508082</td>
+      <td>119922</td>
+      <td>15181</td>
+      <td>104741</td>
+      <td>22</td>
+      <td>8.479491</td>
+      <td>2.395291</td>
+      <td>10.874781</td>
+      <td>17.644088</td>
+      <td>4.345024</td>
+      <td>9.675279</td>
     </tr>
     <tr>
       <th>14</th>
       <td>PXD004720</td>
       <td>grain-zadoks-87</td>
       <td>PXD004720_grain-zadoks-87</td>
-      <td>26464</td>
-      <td>7550</td>
-      <td>34014</td>
-      <td>19859</td>
-      <td>7396</td>
-      <td>27255</td>
-      <td>21628</td>
+      <td>26638</td>
+      <td>7767</td>
+      <td>34405</td>
+      <td>20014</td>
+      <td>7610</td>
+      <td>27624</td>
+      <td>21651</td>
       <td>...</td>
-      <td>110256</td>
-      <td>14790</td>
-      <td>95466</td>
-      <td>21</td>
-      <td>8.943139</td>
-      <td>2.551417</td>
-      <td>11.494556</td>
-      <td>18.574742</td>
-      <td>4.627185</td>
-      <td>10.217355</td>
+      <td>111156</td>
+      <td>14850</td>
+      <td>96306</td>
+      <td>22</td>
+      <td>9.001940</td>
+      <td>2.624749</td>
+      <td>11.626689</td>
+      <td>18.719719</td>
+      <td>4.761071</td>
+      <td>10.355686</td>
     </tr>
     <tr>
       <th>10</th>
       <td>PXD004720</td>
       <td>grain-zadoks-70</td>
       <td>PXD004720_grain-zadoks-70</td>
-      <td>27105</td>
-      <td>7359</td>
-      <td>34464</td>
-      <td>20426</td>
-      <td>7215</td>
-      <td>27641</td>
-      <td>23632</td>
+      <td>27314</td>
+      <td>7615</td>
+      <td>34929</td>
+      <td>20611</td>
+      <td>7469</td>
+      <td>28080</td>
+      <td>23662</td>
       <td>...</td>
-      <td>124251</td>
-      <td>17383</td>
-      <td>106868</td>
-      <td>21</td>
-      <td>9.159756</td>
-      <td>2.486871</td>
-      <td>11.646627</td>
-      <td>19.105075</td>
-      <td>4.513945</td>
-      <td>10.362059</td>
+      <td>125355</td>
+      <td>17442</td>
+      <td>107913</td>
+      <td>22</td>
+      <td>9.230385</td>
+      <td>2.573383</td>
+      <td>11.803767</td>
+      <td>19.278111</td>
+      <td>4.672856</td>
+      <td>10.526631</td>
     </tr>
     <tr>
       <th>9</th>
       <td>PXD004720</td>
       <td>glume</td>
       <td>PXD004720_glume</td>
-      <td>26977</td>
-      <td>7539</td>
-      <td>34516</td>
-      <td>20326</td>
-      <td>7405</td>
-      <td>27731</td>
-      <td>26070</td>
+      <td>27208</td>
+      <td>7806</td>
+      <td>35014</td>
+      <td>20534</td>
+      <td>7671</td>
+      <td>28205</td>
+      <td>26101</td>
       <td>...</td>
-      <td>142449</td>
-      <td>22004</td>
-      <td>120445</td>
-      <td>21</td>
-      <td>9.116500</td>
-      <td>2.547700</td>
-      <td>11.664200</td>
-      <td>19.011542</td>
-      <td>4.632816</td>
-      <td>10.395798</td>
+      <td>144079</td>
+      <td>22077</td>
+      <td>122002</td>
+      <td>22</td>
+      <td>9.194563</td>
+      <td>2.637929</td>
+      <td>11.832492</td>
+      <td>19.206091</td>
+      <td>4.799234</td>
+      <td>10.573491</td>
     </tr>
     <tr>
       <th>4</th>
       <td>PXD004720</td>
       <td>anther</td>
       <td>PXD004720_anther</td>
-      <td>28453</td>
-      <td>7355</td>
-      <td>35808</td>
-      <td>21220</td>
-      <td>7188</td>
-      <td>28408</td>
-      <td>31531</td>
+      <td>28669</td>
+      <td>7606</td>
+      <td>36275</td>
+      <td>21409</td>
+      <td>7436</td>
+      <td>28845</td>
+      <td>31552</td>
       <td>...</td>
-      <td>161955</td>
-      <td>27584</td>
-      <td>134371</td>
-      <td>21</td>
-      <td>9.615294</td>
-      <td>2.485519</td>
-      <td>12.100813</td>
-      <td>19.847728</td>
-      <td>4.497053</td>
-      <td>10.649592</td>
+      <td>163467</td>
+      <td>27708</td>
+      <td>135759</td>
+      <td>22</td>
+      <td>9.688288</td>
+      <td>2.570341</td>
+      <td>12.258629</td>
+      <td>20.024506</td>
+      <td>4.652210</td>
+      <td>10.813415</td>
     </tr>
     <tr>
       <th>13</th>
       <td>PXD004720</td>
       <td>grain-zadoks-83</td>
       <td>PXD004720_grain-zadoks-83</td>
-      <td>27990</td>
-      <td>7605</td>
-      <td>35595</td>
-      <td>20984</td>
-      <td>7445</td>
-      <td>28429</td>
-      <td>21196</td>
+      <td>28200</td>
+      <td>7846</td>
+      <td>36046</td>
+      <td>21170</td>
+      <td>7684</td>
+      <td>28854</td>
+      <td>21217</td>
       <td>...</td>
-      <td>111335</td>
-      <td>14632</td>
-      <td>96703</td>
-      <td>21</td>
-      <td>9.458829</td>
-      <td>2.570003</td>
-      <td>12.028833</td>
-      <td>19.626990</td>
-      <td>4.657841</td>
-      <td>10.657465</td>
+      <td>112389</td>
+      <td>14700</td>
+      <td>97689</td>
+      <td>22</td>
+      <td>9.529796</td>
+      <td>2.651446</td>
+      <td>12.181242</td>
+      <td>19.800962</td>
+      <td>4.807367</td>
+      <td>10.816789</td>
     </tr>
     <tr>
       <th>24</th>
       <td>PXD004720</td>
       <td>rachilla</td>
       <td>PXD004720_rachilla</td>
-      <td>28702</td>
-      <td>7455</td>
-      <td>36157</td>
-      <td>21237</td>
-      <td>7317</td>
-      <td>28554</td>
-      <td>28789</td>
+      <td>28936</td>
+      <td>7727</td>
+      <td>36663</td>
+      <td>21433</td>
+      <td>7587</td>
+      <td>29020</td>
+      <td>28803</td>
       <td>...</td>
-      <td>157648</td>
-      <td>24647</td>
-      <td>133001</td>
-      <td>21</td>
-      <td>9.699440</td>
-      <td>2.519313</td>
-      <td>12.218753</td>
-      <td>19.863629</td>
-      <td>4.577760</td>
-      <td>10.704325</td>
+      <td>159219</td>
+      <td>24725</td>
+      <td>134494</td>
+      <td>22</td>
+      <td>9.778517</td>
+      <td>2.611232</td>
+      <td>12.389748</td>
+      <td>20.046954</td>
+      <td>4.746681</td>
+      <td>10.879019</td>
     </tr>
     <tr>
       <th>19</th>
       <td>PXD004720</td>
       <td>node</td>
       <td>PXD004720_node</td>
-      <td>26041</td>
-      <td>9258</td>
-      <td>35299</td>
-      <td>19676</td>
-      <td>9079</td>
-      <td>28755</td>
-      <td>18255</td>
+      <td>26236</td>
+      <td>9558</td>
+      <td>35794</td>
+      <td>19853</td>
+      <td>9375</td>
+      <td>29228</td>
+      <td>18271</td>
       <td>...</td>
-      <td>97553</td>
-      <td>12673</td>
-      <td>84880</td>
-      <td>21</td>
-      <td>8.800192</td>
-      <td>3.128612</td>
-      <td>11.928804</td>
-      <td>18.403577</td>
-      <td>5.680126</td>
-      <td>10.779676</td>
+      <td>98731</td>
+      <td>12726</td>
+      <td>86005</td>
+      <td>22</td>
+      <td>8.866089</td>
+      <td>3.229992</td>
+      <td>12.096082</td>
+      <td>18.569130</td>
+      <td>5.865314</td>
+      <td>10.956994</td>
     </tr>
     <tr>
       <th>15</th>
       <td>PXD004720</td>
       <td>leaf-flag-mature</td>
       <td>PXD004720_leaf-flag-mature</td>
-      <td>29617</td>
-      <td>7303</td>
-      <td>36920</td>
-      <td>22215</td>
-      <td>7160</td>
-      <td>29375</td>
-      <td>27611</td>
+      <td>29869</td>
+      <td>7584</td>
+      <td>37453</td>
+      <td>22443</td>
+      <td>7439</td>
+      <td>29882</td>
+      <td>27629</td>
       <td>...</td>
-      <td>143118</td>
-      <td>19328</td>
-      <td>123790</td>
-      <td>21</td>
-      <td>10.008651</td>
-      <td>2.467947</td>
-      <td>12.476598</td>
-      <td>20.778383</td>
-      <td>4.479536</td>
-      <td>11.012101</td>
+      <td>144641</td>
+      <td>19405</td>
+      <td>125236</td>
+      <td>22</td>
+      <td>10.093811</td>
+      <td>2.562907</td>
+      <td>12.656718</td>
+      <td>20.991638</td>
+      <td>4.654087</td>
+      <td>11.202165</td>
     </tr>
     <tr>
       <th>18</th>
       <td>PXD004720</td>
       <td>lemma</td>
       <td>PXD004720_lemma</td>
-      <td>28906</td>
-      <td>7995</td>
-      <td>36901</td>
-      <td>21621</td>
-      <td>7839</td>
-      <td>29460</td>
-      <td>27238</td>
+      <td>29136</td>
+      <td>8250</td>
+      <td>37386</td>
+      <td>21824</td>
+      <td>8091</td>
+      <td>29915</td>
+      <td>27259</td>
       <td>...</td>
-      <td>145101</td>
-      <td>21630</td>
-      <td>123471</td>
-      <td>21</td>
-      <td>9.768379</td>
-      <td>2.701798</td>
-      <td>12.470177</td>
-      <td>20.222796</td>
-      <td>4.904341</td>
-      <td>11.043966</td>
+      <td>146562</td>
+      <td>21700</td>
+      <td>124862</td>
+      <td>22</td>
+      <td>9.846104</td>
+      <td>2.787972</td>
+      <td>12.634076</td>
+      <td>20.412668</td>
+      <td>5.062000</td>
+      <td>11.214536</td>
     </tr>
     <tr>
       <th>28</th>
       <td>PXD004720</td>
       <td>root-tip</td>
       <td>PXD004720_root-tip</td>
-      <td>32154</td>
-      <td>6730</td>
-      <td>38884</td>
-      <td>23518</td>
-      <td>6579</td>
-      <td>30097</td>
-      <td>36405</td>
+      <td>32368</td>
+      <td>6969</td>
+      <td>39337</td>
+      <td>23693</td>
+      <td>6815</td>
+      <td>30508</td>
+      <td>36423</td>
       <td>...</td>
-      <td>189975</td>
-      <td>34893</td>
-      <td>155082</td>
-      <td>21</td>
-      <td>10.865995</td>
-      <td>2.274309</td>
-      <td>13.140304</td>
-      <td>21.997119</td>
-      <td>4.116042</td>
-      <td>11.282765</td>
+      <td>191262</td>
+      <td>34992</td>
+      <td>156270</td>
+      <td>22</td>
+      <td>10.938313</td>
+      <td>2.355076</td>
+      <td>13.293389</td>
+      <td>22.160802</td>
+      <td>4.263692</td>
+      <td>11.436840</td>
     </tr>
     <tr>
       <th>30</th>
       <td>PXD004720</td>
       <td>spike-immature</td>
       <td>PXD004720_spike-immature</td>
-      <td>32300</td>
-      <td>6981</td>
-      <td>39281</td>
-      <td>23319</td>
-      <td>6836</td>
-      <td>30155</td>
-      <td>33824</td>
+      <td>32537</td>
+      <td>7242</td>
+      <td>39779</td>
+      <td>23515</td>
+      <td>7096</td>
+      <td>30611</td>
+      <td>33851</td>
       <td>...</td>
-      <td>186379</td>
-      <td>33010</td>
-      <td>153369</td>
-      <td>21</td>
-      <td>10.915334</td>
-      <td>2.359131</td>
-      <td>13.274465</td>
-      <td>21.810988</td>
-      <td>4.276830</td>
-      <td>11.304508</td>
+      <td>188025</td>
+      <td>33123</td>
+      <td>154902</td>
+      <td>22</td>
+      <td>10.995424</td>
+      <td>2.447333</td>
+      <td>13.442757</td>
+      <td>21.994313</td>
+      <td>4.439495</td>
+      <td>11.475453</td>
     </tr>
     <tr>
       <th>26</th>
       <td>PXD004720</td>
       <td>root-mature</td>
       <td>PXD004720_root-mature</td>
-      <td>29294</td>
-      <td>8713</td>
-      <td>38007</td>
-      <td>21919</td>
-      <td>8535</td>
-      <td>30454</td>
-      <td>17343</td>
+      <td>29545</td>
+      <td>8999</td>
+      <td>38544</td>
+      <td>22134</td>
+      <td>8818</td>
+      <td>30952</td>
+      <td>17366</td>
       <td>...</td>
-      <td>95329</td>
-      <td>10790</td>
-      <td>84539</td>
-      <td>21</td>
-      <td>9.899498</td>
-      <td>2.944437</td>
-      <td>12.843934</td>
-      <td>20.501525</td>
-      <td>5.339782</td>
-      <td>11.416597</td>
+      <td>96387</td>
+      <td>10853</td>
+      <td>85534</td>
+      <td>22</td>
+      <td>9.984320</td>
+      <td>3.041086</td>
+      <td>13.025406</td>
+      <td>20.702621</td>
+      <td>5.516836</td>
+      <td>11.603287</td>
     </tr>
     <tr>
       <th>12</th>
       <td>PXD004720</td>
       <td>grain-zadoks-75</td>
       <td>PXD004720_grain-zadoks-75</td>
-      <td>32267</td>
-      <td>7875</td>
-      <td>40142</td>
-      <td>24064</td>
-      <td>7696</td>
-      <td>31760</td>
-      <td>24585</td>
+      <td>32477</td>
+      <td>8105</td>
+      <td>40582</td>
+      <td>24243</td>
+      <td>7924</td>
+      <td>32167</td>
+      <td>24606</td>
       <td>...</td>
-      <td>131066</td>
-      <td>18519</td>
-      <td>112547</td>
-      <td>21</td>
-      <td>10.904182</td>
-      <td>2.661246</td>
-      <td>13.565428</td>
-      <td>22.507810</td>
-      <td>4.814875</td>
-      <td>11.906190</td>
+      <td>132081</td>
+      <td>18607</td>
+      <td>113474</td>
+      <td>22</td>
+      <td>10.975148</td>
+      <td>2.738971</td>
+      <td>13.714120</td>
+      <td>22.675234</td>
+      <td>4.957519</td>
+      <td>12.058766</td>
     </tr>
     <tr>
       <th>20</th>
       <td>PXD004720</td>
       <td>node_secretion</td>
       <td>PXD004720_node_secretion</td>
-      <td>33083</td>
-      <td>8100</td>
-      <td>41183</td>
-      <td>24691</td>
-      <td>7928</td>
-      <td>32619</td>
-      <td>31820</td>
+      <td>33365</td>
+      <td>8404</td>
+      <td>41769</td>
+      <td>24936</td>
+      <td>8230</td>
+      <td>33166</td>
+      <td>31835</td>
       <td>...</td>
-      <td>166896</td>
-      <td>22746</td>
-      <td>144150</td>
-      <td>21</td>
-      <td>11.179937</td>
-      <td>2.737282</td>
-      <td>13.917219</td>
-      <td>23.094263</td>
-      <td>4.960022</td>
-      <td>12.228212</td>
+      <td>168564</td>
+      <td>22830</td>
+      <td>145734</td>
+      <td>22</td>
+      <td>11.275235</td>
+      <td>2.840014</td>
+      <td>14.115250</td>
+      <td>23.323419</td>
+      <td>5.148963</td>
+      <td>12.433271</td>
     </tr>
     <tr>
       <th>25</th>
       <td>PXD004720</td>
       <td>radicle</td>
       <td>PXD004720_radicle</td>
-      <td>34367</td>
-      <td>7605</td>
-      <td>41972</td>
-      <td>25482</td>
-      <td>7444</td>
-      <td>32926</td>
-      <td>36795</td>
+      <td>34621</td>
+      <td>7855</td>
+      <td>42476</td>
+      <td>25692</td>
+      <td>7693</td>
+      <td>33385</td>
+      <td>36832</td>
       <td>...</td>
-      <td>192432</td>
-      <td>32321</td>
-      <td>160111</td>
-      <td>21</td>
-      <td>11.613847</td>
-      <td>2.570003</td>
-      <td>14.183851</td>
-      <td>23.834110</td>
-      <td>4.657215</td>
-      <td>12.343300</td>
+      <td>193938</td>
+      <td>32434</td>
+      <td>161504</td>
+      <td>22</td>
+      <td>11.699683</td>
+      <td>2.654487</td>
+      <td>14.354170</td>
+      <td>24.030529</td>
+      <td>4.812998</td>
+      <td>12.515370</td>
     </tr>
     <tr>
       <th>6</th>
       <td>PXD004720</td>
       <td>coleoptile</td>
       <td>PXD004720_coleoptile</td>
-      <td>35872</td>
-      <td>9308</td>
-      <td>45180</td>
-      <td>26512</td>
-      <td>9098</td>
-      <td>35610</td>
-      <td>37966</td>
+      <td>36197</td>
+      <td>9622</td>
+      <td>45819</td>
+      <td>26797</td>
+      <td>9411</td>
+      <td>36208</td>
+      <td>38002</td>
       <td>...</td>
-      <td>201259</td>
-      <td>31158</td>
-      <td>170101</td>
-      <td>21</td>
-      <td>12.122441</td>
-      <td>3.145508</td>
-      <td>15.267949</td>
-      <td>24.797501</td>
-      <td>5.692013</td>
-      <td>13.349478</td>
+      <td>203264</td>
+      <td>31278</td>
+      <td>171986</td>
+      <td>22</td>
+      <td>12.232270</td>
+      <td>3.251620</td>
+      <td>15.483891</td>
+      <td>25.064070</td>
+      <td>5.887836</td>
+      <td>13.573656</td>
     </tr>
     <tr>
       <th>11</th>
       <td>PXD004720</td>
       <td>grain-zadoks-71</td>
       <td>PXD004720_grain-zadoks-71</td>
-      <td>36678</td>
-      <td>9194</td>
-      <td>45872</td>
-      <td>26757</td>
-      <td>9003</td>
-      <td>35760</td>
-      <td>33005</td>
+      <td>36924</td>
+      <td>9498</td>
+      <td>46422</td>
+      <td>26965</td>
+      <td>9304</td>
+      <td>36269</td>
+      <td>33028</td>
       <td>...</td>
-      <td>177392</td>
-      <td>27486</td>
-      <td>149906</td>
-      <td>21</td>
-      <td>12.394817</td>
-      <td>3.106984</td>
-      <td>15.501801</td>
-      <td>25.026657</td>
-      <td>5.632578</td>
-      <td>13.405710</td>
+      <td>178814</td>
+      <td>27602</td>
+      <td>151212</td>
+      <td>22</td>
+      <td>12.477950</td>
+      <td>3.209716</td>
+      <td>15.687666</td>
+      <td>25.221206</td>
+      <td>5.820894</td>
+      <td>13.596524</td>
     </tr>
     <tr>
       <th>3</th>
       <td>PXD050500</td>
       <td>radicle</td>
       <td>PXD050500_radicle</td>
-      <td>112805</td>
-      <td>85061</td>
-      <td>197866</td>
-      <td>88814</td>
-      <td>83098</td>
-      <td>171912</td>
-      <td>251130</td>
+      <td>113924</td>
+      <td>87339</td>
+      <td>201263</td>
+      <td>89823</td>
+      <td>85356</td>
+      <td>175179</td>
+      <td>251809</td>
       <td>...</td>
-      <td>1040357</td>
-      <td>117056</td>
-      <td>923301</td>
-      <td>21</td>
-      <td>38.120873</td>
-      <td>28.745176</td>
-      <td>66.866049</td>
-      <td>83.070505</td>
-      <td>51.988889</td>
-      <td>64.446377</td>
+      <td>1050178</td>
+      <td>117686</td>
+      <td>932492</td>
+      <td>22</td>
+      <td>38.499023</td>
+      <td>29.514994</td>
+      <td>68.014018</td>
+      <td>84.014254</td>
+      <td>53.401569</td>
+      <td>65.671110</td>
     </tr>
     <tr>
       <th>1</th>
       <td>PXD050500</td>
       <td>coleoptile</td>
       <td>PXD050500_coleoptile</td>
-      <td>121187</td>
-      <td>108389</td>
-      <td>229576</td>
-      <td>96200</td>
-      <td>105918</td>
-      <td>202118</td>
-      <td>444228</td>
+      <td>122443</td>
+      <td>111301</td>
+      <td>233744</td>
+      <td>97341</td>
+      <td>108801</td>
+      <td>206142</td>
+      <td>445454</td>
       <td>...</td>
-      <td>1812027</td>
-      <td>226291</td>
-      <td>1585736</td>
-      <td>21</td>
-      <td>40.953453</td>
-      <td>36.628547</td>
-      <td>77.582000</td>
-      <td>89.978862</td>
-      <td>66.265844</td>
-      <td>75.770004</td>
+      <td>1829196</td>
+      <td>227461</td>
+      <td>1601735</td>
+      <td>22</td>
+      <td>41.377900</td>
+      <td>37.612617</td>
+      <td>78.990518</td>
+      <td>91.046074</td>
+      <td>68.069545</td>
+      <td>77.278521</td>
     </tr>
     <tr>
       <th>2</th>
       <td>PXD050500</td>
       <td>node</td>
       <td>PXD050500_node</td>
-      <td>121937</td>
-      <td>110948</td>
-      <td>232885</td>
-      <td>96914</td>
-      <td>108391</td>
-      <td>205305</td>
-      <td>448104</td>
+      <td>123242</td>
+      <td>113949</td>
+      <td>237191</td>
+      <td>98102</td>
+      <td>111366</td>
+      <td>209468</td>
+      <td>449316</td>
       <td>...</td>
-      <td>1846620</td>
-      <td>233388</td>
-      <td>1613232</td>
-      <td>21</td>
-      <td>41.206905</td>
-      <td>37.493326</td>
-      <td>78.700230</td>
-      <td>90.646688</td>
-      <td>67.813036</td>
-      <td>76.964746</td>
+      <td>1864415</td>
+      <td>234600</td>
+      <td>1629815</td>
+      <td>22</td>
+      <td>41.647911</td>
+      <td>38.507472</td>
+      <td>80.155383</td>
+      <td>91.757861</td>
+      <td>69.674295</td>
+      <td>78.525372</td>
     </tr>
   </tbody>
 </table>
@@ -19090,7 +21139,7 @@ display(step17_summary)
 
     
     Loading fully validated rows from Step 11...
-    Fully validated rows loaded for Step 17: 8,136,687
+    Fully validated rows loaded for Step 17: 8,214,230
     
 
 
@@ -19152,258 +21201,258 @@ display(step17_summary)
     <tr>
       <th>30</th>
       <td>PXD050500_node</td>
-      <td>1846620</td>
-      <td>232885</td>
-      <td>584736</td>
-      <td>205305</td>
+      <td>1864415</td>
+      <td>237191</td>
+      <td>587392</td>
+      <td>209468</td>
     </tr>
     <tr>
       <th>29</th>
       <td>PXD050500_coleoptile</td>
-      <td>1812027</td>
-      <td>229576</td>
-      <td>572135</td>
-      <td>202118</td>
+      <td>1829196</td>
+      <td>233744</td>
+      <td>574831</td>
+      <td>206142</td>
     </tr>
     <tr>
       <th>31</th>
       <td>PXD050500_radicle</td>
-      <td>1040357</td>
-      <td>197866</td>
-      <td>327065</td>
-      <td>171912</td>
+      <td>1050178</td>
+      <td>201263</td>
+      <td>328566</td>
+      <td>175179</td>
     </tr>
     <tr>
       <th>8</th>
       <td>PXD004720_grain-zadoks-71</td>
-      <td>177392</td>
-      <td>45872</td>
-      <td>35753</td>
-      <td>35760</td>
+      <td>178814</td>
+      <td>46422</td>
+      <td>35806</td>
+      <td>36269</td>
     </tr>
     <tr>
       <th>3</th>
       <td>PXD004720_coleoptile</td>
-      <td>201259</td>
-      <td>45180</td>
-      <td>40804</td>
-      <td>35610</td>
+      <td>203264</td>
+      <td>45819</td>
+      <td>40861</td>
+      <td>36208</td>
     </tr>
     <tr>
       <th>22</th>
       <td>PXD004720_radicle</td>
-      <td>192432</td>
-      <td>41972</td>
-      <td>39419</td>
-      <td>32926</td>
+      <td>193938</td>
+      <td>42476</td>
+      <td>39487</td>
+      <td>33385</td>
     </tr>
     <tr>
       <th>17</th>
       <td>PXD004720_node_secretion</td>
-      <td>166896</td>
-      <td>41183</td>
-      <td>33982</td>
-      <td>32619</td>
+      <td>168564</td>
+      <td>41769</td>
+      <td>34026</td>
+      <td>33166</td>
     </tr>
     <tr>
       <th>9</th>
       <td>PXD004720_grain-zadoks-75</td>
-      <td>131066</td>
-      <td>40142</td>
-      <td>27248</td>
-      <td>31760</td>
+      <td>132081</td>
+      <td>40582</td>
+      <td>27293</td>
+      <td>32167</td>
     </tr>
     <tr>
       <th>23</th>
       <td>PXD004720_root-mature</td>
-      <td>95329</td>
-      <td>38007</td>
-      <td>21058</td>
-      <td>30454</td>
+      <td>96387</td>
+      <td>38544</td>
+      <td>21125</td>
+      <td>30952</td>
     </tr>
     <tr>
       <th>27</th>
       <td>PXD004720_spike-immature</td>
-      <td>186379</td>
-      <td>39281</td>
-      <td>36176</td>
-      <td>30155</td>
+      <td>188025</td>
+      <td>39779</td>
+      <td>36236</td>
+      <td>30611</td>
     </tr>
     <tr>
       <th>25</th>
       <td>PXD004720_root-tip</td>
-      <td>189975</td>
-      <td>38884</td>
-      <td>38455</td>
-      <td>30097</td>
+      <td>191262</td>
+      <td>39337</td>
+      <td>38496</td>
+      <td>30508</td>
     </tr>
     <tr>
       <th>15</th>
       <td>PXD004720_lemma</td>
-      <td>145101</td>
-      <td>36901</td>
-      <td>29611</td>
-      <td>29460</td>
+      <td>146562</td>
+      <td>37386</td>
+      <td>29653</td>
+      <td>29915</td>
     </tr>
     <tr>
       <th>12</th>
       <td>PXD004720_leaf-flag-mature</td>
-      <td>143118</td>
-      <td>36920</td>
-      <td>29691</td>
-      <td>29375</td>
+      <td>144641</td>
+      <td>37453</td>
+      <td>29731</td>
+      <td>29882</td>
     </tr>
     <tr>
       <th>16</th>
       <td>PXD004720_node</td>
-      <td>97553</td>
-      <td>35299</td>
-      <td>21227</td>
-      <td>28755</td>
+      <td>98731</td>
+      <td>35794</td>
+      <td>21280</td>
+      <td>29228</td>
     </tr>
     <tr>
       <th>21</th>
       <td>PXD004720_rachilla</td>
-      <td>157648</td>
-      <td>36157</td>
-      <td>30965</td>
-      <td>28554</td>
+      <td>159219</td>
+      <td>36663</td>
+      <td>31008</td>
+      <td>29020</td>
     </tr>
     <tr>
       <th>10</th>
       <td>PXD004720_grain-zadoks-83</td>
-      <td>111335</td>
-      <td>35595</td>
-      <td>23796</td>
-      <td>28429</td>
+      <td>112389</td>
+      <td>36046</td>
+      <td>23840</td>
+      <td>28854</td>
     </tr>
     <tr>
       <th>1</th>
       <td>PXD004720_anther</td>
-      <td>161955</td>
-      <td>35808</td>
-      <td>33926</td>
-      <td>28408</td>
+      <td>163467</td>
+      <td>36275</td>
+      <td>33982</td>
+      <td>28845</td>
     </tr>
     <tr>
       <th>6</th>
       <td>PXD004720_glume</td>
-      <td>142449</td>
-      <td>34516</td>
-      <td>28467</td>
-      <td>27731</td>
+      <td>144079</td>
+      <td>35014</td>
+      <td>28512</td>
+      <td>28205</td>
     </tr>
     <tr>
       <th>7</th>
       <td>PXD004720_grain-zadoks-70</td>
-      <td>124251</td>
-      <td>34464</td>
-      <td>25979</td>
-      <td>27641</td>
+      <td>125355</td>
+      <td>34929</td>
+      <td>26037</td>
+      <td>28080</td>
     </tr>
     <tr>
       <th>11</th>
       <td>PXD004720_grain-zadoks-87</td>
-      <td>110256</td>
-      <td>34014</td>
-      <td>24426</td>
-      <td>27255</td>
+      <td>111156</td>
+      <td>34405</td>
+      <td>24482</td>
+      <td>27624</td>
     </tr>
     <tr>
       <th>14</th>
       <td>PXD004720_leaf-flag-young</td>
-      <td>118601</td>
-      <td>31709</td>
-      <td>23264</td>
-      <td>25363</td>
+      <td>119922</td>
+      <td>32180</td>
+      <td>23296</td>
+      <td>25809</td>
     </tr>
     <tr>
       <th>19</th>
       <td>PXD004720_pericarp</td>
-      <td>129415</td>
-      <td>31869</td>
-      <td>28122</td>
-      <td>25198</td>
+      <td>130645</td>
+      <td>32281</td>
+      <td>28184</td>
+      <td>25580</td>
     </tr>
     <tr>
       <th>24</th>
       <td>PXD004720_root-secretion</td>
-      <td>99127</td>
-      <td>31289</td>
-      <td>21057</td>
-      <td>24785</td>
+      <td>100085</td>
+      <td>31657</td>
+      <td>21111</td>
+      <td>25126</td>
     </tr>
     <tr>
       <th>26</th>
       <td>PXD004720_root-vasculature</td>
-      <td>110307</td>
-      <td>29966</td>
-      <td>20703</td>
-      <td>23188</td>
+      <td>111315</td>
+      <td>30323</td>
+      <td>20728</td>
+      <td>23512</td>
     </tr>
     <tr>
       <th>28</th>
       <td>PXD004720_stem</td>
-      <td>59623</td>
-      <td>28609</td>
-      <td>14136</td>
-      <td>22899</td>
+      <td>60181</td>
+      <td>28948</td>
+      <td>14177</td>
+      <td>23218</td>
     </tr>
     <tr>
       <th>5</th>
       <td>PXD004720_endosperm</td>
-      <td>101413</td>
-      <td>26770</td>
-      <td>19923</td>
-      <td>21225</td>
+      <td>102289</td>
+      <td>27099</td>
+      <td>19953</td>
+      <td>21529</td>
     </tr>
     <tr>
       <th>18</th>
       <td>PXD004720_palea</td>
-      <td>115047</td>
-      <td>26907</td>
-      <td>21587</td>
-      <td>21138</td>
+      <td>116285</td>
+      <td>27295</td>
+      <td>21623</td>
+      <td>21503</td>
     </tr>
     <tr>
       <th>13</th>
       <td>PXD004720_leaf-flag-senescing</td>
-      <td>45054</td>
-      <td>24893</td>
-      <td>11158</td>
-      <td>20480</td>
+      <td>45680</td>
+      <td>25275</td>
+      <td>11204</td>
+      <td>20842</td>
     </tr>
     <tr>
       <th>20</th>
       <td>PXD004720_pollen</td>
-      <td>73586</td>
-      <td>19464</td>
-      <td>13425</td>
-      <td>15612</td>
+      <td>74334</td>
+      <td>19731</td>
+      <td>13446</td>
+      <td>15866</td>
     </tr>
     <tr>
       <th>0</th>
       <td>MSV000090572_stored_grain</td>
-      <td>29430</td>
-      <td>16819</td>
-      <td>9070</td>
-      <td>14263</td>
+      <td>29892</td>
+      <td>17110</td>
+      <td>9126</td>
+      <td>14536</td>
     </tr>
     <tr>
       <th>2</th>
       <td>PXD004720_boot</td>
-      <td>13024</td>
-      <td>9028</td>
-      <td>3585</td>
-      <td>7191</td>
+      <td>13137</td>
+      <td>9126</td>
+      <td>3599</td>
+      <td>7279</td>
     </tr>
     <tr>
       <th>4</th>
       <td>PXD004720_embryo</td>
-      <td>8662</td>
-      <td>7035</td>
-      <td>2807</td>
-      <td>5683</td>
+      <td>8742</td>
+      <td>7110</td>
+      <td>2815</td>
+      <td>5749</td>
     </tr>
   </tbody>
 </table>
@@ -19726,7 +21775,7 @@ print(f"Step 18 summary saved: {step18_summary_out}")
 display(step18_summary)
 ```
 
-    Gene models with validated peptide support: 238,590
+    Gene models with validated peptide support: 243,564
     
 
 
@@ -19782,89 +21831,89 @@ display(step18_summary)
       <th>0</th>
       <td>HC</td>
       <td>1 peptide</td>
-      <td>4029</td>
+      <td>4130</td>
       <td>1.0</td>
       <td>1.000000</td>
       <td>1</td>
-      <td>103095</td>
-      <td>3.9080</td>
+      <td>104417</td>
+      <td>3.9553</td>
     </tr>
     <tr>
       <th>1</th>
       <td>HC</td>
       <td>2–4 peptides</td>
-      <td>16907</td>
+      <td>17259</td>
       <td>3.0</td>
-      <td>3.038564</td>
+      <td>3.037777</td>
       <td>4</td>
-      <td>103095</td>
-      <td>16.3994</td>
+      <td>104417</td>
+      <td>16.5289</td>
     </tr>
     <tr>
       <th>2</th>
       <td>HC</td>
       <td>5–9 peptides</td>
-      <td>26042</td>
+      <td>26478</td>
       <td>7.0</td>
-      <td>6.870594</td>
+      <td>6.866720</td>
       <td>9</td>
-      <td>103095</td>
-      <td>25.2602</td>
+      <td>104417</td>
+      <td>25.3579</td>
     </tr>
     <tr>
       <th>3</th>
       <td>HC</td>
       <td>≥10 peptides</td>
-      <td>56117</td>
+      <td>56550</td>
       <td>20.0</td>
-      <td>26.290785</td>
+      <td>26.247303</td>
       <td>318</td>
-      <td>103095</td>
-      <td>54.4323</td>
+      <td>104417</td>
+      <td>54.1578</td>
     </tr>
     <tr>
       <th>4</th>
       <td>LC</td>
       <td>1 peptide</td>
-      <td>23940</td>
+      <td>24564</td>
       <td>1.0</td>
       <td>1.000000</td>
       <td>1</td>
-      <td>135495</td>
-      <td>17.6685</td>
+      <td>139147</td>
+      <td>17.6533</td>
     </tr>
     <tr>
       <th>5</th>
       <td>LC</td>
       <td>2–4 peptides</td>
-      <td>58112</td>
+      <td>59665</td>
       <td>3.0</td>
-      <td>2.859926</td>
+      <td>2.859784</td>
       <td>4</td>
-      <td>135495</td>
-      <td>42.8887</td>
+      <td>139147</td>
+      <td>42.8791</td>
     </tr>
     <tr>
       <th>6</th>
       <td>LC</td>
       <td>5–9 peptides</td>
-      <td>36004</td>
+      <td>36992</td>
       <td>6.0</td>
-      <td>6.476614</td>
+      <td>6.479455</td>
       <td>9</td>
-      <td>135495</td>
-      <td>26.5722</td>
+      <td>139147</td>
+      <td>26.5848</td>
     </tr>
     <tr>
       <th>7</th>
       <td>LC</td>
       <td>≥10 peptides</td>
-      <td>17439</td>
-      <td>14.0</td>
-      <td>16.592121</td>
+      <td>17926</td>
+      <td>13.0</td>
+      <td>16.557291</td>
       <td>217</td>
-      <td>135495</td>
-      <td>12.8706</td>
+      <td>139147</td>
+      <td>12.8828</td>
     </tr>
   </tbody>
 </table>
@@ -20238,22 +22287,22 @@ display(step19_summary)
     <tr>
       <th>0</th>
       <td>HC</td>
-      <td>8569</td>
-      <td>8086</td>
-      <td>13.680710</td>
+      <td>8538</td>
+      <td>8050</td>
+      <td>13.522019</td>
       <td>12.0</td>
-      <td>0.841943</td>
-      <td>0.9985</td>
+      <td>0.847330</td>
+      <td>0.9983</td>
     </tr>
     <tr>
       <th>1</th>
       <td>LC</td>
-      <td>1431</td>
-      <td>1376</td>
-      <td>12.867226</td>
+      <td>1462</td>
+      <td>1405</td>
+      <td>12.855677</td>
       <td>11.0</td>
-      <td>0.548139</td>
-      <td>0.5254</td>
+      <td>0.558524</td>
+      <td>0.5663</td>
     </tr>
   </tbody>
 </table>
@@ -20649,7 +22698,7 @@ print(f"Step 20 summary saved: {step20_summary_out}")
 display(step20_summary)
 ```
 
-    Protein isoforms plotted: 267,166
+    Protein isoforms plotted: 272,298
     
 
 
@@ -20699,32 +22748,32 @@ display(step20_summary)
     <tr>
       <th>0</th>
       <td>HC</td>
-      <td>128561</td>
-      <td>451.7706</td>
-      <td>384.0</td>
+      <td>130006</td>
+      <td>450.3988</td>
+      <td>383.0</td>
       <td>5366.0</td>
-      <td>18.7402</td>
+      <td>18.6526</td>
       <td>12.0</td>
       <td>318</td>
-      <td>128561</td>
-      <td>0.0430</td>
-      <td>-0.6822</td>
-      <td>0.4563</td>
+      <td>130006</td>
+      <td>0.0429</td>
+      <td>-0.6836</td>
+      <td>0.4559</td>
     </tr>
     <tr>
       <th>1</th>
       <td>LC</td>
-      <td>138605</td>
-      <td>213.5813</td>
+      <td>142292</td>
+      <td>213.3316</td>
       <td>158.0</td>
       <td>4979.0</td>
-      <td>5.2642</td>
+      <td>5.2629</td>
       <td>4.0</td>
       <td>217</td>
-      <td>138605</td>
-      <td>0.0224</td>
-      <td>0.4878</td>
-      <td>0.4192</td>
+      <td>142292</td>
+      <td>0.0223</td>
+      <td>0.5120</td>
+      <td>0.4156</td>
     </tr>
   </tbody>
 </table>
@@ -21315,10 +23364,10 @@ display(summary)
     Chunk 29: read 100,000 retained rows | cumulative retained 2,900,000
     Chunk 30: read 100,000 retained rows | cumulative retained 3,000,000
     Chunk 31: read 100,000 retained rows | cumulative retained 3,100,000
-    Chunk 32: read 38,903 retained rows | cumulative retained 3,138,903
+    Chunk 32: read 73,811 retained rows | cumulative retained 3,173,811
     
-    Rows read from Step 13 combined table: 3,138,903
-    Rows retained for summary: 3,138,903
+    Rows read from Step 13 combined table: 3,173,811
+    Rows retained for summary: 3,173,811
     Sampled rows before group cap: 96,000
     Rows used for violin plot: 96,000
     
@@ -21954,6 +24003,34 @@ display(summary)
       <td>0.173586</td>
       <td>642.831014</td>
     </tr>
+    <tr>
+      <th>42</th>
+      <td>ChrUnknown</td>
+      <td>HC</td>
+      <td>15693</td>
+      <td>134767961.0</td>
+      <td>1.324406e+08</td>
+      <td>7635176</td>
+      <td>347551051</td>
+      <td>134.767961</td>
+      <td>132.440645</td>
+      <td>7.635176</td>
+      <td>347.551051</td>
+    </tr>
+    <tr>
+      <th>43</th>
+      <td>ChrUnknown</td>
+      <td>LC</td>
+      <td>19215</td>
+      <td>215114082.0</td>
+      <td>1.893907e+08</td>
+      <td>806019</td>
+      <td>351238213</td>
+      <td>215.114082</td>
+      <td>189.390689</td>
+      <td>0.806019</td>
+      <td>351.238213</td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -22110,7 +24187,8 @@ chrom_order = [
     "Chr4A", "Chr4B", "Chr4D",
     "Chr5A", "Chr5B", "Chr5D",
     "Chr6A", "Chr6B", "Chr6D",
-    "Chr7A", "Chr7B", "Chr7D"
+    "Chr7A", "Chr7B", "Chr7D",
+    "ChrUnknown"
 ]
 
 max_points_per_tissue_chrom = 400
@@ -22492,92 +24570,92 @@ print(f"Figure saved: {figure_out}")
 display(summary.head())
 ```
 
-    Chromosomes loaded: 21
+    Chromosomes loaded: 22
     
     Sampling fully validated mapped peptide positions from Step 11...
-    Chunk 1: retained 99,103 validated mapped rows | cumulative validated rows used 99,103
-    Chunk 2: retained 99,042 validated mapped rows | cumulative validated rows used 198,145
-    Chunk 3: retained 98,965 validated mapped rows | cumulative validated rows used 297,110
-    Chunk 4: retained 99,072 validated mapped rows | cumulative validated rows used 396,182
-    Chunk 5: retained 99,141 validated mapped rows | cumulative validated rows used 495,323
-    Chunk 6: retained 98,838 validated mapped rows | cumulative validated rows used 594,161
-    Chunk 7: retained 99,027 validated mapped rows | cumulative validated rows used 693,188
-    Chunk 8: retained 99,136 validated mapped rows | cumulative validated rows used 792,324
-    Chunk 9: retained 99,224 validated mapped rows | cumulative validated rows used 891,548
-    Chunk 10: retained 99,254 validated mapped rows | cumulative validated rows used 990,802
-    Chunk 11: retained 99,160 validated mapped rows | cumulative validated rows used 1,089,962
-    Chunk 12: retained 99,088 validated mapped rows | cumulative validated rows used 1,189,050
-    Chunk 13: retained 99,193 validated mapped rows | cumulative validated rows used 1,288,243
-    Chunk 14: retained 98,905 validated mapped rows | cumulative validated rows used 1,387,148
-    Chunk 15: retained 98,837 validated mapped rows | cumulative validated rows used 1,485,985
-    Chunk 16: retained 98,897 validated mapped rows | cumulative validated rows used 1,584,882
-    Chunk 17: retained 98,979 validated mapped rows | cumulative validated rows used 1,683,861
-    Chunk 18: retained 99,059 validated mapped rows | cumulative validated rows used 1,782,920
-    Chunk 19: retained 98,967 validated mapped rows | cumulative validated rows used 1,881,887
-    Chunk 20: retained 98,810 validated mapped rows | cumulative validated rows used 1,980,697
-    Chunk 21: retained 98,925 validated mapped rows | cumulative validated rows used 2,079,622
-    Chunk 22: retained 99,018 validated mapped rows | cumulative validated rows used 2,178,640
-    Chunk 23: retained 99,038 validated mapped rows | cumulative validated rows used 2,277,678
-    Chunk 24: retained 99,055 validated mapped rows | cumulative validated rows used 2,376,733
-    Chunk 25: retained 98,990 validated mapped rows | cumulative validated rows used 2,475,723
-    Chunk 26: retained 99,206 validated mapped rows | cumulative validated rows used 2,574,929
-    Chunk 27: retained 99,222 validated mapped rows | cumulative validated rows used 2,674,151
-    Chunk 28: retained 98,908 validated mapped rows | cumulative validated rows used 2,773,059
-    Chunk 29: retained 99,076 validated mapped rows | cumulative validated rows used 2,872,135
-    Chunk 30: retained 99,293 validated mapped rows | cumulative validated rows used 2,971,428
-    Chunk 31: retained 99,320 validated mapped rows | cumulative validated rows used 3,070,748
-    Chunk 32: retained 99,085 validated mapped rows | cumulative validated rows used 3,169,833
-    Chunk 33: retained 99,136 validated mapped rows | cumulative validated rows used 3,268,969
-    Chunk 34: retained 99,097 validated mapped rows | cumulative validated rows used 3,368,066
-    Chunk 35: retained 99,148 validated mapped rows | cumulative validated rows used 3,467,214
-    Chunk 36: retained 99,169 validated mapped rows | cumulative validated rows used 3,566,383
-    Chunk 37: retained 99,114 validated mapped rows | cumulative validated rows used 3,665,497
-    Chunk 38: retained 99,182 validated mapped rows | cumulative validated rows used 3,764,679
-    Chunk 39: retained 99,057 validated mapped rows | cumulative validated rows used 3,863,736
-    Chunk 40: retained 98,957 validated mapped rows | cumulative validated rows used 3,962,693
-    Chunk 41: retained 98,997 validated mapped rows | cumulative validated rows used 4,061,690
-    Chunk 42: retained 99,107 validated mapped rows | cumulative validated rows used 4,160,797
-    Chunk 43: retained 99,042 validated mapped rows | cumulative validated rows used 4,259,839
-    Chunk 44: retained 99,128 validated mapped rows | cumulative validated rows used 4,358,967
-    Chunk 45: retained 98,819 validated mapped rows | cumulative validated rows used 4,457,786
-    Chunk 46: retained 98,863 validated mapped rows | cumulative validated rows used 4,556,649
-    Chunk 47: retained 98,948 validated mapped rows | cumulative validated rows used 4,655,597
-    Chunk 48: retained 99,086 validated mapped rows | cumulative validated rows used 4,754,683
-    Chunk 49: retained 99,008 validated mapped rows | cumulative validated rows used 4,853,691
-    Chunk 50: retained 99,199 validated mapped rows | cumulative validated rows used 4,952,890
-    Chunk 51: retained 99,139 validated mapped rows | cumulative validated rows used 5,052,029
-    Chunk 52: retained 99,127 validated mapped rows | cumulative validated rows used 5,151,156
-    Chunk 53: retained 99,101 validated mapped rows | cumulative validated rows used 5,250,257
-    Chunk 54: retained 99,098 validated mapped rows | cumulative validated rows used 5,349,355
-    Chunk 55: retained 99,066 validated mapped rows | cumulative validated rows used 5,448,421
-    Chunk 56: retained 99,182 validated mapped rows | cumulative validated rows used 5,547,603
-    Chunk 57: retained 99,056 validated mapped rows | cumulative validated rows used 5,646,659
-    Chunk 58: retained 99,148 validated mapped rows | cumulative validated rows used 5,745,807
-    Chunk 59: retained 98,940 validated mapped rows | cumulative validated rows used 5,844,747
-    Chunk 60: retained 98,960 validated mapped rows | cumulative validated rows used 5,943,707
-    Chunk 61: retained 98,997 validated mapped rows | cumulative validated rows used 6,042,704
-    Chunk 62: retained 99,076 validated mapped rows | cumulative validated rows used 6,141,780
-    Chunk 63: retained 98,946 validated mapped rows | cumulative validated rows used 6,240,726
-    Chunk 64: retained 98,710 validated mapped rows | cumulative validated rows used 6,339,436
-    Chunk 65: retained 98,980 validated mapped rows | cumulative validated rows used 6,438,416
-    Chunk 66: retained 98,997 validated mapped rows | cumulative validated rows used 6,537,413
-    Chunk 67: retained 99,038 validated mapped rows | cumulative validated rows used 6,636,451
-    Chunk 68: retained 99,159 validated mapped rows | cumulative validated rows used 6,735,610
-    Chunk 69: retained 99,199 validated mapped rows | cumulative validated rows used 6,834,809
-    Chunk 70: retained 99,153 validated mapped rows | cumulative validated rows used 6,933,962
-    Chunk 71: retained 99,141 validated mapped rows | cumulative validated rows used 7,033,103
-    Chunk 72: retained 99,059 validated mapped rows | cumulative validated rows used 7,132,162
-    Chunk 73: retained 99,140 validated mapped rows | cumulative validated rows used 7,231,302
-    Chunk 74: retained 99,153 validated mapped rows | cumulative validated rows used 7,330,455
-    Chunk 75: retained 98,987 validated mapped rows | cumulative validated rows used 7,429,442
-    Chunk 76: retained 99,048 validated mapped rows | cumulative validated rows used 7,528,490
-    Chunk 77: retained 99,101 validated mapped rows | cumulative validated rows used 7,627,591
-    Chunk 78: retained 98,819 validated mapped rows | cumulative validated rows used 7,726,410
-    Chunk 79: retained 98,937 validated mapped rows | cumulative validated rows used 7,825,347
-    Chunk 80: retained 99,217 validated mapped rows | cumulative validated rows used 7,924,564
-    Chunk 81: retained 99,111 validated mapped rows | cumulative validated rows used 8,023,675
-    Chunk 82: retained 98,995 validated mapped rows | cumulative validated rows used 8,122,670
-    Chunk 83: retained 14,017 validated mapped rows | cumulative validated rows used 8,136,687
+    Chunk 1: retained 100,000 validated mapped rows | cumulative validated rows used 100,000
+    Chunk 2: retained 100,000 validated mapped rows | cumulative validated rows used 200,000
+    Chunk 3: retained 100,000 validated mapped rows | cumulative validated rows used 300,000
+    Chunk 4: retained 100,000 validated mapped rows | cumulative validated rows used 400,000
+    Chunk 5: retained 100,000 validated mapped rows | cumulative validated rows used 500,000
+    Chunk 6: retained 100,000 validated mapped rows | cumulative validated rows used 600,000
+    Chunk 7: retained 100,000 validated mapped rows | cumulative validated rows used 700,000
+    Chunk 8: retained 100,000 validated mapped rows | cumulative validated rows used 800,000
+    Chunk 9: retained 100,000 validated mapped rows | cumulative validated rows used 900,000
+    Chunk 10: retained 100,000 validated mapped rows | cumulative validated rows used 1,000,000
+    Chunk 11: retained 100,000 validated mapped rows | cumulative validated rows used 1,100,000
+    Chunk 12: retained 100,000 validated mapped rows | cumulative validated rows used 1,200,000
+    Chunk 13: retained 100,000 validated mapped rows | cumulative validated rows used 1,300,000
+    Chunk 14: retained 100,000 validated mapped rows | cumulative validated rows used 1,400,000
+    Chunk 15: retained 100,000 validated mapped rows | cumulative validated rows used 1,500,000
+    Chunk 16: retained 100,000 validated mapped rows | cumulative validated rows used 1,600,000
+    Chunk 17: retained 100,000 validated mapped rows | cumulative validated rows used 1,700,000
+    Chunk 18: retained 100,000 validated mapped rows | cumulative validated rows used 1,800,000
+    Chunk 19: retained 100,000 validated mapped rows | cumulative validated rows used 1,900,000
+    Chunk 20: retained 100,000 validated mapped rows | cumulative validated rows used 2,000,000
+    Chunk 21: retained 100,000 validated mapped rows | cumulative validated rows used 2,100,000
+    Chunk 22: retained 100,000 validated mapped rows | cumulative validated rows used 2,200,000
+    Chunk 23: retained 100,000 validated mapped rows | cumulative validated rows used 2,300,000
+    Chunk 24: retained 100,000 validated mapped rows | cumulative validated rows used 2,400,000
+    Chunk 25: retained 100,000 validated mapped rows | cumulative validated rows used 2,500,000
+    Chunk 26: retained 100,000 validated mapped rows | cumulative validated rows used 2,600,000
+    Chunk 27: retained 100,000 validated mapped rows | cumulative validated rows used 2,700,000
+    Chunk 28: retained 100,000 validated mapped rows | cumulative validated rows used 2,800,000
+    Chunk 29: retained 100,000 validated mapped rows | cumulative validated rows used 2,900,000
+    Chunk 30: retained 100,000 validated mapped rows | cumulative validated rows used 3,000,000
+    Chunk 31: retained 100,000 validated mapped rows | cumulative validated rows used 3,100,000
+    Chunk 32: retained 100,000 validated mapped rows | cumulative validated rows used 3,200,000
+    Chunk 33: retained 100,000 validated mapped rows | cumulative validated rows used 3,300,000
+    Chunk 34: retained 100,000 validated mapped rows | cumulative validated rows used 3,400,000
+    Chunk 35: retained 100,000 validated mapped rows | cumulative validated rows used 3,500,000
+    Chunk 36: retained 100,000 validated mapped rows | cumulative validated rows used 3,600,000
+    Chunk 37: retained 100,000 validated mapped rows | cumulative validated rows used 3,700,000
+    Chunk 38: retained 100,000 validated mapped rows | cumulative validated rows used 3,800,000
+    Chunk 39: retained 100,000 validated mapped rows | cumulative validated rows used 3,900,000
+    Chunk 40: retained 100,000 validated mapped rows | cumulative validated rows used 4,000,000
+    Chunk 41: retained 100,000 validated mapped rows | cumulative validated rows used 4,100,000
+    Chunk 42: retained 100,000 validated mapped rows | cumulative validated rows used 4,200,000
+    Chunk 43: retained 100,000 validated mapped rows | cumulative validated rows used 4,300,000
+    Chunk 44: retained 100,000 validated mapped rows | cumulative validated rows used 4,400,000
+    Chunk 45: retained 100,000 validated mapped rows | cumulative validated rows used 4,500,000
+    Chunk 46: retained 100,000 validated mapped rows | cumulative validated rows used 4,600,000
+    Chunk 47: retained 100,000 validated mapped rows | cumulative validated rows used 4,700,000
+    Chunk 48: retained 100,000 validated mapped rows | cumulative validated rows used 4,800,000
+    Chunk 49: retained 100,000 validated mapped rows | cumulative validated rows used 4,900,000
+    Chunk 50: retained 100,000 validated mapped rows | cumulative validated rows used 5,000,000
+    Chunk 51: retained 100,000 validated mapped rows | cumulative validated rows used 5,100,000
+    Chunk 52: retained 100,000 validated mapped rows | cumulative validated rows used 5,200,000
+    Chunk 53: retained 100,000 validated mapped rows | cumulative validated rows used 5,300,000
+    Chunk 54: retained 100,000 validated mapped rows | cumulative validated rows used 5,400,000
+    Chunk 55: retained 100,000 validated mapped rows | cumulative validated rows used 5,500,000
+    Chunk 56: retained 100,000 validated mapped rows | cumulative validated rows used 5,600,000
+    Chunk 57: retained 100,000 validated mapped rows | cumulative validated rows used 5,700,000
+    Chunk 58: retained 100,000 validated mapped rows | cumulative validated rows used 5,800,000
+    Chunk 59: retained 100,000 validated mapped rows | cumulative validated rows used 5,900,000
+    Chunk 60: retained 100,000 validated mapped rows | cumulative validated rows used 6,000,000
+    Chunk 61: retained 100,000 validated mapped rows | cumulative validated rows used 6,100,000
+    Chunk 62: retained 100,000 validated mapped rows | cumulative validated rows used 6,200,000
+    Chunk 63: retained 100,000 validated mapped rows | cumulative validated rows used 6,300,000
+    Chunk 64: retained 100,000 validated mapped rows | cumulative validated rows used 6,400,000
+    Chunk 65: retained 100,000 validated mapped rows | cumulative validated rows used 6,500,000
+    Chunk 66: retained 100,000 validated mapped rows | cumulative validated rows used 6,600,000
+    Chunk 67: retained 100,000 validated mapped rows | cumulative validated rows used 6,700,000
+    Chunk 68: retained 100,000 validated mapped rows | cumulative validated rows used 6,800,000
+    Chunk 69: retained 100,000 validated mapped rows | cumulative validated rows used 6,900,000
+    Chunk 70: retained 100,000 validated mapped rows | cumulative validated rows used 7,000,000
+    Chunk 71: retained 100,000 validated mapped rows | cumulative validated rows used 7,100,000
+    Chunk 72: retained 100,000 validated mapped rows | cumulative validated rows used 7,200,000
+    Chunk 73: retained 100,000 validated mapped rows | cumulative validated rows used 7,300,000
+    Chunk 74: retained 100,000 validated mapped rows | cumulative validated rows used 7,400,000
+    Chunk 75: retained 100,000 validated mapped rows | cumulative validated rows used 7,500,000
+    Chunk 76: retained 100,000 validated mapped rows | cumulative validated rows used 7,600,000
+    Chunk 77: retained 100,000 validated mapped rows | cumulative validated rows used 7,700,000
+    Chunk 78: retained 100,000 validated mapped rows | cumulative validated rows used 7,800,000
+    Chunk 79: retained 100,000 validated mapped rows | cumulative validated rows used 7,900,000
+    Chunk 80: retained 100,000 validated mapped rows | cumulative validated rows used 8,000,000
+    Chunk 81: retained 100,000 validated mapped rows | cumulative validated rows used 8,100,000
+    Chunk 82: retained 100,000 validated mapped rows | cumulative validated rows used 8,200,000
+    Chunk 83: retained 14,230 validated mapped rows | cumulative validated rows used 8,214,230
     
     Summary saved: python_outputs\tables\wheat_circos_tissue_validated_peptide_summary_step22.csv
     
@@ -23194,7 +25272,7 @@ plt.show()
 print(f"Figure saved: {figure_out}")
 ```
 
-    Non-redundant validated peptide projection rows loaded: 3,138,903
+    Non-redundant validated peptide projection rows loaded: 3,173,811
     
     Annotation confidence counts:
     
@@ -23226,12 +25304,12 @@ print(f"Figure saved: {figure_out}")
     <tr>
       <th>0</th>
       <td>HC</td>
-      <td>2409255</td>
+      <td>2424948</td>
     </tr>
     <tr>
       <th>1</th>
       <td>LC</td>
-      <td>729648</td>
+      <td>748863</td>
     </tr>
   </tbody>
 </table>
@@ -23269,12 +25347,12 @@ print(f"Figure saved: {figure_out}")
     <tr>
       <th>0</th>
       <td>Within-exon</td>
-      <td>2775671</td>
+      <td>2808552</td>
     </tr>
     <tr>
       <th>1</th>
       <td>Exon-spanning</td>
-      <td>363232</td>
+      <td>365259</td>
     </tr>
   </tbody>
 </table>
@@ -23323,13 +25401,13 @@ print(f"Figure saved: {figure_out}")
       <th>0</th>
       <td>HC</td>
       <td>All</td>
-      <td>2409255</td>
-      <td>772918</td>
-      <td>128561</td>
-      <td>2409255</td>
-      <td>772918</td>
+      <td>2424948</td>
+      <td>775525</td>
+      <td>130006</td>
+      <td>2424948</td>
+      <td>775525</td>
       <td>100.0000</td>
-      <td>76.7547</td>
+      <td>76.4049</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -23338,13 +25416,13 @@ print(f"Figure saved: {figure_out}")
       <th>1</th>
       <td>LC</td>
       <td>All</td>
-      <td>729648</td>
-      <td>375892</td>
-      <td>138605</td>
-      <td>729648</td>
-      <td>375892</td>
+      <td>748863</td>
+      <td>381563</td>
+      <td>142292</td>
+      <td>748863</td>
+      <td>381563</td>
       <td>100.0000</td>
-      <td>23.2453</td>
+      <td>23.5951</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -23353,28 +25431,28 @@ print(f"Figure saved: {figure_out}")
       <th>2</th>
       <td>HC</td>
       <td>Exon-spanning</td>
-      <td>329096</td>
-      <td>93900</td>
-      <td>67872</td>
-      <td>2409255</td>
-      <td>772918</td>
-      <td>13.6597</td>
-      <td>10.4844</td>
+      <td>330367</td>
+      <td>94087</td>
+      <td>68246</td>
+      <td>2424948</td>
+      <td>775525</td>
+      <td>13.6237</td>
+      <td>10.4092</td>
       <td>2.0</td>
-      <td>2.018056</td>
+      <td>2.018098</td>
       <td>5.0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>HC</td>
       <td>Within-exon</td>
-      <td>2080159</td>
-      <td>681374</td>
-      <td>128133</td>
-      <td>2409255</td>
-      <td>772918</td>
-      <td>86.3403</td>
-      <td>66.2703</td>
+      <td>2094581</td>
+      <td>683809</td>
+      <td>129570</td>
+      <td>2424948</td>
+      <td>775525</td>
+      <td>86.3763</td>
+      <td>65.9958</td>
       <td>1.0</td>
       <td>1.000000</td>
       <td>1.0</td>
@@ -23383,28 +25461,28 @@ print(f"Figure saved: {figure_out}")
       <th>4</th>
       <td>LC</td>
       <td>Exon-spanning</td>
-      <td>34136</td>
-      <td>25782</td>
-      <td>18938</td>
-      <td>729648</td>
-      <td>375892</td>
-      <td>4.6784</td>
-      <td>1.0875</td>
+      <td>34892</td>
+      <td>26193</td>
+      <td>19391</td>
+      <td>748863</td>
+      <td>381563</td>
+      <td>4.6593</td>
+      <td>1.0994</td>
       <td>2.0</td>
-      <td>2.020858</td>
+      <td>2.020807</td>
       <td>6.0</td>
     </tr>
     <tr>
       <th>5</th>
       <td>LC</td>
       <td>Within-exon</td>
-      <td>695512</td>
-      <td>351136</td>
-      <td>137369</td>
-      <td>729648</td>
-      <td>375892</td>
-      <td>95.3216</td>
-      <td>22.1578</td>
+      <td>713971</td>
+      <td>356427</td>
+      <td>141024</td>
+      <td>748863</td>
+      <td>381563</td>
+      <td>95.3407</td>
+      <td>22.4957</td>
       <td>1.0</td>
       <td>1.000000</td>
       <td>1.0</td>
@@ -23433,6 +25511,7 @@ The workflow begins by defining the input/output directories and loading the Fra
 
 Summary outputs from previous workflow steps are then loaded, including:
 
+- **Step 4:** FragPipe miscleavages and peptidelengths summaries  
 - **Step 6:** FragPipe annotation summaries  
 - **Step 7:** Peptide–protein evidence summaries  
 - **Step 8:** Peptide–protein–gene mapping summaries  
@@ -23537,16 +25616,14 @@ def build_projection_manifest_lookup(manifest):
 
         lookup_records.append({
             "Projection_file": projection_filename_from_manifest_row(row),
-            "Source": row["Source"],
+            "Source": str(row["Source"]).strip(),
             "Species": row["Species"],
-            "Tissue": row["Tissue-Raw-Code"],
+            "Tissue": normalise_tissue_name(row["Tissue-Raw-Code"]),
             "Batch": row["Batch"]
         })
 
     return pd.DataFrame(lookup_records)
 
-
-projection_manifest_lookup = build_projection_manifest_lookup(manifest)
 
 
 def add_source_tissue_from_projection_file(data):
@@ -23611,6 +25688,34 @@ def split_source_tissue(data):
 
     return data
 
+def normalise_tissue_name(value):
+    """
+    Standardise tissue names for merging across workflow summaries.
+
+    Converts spaces and hyphens to underscores and collapses
+    repeated underscores.
+    """
+    if pd.isna(value):
+        return pd.NA
+
+    value = str(value).strip()
+
+    value = re.sub(
+        r"[\s\-]+",
+        "_",
+        value
+    )
+
+    value = re.sub(
+        r"_+",
+        "_",
+        value
+    )
+
+    return value.strip("_")
+
+
+projection_manifest_lookup = build_projection_manifest_lookup(manifest)
 
 def standardise_tissue_key(data):
     """
@@ -23638,8 +25743,16 @@ def standardise_tissue_key(data):
     ].copy()
 
     # Standardise as string keys
-    data["Source"] = data["Source"].astype(str)
-    data["Tissue"] = data["Tissue"].astype(str)
+    data["Source"] = (
+        data["Source"]
+        .astype(str)
+        .str.strip()
+    )
+    
+    data["Tissue"] = (
+        data["Tissue"]
+        .map(normalise_tissue_name)
+    )
 
     return data
 
@@ -23669,6 +25782,7 @@ def prefix_non_key_columns(data, prefix):
 # -----------------------------
 summary_files = {
     # Upstream FragPipe and mapping/projection summaries
+    "step4_fragpipe_miscleavages": tables_dir / "wheat_fragpipe_peptide_length_missed_cleavage_tissue_summary_step4.csv",
     "step6_fragpipe_annotation": tables_dir / "wheat_fragpipe_annotation_summary_step6.csv",
     "step7_peptide_protein_evidence": tables_dir / "wheat_fragpipe_peptide_protein_evidence_summary_step7.csv",
     "step8_peptide_gene_mapping": tables_dir / "wheat_peptide_protein_gene_mapping_summary_step8.csv",
@@ -23707,8 +25821,16 @@ complete_summary = complete_summary.rename(
     }
 )
 
-complete_summary["Source"] = complete_summary["Source"].astype(str)
-complete_summary["Tissue"] = complete_summary["Tissue"].astype(str)
+complete_summary["Source"] = (
+    complete_summary["Source"]
+    .astype(str)
+    .str.strip()
+)
+
+complete_summary["Tissue"] = (
+    complete_summary["Tissue"]
+    .map(normalise_tissue_name)
+)
 
 # Add projection filename for traceability
 complete_summary = complete_summary.merge(
@@ -23722,6 +25844,19 @@ complete_summary = complete_summary.merge(
 # 5. Merge useful columns from each step
 # -----------------------------
 merge_specs = {
+    "step4_fragpipe_miscleavages": [
+        "Source",
+        "Tissue",
+        "Peptides_with_more_than_2_missed_cleavages",
+        "Percent_with_more_than_2_missed_cleavages",
+        "Peptides_longer_than_50_AA",
+        "Percent_longer_than_50_AA",
+        "Peptides_satisfying_both_criteria",
+        "Percent_satisfying_both_criteria",
+        "Maximum_missed_cleavages",
+        "Maximum_peptide_length_AA"
+    ],        
+    
     "step6_fragpipe_annotation": [
         "Source",
         "Tissue",
@@ -23988,6 +26123,7 @@ print(f"Columns: {complete_summary.shape[1]:,}")
 display(complete_summary)
 ```
 
+    Loaded: wheat_fragpipe_peptide_length_missed_cleavage_tissue_summary_step4.csv
     Loaded: wheat_fragpipe_annotation_summary_step6.csv
     Loaded: wheat_fragpipe_peptide_protein_evidence_summary_step7.csv
     Loaded: wheat_peptide_protein_gene_mapping_summary_step8.csv
@@ -24001,7 +26137,7 @@ display(complete_summary)
     
     Complete Python workflow summary saved: python_outputs\tables\wheat_complete_python_workflow_summary_step24.csv
     Rows: 32
-    Columns: 119
+    Columns: 127
     
 
 
@@ -24028,11 +26164,11 @@ display(complete_summary)
       <th>Tissue</th>
       <th>Batch</th>
       <th>Projection_file</th>
-      <th>step6_fragpipe_annotation_Contaminant_count_peptide</th>
-      <th>step6_fragpipe_annotation_Contaminant_count_protein</th>
-      <th>step6_fragpipe_annotation_Non_contaminant_count_peptide</th>
-      <th>step6_fragpipe_annotation_Non_contaminant_count_protein</th>
-      <th>step6_fragpipe_annotation_Total_rows_peptide</th>
+      <th>step4_fragpipe_miscleavages_Peptides_with_more_than_2_missed_cleavages</th>
+      <th>step4_fragpipe_miscleavages_Percent_with_more_than_2_missed_cleavages</th>
+      <th>step4_fragpipe_miscleavages_Peptides_longer_than_50_AA</th>
+      <th>step4_fragpipe_miscleavages_Percent_longer_than_50_AA</th>
+      <th>step4_fragpipe_miscleavages_Peptides_satisfying_both_criteria</th>
       <th>...</th>
       <th>step16_validated_HC_LC_coverage_HC_gene_model_percent</th>
       <th>step16_validated_HC_LC_coverage_LC_gene_model_percent</th>
@@ -24054,22 +26190,22 @@ display(complete_summary)
       <td>stored_grain</td>
       <td>single</td>
       <td>FragPipe_Vincent_MSV000090572_stored-grain_pep...</td>
-      <td>14</td>
-      <td>6</td>
-      <td>9329</td>
-      <td>7068</td>
-      <td>9343.0</td>
+      <td>1801</td>
+      <td>19.276464</td>
+      <td>62</td>
+      <td>0.663598</td>
+      <td>47</td>
       <td>...</td>
-      <td>8.433881</td>
-      <td>3.282073</td>
-      <td>5.346914</td>
+      <td>8.535833</td>
+      <td>3.384677</td>
+      <td>5.449256</td>
       <td>MSV000090572_stored_grain</td>
-      <td>29430</td>
-      <td>16819</td>
-      <td>9070</td>
-      <td>14263</td>
+      <td>29892</td>
+      <td>17110</td>
+      <td>9126</td>
+      <td>14536</td>
       <td>98.6079</td>
-      <td>97.0839</td>
+      <td>98.6079</td>
     </tr>
     <tr>
       <th>1</th>
@@ -24078,22 +26214,22 @@ display(complete_summary)
       <td>coleoptile</td>
       <td>single</td>
       <td>FragPipe_Liu_PXD050500_coleoptile_peptide_geno...</td>
-      <td>409</td>
-      <td>79</td>
-      <td>582775</td>
-      <td>137762</td>
-      <td>583184.0</td>
+      <td>14721</td>
+      <td>2.524246</td>
+      <td>165</td>
+      <td>0.028293</td>
+      <td>64</td>
       <td>...</td>
-      <td>89.978862</td>
-      <td>66.265844</td>
-      <td>75.770004</td>
+      <td>91.046074</td>
+      <td>68.069545</td>
+      <td>77.278521</td>
       <td>PXD050500_coleoptile</td>
-      <td>1812027</td>
-      <td>229576</td>
-      <td>572135</td>
-      <td>202118</td>
+      <td>1829196</td>
+      <td>233744</td>
+      <td>574831</td>
+      <td>206142</td>
       <td>98.8682</td>
-      <td>97.9402</td>
+      <td>98.8682</td>
     </tr>
     <tr>
       <th>2</th>
@@ -24102,22 +26238,22 @@ display(complete_summary)
       <td>node</td>
       <td>single</td>
       <td>FragPipe_Liu_PXD050500_node_peptide_genome_pro...</td>
-      <td>483</td>
-      <td>94</td>
-      <td>595954</td>
-      <td>141678</td>
-      <td>596437.0</td>
+      <td>15804</td>
+      <td>2.649735</td>
+      <td>301</td>
+      <td>0.050466</td>
+      <td>137</td>
       <td>...</td>
-      <td>90.646688</td>
-      <td>67.813036</td>
-      <td>76.964746</td>
+      <td>91.757861</td>
+      <td>69.674295</td>
+      <td>78.525372</td>
       <td>PXD050500_node</td>
-      <td>1846620</td>
-      <td>232885</td>
-      <td>584736</td>
-      <td>205305</td>
+      <td>1864415</td>
+      <td>237191</td>
+      <td>587392</td>
+      <td>209468</td>
       <td>98.8072</td>
-      <td>97.8641</td>
+      <td>98.8072</td>
     </tr>
     <tr>
       <th>3</th>
@@ -24126,22 +26262,22 @@ display(complete_summary)
       <td>radicle</td>
       <td>single</td>
       <td>FragPipe_Liu_PXD050500_radicle_peptide_genome_...</td>
-      <td>342</td>
-      <td>67</td>
-      <td>333058</td>
-      <td>105903</td>
-      <td>333400.0</td>
+      <td>5371</td>
+      <td>1.610978</td>
+      <td>142</td>
+      <td>0.042591</td>
+      <td>59</td>
       <td>...</td>
-      <td>83.070505</td>
-      <td>51.988889</td>
-      <td>64.446377</td>
+      <td>84.014254</td>
+      <td>53.401569</td>
+      <td>65.671110</td>
       <td>PXD050500_radicle</td>
-      <td>1040357</td>
-      <td>197866</td>
-      <td>327065</td>
-      <td>171912</td>
+      <td>1050178</td>
+      <td>201263</td>
+      <td>328566</td>
+      <td>175179</td>
       <td>98.8395</td>
-      <td>97.9152</td>
+      <td>98.8395</td>
     </tr>
     <tr>
       <th>4</th>
@@ -24150,22 +26286,22 @@ display(complete_summary)
       <td>anther</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_anther_peptide_genom...</td>
-      <td>105</td>
-      <td>10</td>
-      <td>34098</td>
-      <td>10085</td>
-      <td>34203.0</td>
+      <td>2368</td>
+      <td>6.923369</td>
+      <td>65</td>
+      <td>0.190042</td>
+      <td>50</td>
       <td>...</td>
-      <td>19.847728</td>
-      <td>4.497053</td>
-      <td>10.649592</td>
+      <td>20.024506</td>
+      <td>4.652210</td>
+      <td>10.813415</td>
       <td>PXD004720_anther</td>
-      <td>161955</td>
-      <td>35808</td>
-      <td>33926</td>
-      <td>28408</td>
+      <td>163467</td>
+      <td>36275</td>
+      <td>33982</td>
+      <td>28845</td>
       <td>99.4537</td>
-      <td>98.5338</td>
+      <td>99.4537</td>
     </tr>
     <tr>
       <th>5</th>
@@ -24174,22 +26310,22 @@ display(complete_summary)
       <td>boot</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_boot_peptide_genome_...</td>
-      <td>1</td>
-      <td>1</td>
-      <td>3643</td>
-      <td>2827</td>
-      <td>3644.0</td>
+      <td>326</td>
+      <td>8.946213</td>
+      <td>19</td>
+      <td>0.521405</td>
+      <td>11</td>
       <td>...</td>
-      <td>5.029276</td>
-      <td>1.134899</td>
-      <td>2.695762</td>
+      <td>5.064818</td>
+      <td>1.166181</td>
+      <td>2.728752</td>
       <td>PXD004720_boot</td>
-      <td>13024</td>
-      <td>9028</td>
-      <td>3585</td>
-      <td>7191</td>
+      <td>13137</td>
+      <td>9126</td>
+      <td>3599</td>
+      <td>7279</td>
       <td>99.3196</td>
-      <td>98.4653</td>
+      <td>99.3196</td>
     </tr>
     <tr>
       <th>6</th>
@@ -24198,22 +26334,22 @@ display(complete_summary)
       <td>coleoptile</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_coleoptile_peptide_g...</td>
-      <td>101</td>
-      <td>11</td>
-      <td>41025</td>
-      <td>12205</td>
-      <td>41126.0</td>
+      <td>885</td>
+      <td>2.151923</td>
+      <td>30</td>
+      <td>0.072947</td>
+      <td>18</td>
       <td>...</td>
-      <td>24.797501</td>
-      <td>5.692013</td>
-      <td>13.349478</td>
+      <td>25.064070</td>
+      <td>5.887836</td>
+      <td>13.573656</td>
       <td>PXD004720_coleoptile</td>
-      <td>201259</td>
-      <td>45180</td>
-      <td>40804</td>
-      <td>35610</td>
+      <td>203264</td>
+      <td>45819</td>
+      <td>40861</td>
+      <td>36208</td>
       <td>99.4073</td>
-      <td>98.4267</td>
+      <td>99.4073</td>
     </tr>
     <tr>
       <th>7</th>
@@ -24222,22 +26358,22 @@ display(complete_summary)
       <td>embryo</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_embryo_peptide_genom...</td>
-      <td>1</td>
-      <td>1</td>
-      <td>2867</td>
-      <td>2402</td>
-      <td>2868.0</td>
+      <td>202</td>
+      <td>7.043236</td>
+      <td>9</td>
+      <td>0.313808</td>
+      <td>5</td>
       <td>...</td>
-      <td>3.905943</td>
-      <td>0.942830</td>
-      <td>2.130443</td>
+      <td>3.932132</td>
+      <td>0.966604</td>
+      <td>2.155185</td>
       <td>PXD004720_embryo</td>
-      <td>8662</td>
-      <td>7035</td>
-      <td>2807</td>
-      <td>5683</td>
+      <td>8742</td>
+      <td>7110</td>
+      <td>2815</td>
+      <td>5749</td>
       <td>98.7573</td>
-      <td>97.8536</td>
+      <td>98.7573</td>
     </tr>
     <tr>
       <th>8</th>
@@ -24246,22 +26382,22 @@ display(complete_summary)
       <td>endosperm</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_endosperm_peptide_ge...</td>
-      <td>93</td>
-      <td>11</td>
-      <td>20081</td>
-      <td>7416</td>
-      <td>20174.0</td>
+      <td>284</td>
+      <td>1.407753</td>
+      <td>27</td>
+      <td>0.133836</td>
+      <td>10</td>
       <td>...</td>
-      <td>14.872701</td>
-      <td>3.330873</td>
-      <td>7.956829</td>
+      <td>14.998971</td>
+      <td>3.436605</td>
+      <td>8.070792</td>
       <td>PXD004720_endosperm</td>
-      <td>101413</td>
-      <td>26770</td>
-      <td>19923</td>
-      <td>21225</td>
+      <td>102289</td>
+      <td>27099</td>
+      <td>19953</td>
+      <td>21529</td>
       <td>99.4739</td>
-      <td>98.6220</td>
+      <td>99.4739</td>
     </tr>
     <tr>
       <th>9</th>
@@ -24270,214 +26406,214 @@ display(complete_summary)
       <td>glume</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_glume_peptide_genome...</td>
-      <td>35</td>
-      <td>8</td>
-      <td>28648</td>
-      <td>9604</td>
-      <td>28683.0</td>
+      <td>1275</td>
+      <td>4.445142</td>
+      <td>77</td>
+      <td>0.268452</td>
+      <td>50</td>
       <td>...</td>
-      <td>19.011542</td>
-      <td>4.632816</td>
-      <td>10.395798</td>
+      <td>19.206091</td>
+      <td>4.799234</td>
+      <td>10.573491</td>
       <td>PXD004720_glume</td>
-      <td>142449</td>
-      <td>34516</td>
-      <td>28467</td>
-      <td>27731</td>
+      <td>144079</td>
+      <td>35014</td>
+      <td>28512</td>
+      <td>28205</td>
       <td>99.2738</td>
-      <td>98.1507</td>
+      <td>99.2738</td>
     </tr>
     <tr>
       <th>10</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>grain-zadoks-70</td>
+      <td>grain_zadoks_70</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-70_pept...</td>
-      <td>33</td>
-      <td>9</td>
-      <td>26196</td>
-      <td>9812</td>
-      <td>26229.0</td>
+      <td>290</td>
+      <td>1.105646</td>
+      <td>27</td>
+      <td>0.102939</td>
+      <td>14</td>
       <td>...</td>
-      <td>19.105075</td>
-      <td>4.513945</td>
-      <td>10.362059</td>
+      <td>19.278111</td>
+      <td>4.672856</td>
+      <td>10.526631</td>
       <td>PXD004720_grain-zadoks-70</td>
-      <td>124251</td>
-      <td>34464</td>
-      <td>25979</td>
-      <td>27641</td>
+      <td>125355</td>
+      <td>34929</td>
+      <td>26037</td>
+      <td>28080</td>
       <td>99.3344</td>
-      <td>98.4595</td>
+      <td>99.3344</td>
     </tr>
     <tr>
       <th>11</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>grain-zadoks-71</td>
+      <td>grain_zadoks_71</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-71_pept...</td>
-      <td>30</td>
-      <td>10</td>
-      <td>35960</td>
-      <td>12326</td>
-      <td>35990.0</td>
+      <td>315</td>
+      <td>0.875243</td>
+      <td>3</td>
+      <td>0.008336</td>
+      <td>1</td>
       <td>...</td>
-      <td>25.026657</td>
-      <td>5.632578</td>
-      <td>13.405710</td>
+      <td>25.221206</td>
+      <td>5.820894</td>
+      <td>13.596524</td>
       <td>PXD004720_grain-zadoks-71</td>
-      <td>177392</td>
-      <td>45872</td>
-      <td>35753</td>
-      <td>35760</td>
+      <td>178814</td>
+      <td>46422</td>
+      <td>35806</td>
+      <td>36269</td>
       <td>99.4931</td>
-      <td>98.7019</td>
+      <td>99.4931</td>
     </tr>
     <tr>
       <th>12</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>grain-zadoks-75</td>
+      <td>grain_zadoks_75</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-75_pept...</td>
-      <td>89</td>
-      <td>11</td>
-      <td>27463</td>
-      <td>11089</td>
-      <td>27552.0</td>
+      <td>160</td>
+      <td>0.580720</td>
+      <td>1</td>
+      <td>0.003630</td>
+      <td>0</td>
       <td>...</td>
-      <td>22.507810</td>
-      <td>4.814875</td>
-      <td>11.906190</td>
+      <td>22.675234</td>
+      <td>4.957519</td>
+      <td>12.058766</td>
       <td>PXD004720_grain-zadoks-75</td>
-      <td>131066</td>
-      <td>40142</td>
-      <td>27248</td>
-      <td>31760</td>
+      <td>132081</td>
+      <td>40582</td>
+      <td>27293</td>
+      <td>32167</td>
       <td>99.5328</td>
-      <td>98.7679</td>
+      <td>99.5328</td>
     </tr>
     <tr>
       <th>13</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>grain-zadoks-83</td>
+      <td>grain_zadoks_83</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-83_pept...</td>
-      <td>61</td>
-      <td>9</td>
-      <td>23990</td>
-      <td>10185</td>
-      <td>24051.0</td>
+      <td>184</td>
+      <td>0.765041</td>
+      <td>8</td>
+      <td>0.033263</td>
+      <td>5</td>
       <td>...</td>
-      <td>19.626990</td>
-      <td>4.657841</td>
-      <td>10.657465</td>
+      <td>19.800962</td>
+      <td>4.807367</td>
+      <td>10.816789</td>
       <td>PXD004720_grain-zadoks-83</td>
-      <td>111335</td>
-      <td>35595</td>
-      <td>23796</td>
-      <td>28429</td>
+      <td>112389</td>
+      <td>36046</td>
+      <td>23840</td>
+      <td>28854</td>
       <td>99.2809</td>
-      <td>98.3499</td>
+      <td>99.2809</td>
     </tr>
     <tr>
       <th>14</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>grain-zadoks-87</td>
+      <td>grain_zadoks_87</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_grain-zadoks-87_pept...</td>
-      <td>38</td>
-      <td>9</td>
-      <td>24636</td>
-      <td>10380</td>
-      <td>24674.0</td>
+      <td>275</td>
+      <td>1.114534</td>
+      <td>13</td>
+      <td>0.052687</td>
+      <td>3</td>
       <td>...</td>
-      <td>18.574742</td>
-      <td>4.627185</td>
-      <td>10.217355</td>
+      <td>18.719719</td>
+      <td>4.761071</td>
+      <td>10.355686</td>
       <td>PXD004720_grain-zadoks-87</td>
-      <td>110256</td>
-      <td>34014</td>
-      <td>24426</td>
-      <td>27255</td>
+      <td>111156</td>
+      <td>34405</td>
+      <td>24482</td>
+      <td>27624</td>
       <td>99.4311</td>
-      <td>98.6260</td>
+      <td>99.4311</td>
     </tr>
     <tr>
       <th>15</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>leaf-flag-mature</td>
+      <td>leaf_flag_mature</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_leaf-flag-mature_pep...</td>
-      <td>101</td>
-      <td>13</td>
-      <td>29840</td>
-      <td>9626</td>
-      <td>29941.0</td>
+      <td>218</td>
+      <td>0.728099</td>
+      <td>3</td>
+      <td>0.010020</td>
+      <td>2</td>
       <td>...</td>
-      <td>20.778383</td>
-      <td>4.479536</td>
-      <td>11.012101</td>
+      <td>20.991638</td>
+      <td>4.654087</td>
+      <td>11.202165</td>
       <td>PXD004720_leaf-flag-mature</td>
-      <td>143118</td>
-      <td>36920</td>
-      <td>29691</td>
-      <td>29375</td>
+      <td>144641</td>
+      <td>37453</td>
+      <td>29731</td>
+      <td>29882</td>
       <td>99.3195</td>
-      <td>98.2737</td>
+      <td>99.3195</td>
     </tr>
     <tr>
       <th>16</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>leaf-flag-senescing</td>
+      <td>leaf_flag_senescing</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_leaf-flag-senescing_...</td>
-      <td>40</td>
-      <td>12</td>
-      <td>11354</td>
-      <td>8022</td>
-      <td>11394.0</td>
+      <td>239</td>
+      <td>2.097595</td>
+      <td>1</td>
+      <td>0.008777</td>
+      <td>1</td>
       <td>...</td>
-      <td>13.252708</td>
-      <td>3.948373</td>
-      <td>7.677543</td>
+      <td>13.407973</td>
+      <td>4.070997</td>
+      <td>7.813250</td>
       <td>PXD004720_leaf-flag-senescing</td>
-      <td>45054</td>
-      <td>24893</td>
-      <td>11158</td>
-      <td>20480</td>
+      <td>45680</td>
+      <td>25275</td>
+      <td>11204</td>
+      <td>20842</td>
       <td>98.8745</td>
-      <td>97.5195</td>
+      <td>98.8745</td>
     </tr>
     <tr>
       <th>17</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>leaf-flag-young</td>
+      <td>leaf_flag_young</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_leaf-flag-young_pept...</td>
-      <td>68</td>
-      <td>10</td>
-      <td>23373</td>
-      <td>7532</td>
-      <td>23441.0</td>
+      <td>195</td>
+      <td>0.831876</td>
+      <td>6</td>
+      <td>0.025596</td>
+      <td>6</td>
       <td>...</td>
-      <td>17.455151</td>
-      <td>4.192370</td>
-      <td>9.508082</td>
+      <td>17.644088</td>
+      <td>4.345024</td>
+      <td>9.675279</td>
       <td>PXD004720_leaf-flag-young</td>
-      <td>118601</td>
-      <td>31709</td>
-      <td>23264</td>
-      <td>25363</td>
+      <td>119922</td>
+      <td>32180</td>
+      <td>23296</td>
+      <td>25809</td>
       <td>99.2559</td>
-      <td>98.1626</td>
+      <td>99.2559</td>
     </tr>
     <tr>
       <th>18</th>
@@ -24486,22 +26622,22 @@ display(complete_summary)
       <td>lemma</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_lemma_peptide_genome...</td>
-      <td>54</td>
-      <td>8</td>
-      <td>29788</td>
-      <td>9948</td>
-      <td>29842.0</td>
+      <td>594</td>
+      <td>1.990483</td>
+      <td>26</td>
+      <td>0.087126</td>
+      <td>18</td>
       <td>...</td>
-      <td>20.222796</td>
-      <td>4.904341</td>
-      <td>11.043966</td>
+      <td>20.412668</td>
+      <td>5.062000</td>
+      <td>11.214536</td>
       <td>PXD004720_lemma</td>
-      <td>145101</td>
-      <td>36901</td>
-      <td>29611</td>
-      <td>29460</td>
+      <td>146562</td>
+      <td>37386</td>
+      <td>29653</td>
+      <td>29915</td>
       <td>99.2846</td>
-      <td>98.2949</td>
+      <td>99.2846</td>
     </tr>
     <tr>
       <th>19</th>
@@ -24510,22 +26646,22 @@ display(complete_summary)
       <td>node</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_node_peptide_genome_...</td>
-      <td>51</td>
-      <td>9</td>
-      <td>21457</td>
-      <td>10521</td>
-      <td>21508.0</td>
+      <td>462</td>
+      <td>2.148038</td>
+      <td>4</td>
+      <td>0.018598</td>
+      <td>2</td>
       <td>...</td>
-      <td>18.403577</td>
-      <td>5.680126</td>
-      <td>10.779676</td>
+      <td>18.569130</td>
+      <td>5.865314</td>
+      <td>10.956994</td>
       <td>PXD004720_node</td>
-      <td>97553</td>
-      <td>35299</td>
-      <td>21227</td>
-      <td>28755</td>
+      <td>98731</td>
+      <td>35794</td>
+      <td>21280</td>
+      <td>29228</td>
       <td>98.9061</td>
-      <td>97.7260</td>
+      <td>98.9061</td>
     </tr>
     <tr>
       <th>20</th>
@@ -24534,22 +26670,22 @@ display(complete_summary)
       <td>node_secretion</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_node-secretion_pepti...</td>
-      <td>70</td>
-      <td>12</td>
-      <td>34124</td>
-      <td>10560</td>
-      <td>34194.0</td>
+      <td>242</td>
+      <td>0.707727</td>
+      <td>4</td>
+      <td>0.011698</td>
+      <td>2</td>
       <td>...</td>
-      <td>23.094263</td>
-      <td>4.960022</td>
-      <td>12.228212</td>
+      <td>23.323419</td>
+      <td>5.148963</td>
+      <td>12.433271</td>
       <td>PXD004720_node_secretion</td>
-      <td>166896</td>
-      <td>41183</td>
-      <td>33982</td>
-      <td>32619</td>
+      <td>168564</td>
+      <td>41769</td>
+      <td>34026</td>
+      <td>33166</td>
       <td>99.3452</td>
-      <td>98.3622</td>
+      <td>99.3452</td>
     </tr>
     <tr>
       <th>21</th>
@@ -24558,22 +26694,22 @@ display(complete_summary)
       <td>palea</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_palea_peptide_genome...</td>
-      <td>67</td>
-      <td>8</td>
-      <td>21707</td>
-      <td>6934</td>
-      <td>21774.0</td>
+      <td>2186</td>
+      <td>10.039497</td>
+      <td>72</td>
+      <td>0.330670</td>
+      <td>51</td>
       <td>...</td>
-      <td>15.186037</td>
-      <td>3.066855</td>
-      <td>7.924214</td>
+      <td>15.331014</td>
+      <td>3.198238</td>
+      <td>8.061045</td>
       <td>PXD004720_palea</td>
-      <td>115047</td>
-      <td>26907</td>
-      <td>21587</td>
-      <td>21138</td>
+      <td>116285</td>
+      <td>27295</td>
+      <td>21623</td>
+      <td>21503</td>
       <td>99.4433</td>
-      <td>98.3846</td>
+      <td>99.4433</td>
     </tr>
     <tr>
       <th>22</th>
@@ -24582,22 +26718,22 @@ display(complete_summary)
       <td>pericarp</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_pericarp_peptide_gen...</td>
-      <td>116</td>
-      <td>13</td>
-      <td>28332</td>
-      <td>9453</td>
-      <td>28448.0</td>
+      <td>1081</td>
+      <td>3.799916</td>
+      <td>70</td>
+      <td>0.246063</td>
+      <td>35</td>
       <td>...</td>
-      <td>17.539331</td>
-      <td>4.032833</td>
-      <td>9.446227</td>
+      <td>17.688984</td>
+      <td>4.171724</td>
+      <td>9.589431</td>
       <td>PXD004720_pericarp</td>
-      <td>129415</td>
-      <td>31869</td>
-      <td>28122</td>
-      <td>25198</td>
+      <td>130645</td>
+      <td>32281</td>
+      <td>28184</td>
+      <td>25580</td>
       <td>99.5656</td>
-      <td>98.6282</td>
+      <td>99.5656</td>
     </tr>
     <tr>
       <th>23</th>
@@ -24606,22 +26742,22 @@ display(complete_summary)
       <td>pollen</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_pollen_peptide_genom...</td>
-      <td>91</td>
+      <td>259</td>
+      <td>1.905392</td>
+      <td>27</td>
+      <td>0.198632</td>
       <td>9</td>
-      <td>13502</td>
-      <td>4667</td>
-      <td>13593.0</td>
       <td>...</td>
-      <td>11.290383</td>
-      <td>2.215368</td>
-      <td>5.852627</td>
+      <td>11.384851</td>
+      <td>2.311090</td>
+      <td>5.947847</td>
       <td>PXD004720_pollen</td>
-      <td>73586</td>
-      <td>19464</td>
-      <td>13425</td>
-      <td>15612</td>
+      <td>74334</td>
+      <td>19731</td>
+      <td>13446</td>
+      <td>15866</td>
       <td>99.5127</td>
-      <td>98.5113</td>
+      <td>99.5127</td>
     </tr>
     <tr>
       <th>24</th>
@@ -24630,22 +26766,22 @@ display(complete_summary)
       <td>rachilla</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_rachilla_peptide_gen...</td>
-      <td>68</td>
-      <td>7</td>
-      <td>31145</td>
-      <td>9710</td>
-      <td>31213.0</td>
+      <td>1659</td>
+      <td>5.315093</td>
+      <td>53</td>
+      <td>0.169801</td>
+      <td>34</td>
       <td>...</td>
-      <td>19.863629</td>
-      <td>4.577760</td>
-      <td>10.704325</td>
+      <td>20.046954</td>
+      <td>4.746681</td>
+      <td>10.879019</td>
       <td>PXD004720_rachilla</td>
-      <td>157648</td>
-      <td>36157</td>
-      <td>30965</td>
-      <td>28554</td>
+      <td>159219</td>
+      <td>36663</td>
+      <td>31008</td>
+      <td>29020</td>
       <td>99.3852</td>
-      <td>98.4045</td>
+      <td>99.3852</td>
     </tr>
     <tr>
       <th>25</th>
@@ -24654,142 +26790,142 @@ display(complete_summary)
       <td>radicle</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_radicle_peptide_geno...</td>
-      <td>61</td>
-      <td>11</td>
-      <td>39643</td>
-      <td>11741</td>
-      <td>39704.0</td>
+      <td>1486</td>
+      <td>3.742696</td>
+      <td>39</td>
+      <td>0.098227</td>
+      <td>18</td>
       <td>...</td>
-      <td>23.834110</td>
-      <td>4.657215</td>
-      <td>12.343300</td>
+      <td>24.030529</td>
+      <td>4.812998</td>
+      <td>12.515370</td>
       <td>PXD004720_radicle</td>
-      <td>192432</td>
-      <td>41972</td>
-      <td>39419</td>
-      <td>32926</td>
+      <td>193938</td>
+      <td>42476</td>
+      <td>39487</td>
+      <td>33385</td>
       <td>99.6117</td>
-      <td>98.8382</td>
+      <td>99.6117</td>
     </tr>
     <tr>
       <th>26</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>root-mature</td>
+      <td>root_mature</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_root-mature_peptide_...</td>
-      <td>40</td>
-      <td>11</td>
-      <td>21350</td>
-      <td>12203</td>
-      <td>21390.0</td>
+      <td>1434</td>
+      <td>6.704067</td>
+      <td>12</td>
+      <td>0.056101</td>
+      <td>8</td>
       <td>...</td>
-      <td>20.501525</td>
-      <td>5.339782</td>
-      <td>11.416597</td>
+      <td>20.702621</td>
+      <td>5.516836</td>
+      <td>11.603287</td>
       <td>PXD004720_root-mature</td>
-      <td>95329</td>
-      <td>38007</td>
-      <td>21058</td>
-      <td>30454</td>
+      <td>96387</td>
+      <td>38544</td>
+      <td>21125</td>
+      <td>30952</td>
       <td>99.1758</td>
-      <td>98.0872</td>
+      <td>99.1758</td>
     </tr>
     <tr>
       <th>27</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>root-secretion</td>
+      <td>root_secretion</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_root-secretion_pepti...</td>
-      <td>45</td>
-      <td>11</td>
-      <td>21284</td>
-      <td>10298</td>
-      <td>21329.0</td>
+      <td>1757</td>
+      <td>8.237611</td>
+      <td>26</td>
+      <td>0.121900</td>
+      <td>20</td>
       <td>...</td>
-      <td>17.328881</td>
-      <td>3.915214</td>
-      <td>9.291402</td>
+      <td>17.474793</td>
+      <td>4.030956</td>
+      <td>9.419236</td>
       <td>PXD004720_root-secretion</td>
-      <td>99127</td>
-      <td>31289</td>
-      <td>21057</td>
-      <td>24785</td>
+      <td>100085</td>
+      <td>31657</td>
+      <td>21111</td>
+      <td>25126</td>
       <td>99.4495</td>
-      <td>98.4976</td>
+      <td>99.4495</td>
     </tr>
     <tr>
       <th>28</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>root-tip</td>
+      <td>root_tip</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_root-tip_peptide_gen...</td>
+      <td>1351</td>
+      <td>3.492671</td>
       <td>47</td>
-      <td>8</td>
-      <td>38634</td>
-      <td>10336</td>
-      <td>38681.0</td>
+      <td>0.121507</td>
+      <td>29</td>
       <td>...</td>
-      <td>21.997119</td>
-      <td>4.116042</td>
-      <td>11.282765</td>
+      <td>22.160802</td>
+      <td>4.263692</td>
+      <td>11.436840</td>
       <td>PXD004720_root-tip</td>
-      <td>189975</td>
-      <td>38884</td>
-      <td>38455</td>
-      <td>30097</td>
+      <td>191262</td>
+      <td>39337</td>
+      <td>38496</td>
+      <td>30508</td>
       <td>99.6452</td>
-      <td>98.9747</td>
+      <td>99.6452</td>
     </tr>
     <tr>
       <th>29</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>root-vasculature</td>
+      <td>root_vasculature</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_root-vasculature_pep...</td>
-      <td>96</td>
-      <td>9</td>
-      <td>20815</td>
-      <td>7568</td>
-      <td>20911.0</td>
+      <td>737</td>
+      <td>3.524461</td>
+      <td>7</td>
+      <td>0.033475</td>
+      <td>1</td>
       <td>...</td>
-      <td>16.868698</td>
-      <td>3.223889</td>
-      <td>8.692718</td>
+      <td>17.015545</td>
+      <td>3.328370</td>
+      <td>8.814179</td>
       <td>PXD004720_root-vasculature</td>
-      <td>110307</td>
-      <td>29966</td>
-      <td>20703</td>
-      <td>23188</td>
+      <td>111315</td>
+      <td>30323</td>
+      <td>20728</td>
+      <td>23512</td>
       <td>99.5386</td>
-      <td>98.6372</td>
+      <td>99.5386</td>
     </tr>
     <tr>
       <th>30</th>
       <td>PXD004720</td>
       <td>bread wheat</td>
-      <td>spike-immature</td>
+      <td>spike_immature</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_spike-immature_pepti...</td>
-      <td>44</td>
-      <td>8</td>
-      <td>36370</td>
-      <td>10940</td>
-      <td>36414.0</td>
+      <td>3108</td>
+      <td>8.535179</td>
+      <td>83</td>
+      <td>0.227934</td>
+      <td>61</td>
       <td>...</td>
-      <td>21.810988</td>
-      <td>4.276830</td>
-      <td>11.304508</td>
+      <td>21.994313</td>
+      <td>4.439495</td>
+      <td>11.475453</td>
       <td>PXD004720_spike-immature</td>
-      <td>186379</td>
-      <td>39281</td>
-      <td>36176</td>
-      <td>30155</td>
+      <td>188025</td>
+      <td>39779</td>
+      <td>36236</td>
+      <td>30611</td>
       <td>99.5758</td>
-      <td>98.7041</td>
+      <td>99.5758</td>
     </tr>
     <tr>
       <th>31</th>
@@ -24798,26 +26934,26 @@ display(complete_summary)
       <td>stem</td>
       <td>single</td>
       <td>FragPipe_Duncan_PXD004720_stem_peptide_genome_...</td>
-      <td>51</td>
-      <td>10</td>
-      <td>14338</td>
-      <td>8974</td>
-      <td>14389.0</td>
+      <td>277</td>
+      <td>1.925082</td>
+      <td>2</td>
+      <td>0.013900</td>
+      <td>2</td>
       <td>...</td>
-      <td>15.418935</td>
-      <td>4.012813</td>
-      <td>8.584378</td>
+      <td>15.543334</td>
+      <td>4.129181</td>
+      <td>8.703965</td>
       <td>PXD004720_stem</td>
-      <td>59623</td>
-      <td>28609</td>
-      <td>14136</td>
-      <td>22899</td>
+      <td>60181</td>
+      <td>28948</td>
+      <td>14177</td>
+      <td>23218</td>
       <td>99.0895</td>
-      <td>98.1707</td>
+      <td>99.0895</td>
     </tr>
   </tbody>
 </table>
-<p>32 rows × 119 columns</p>
+<p>32 rows × 127 columns</p>
 </div>
 
 
@@ -24885,7 +27021,7 @@ dataset_metadata = {
     "MSV000090572": {
         "Total tissues analysed": 1,
         "Total PRIDE/MassIVE datasets": 1,
-        "Total raw MS files": 62,
+        "Total raw MS files": 63,
         "Total raw data size (GB)": 12,
     },
     "PXD004720": {
@@ -24897,7 +27033,7 @@ dataset_metadata = {
     "PXD050500": {
         "Total tissues analysed": 3,
         "Total PRIDE/MassIVE datasets": 1,
-        "Total raw MS files": 180,
+        "Total raw MS files": 178,
         "Total raw data size (GB)": 434,
     },
 }
@@ -25858,7 +27994,7 @@ display(display_table)
     Reading Step 13 combined table using only required columns:
     ['Peptide', 'ProteinID', 'BED_block_count', 'Sources', 'Tissues', 'Tissue_count', 'Observation_count', 'Gene_label']
     
-    Step 13 non-redundant validated rows loaded: 3,138,903
+    Step 13 non-redundant validated rows loaded: 3,173,811
     
     Preparatory manuscript Table 1 saved to:
     python_outputs\tables\wheat_manuscript_table1_preparatory_step25.csv
@@ -25927,10 +28063,10 @@ display(display_table)
       <th>2</th>
       <td>3</td>
       <td>Total raw MS files</td>
-      <td>577</td>
-      <td>62</td>
+      <td>576</td>
+      <td>63</td>
       <td>335</td>
-      <td>180</td>
+      <td>178</td>
       <td></td>
     </tr>
     <tr>
@@ -26007,110 +28143,110 @@ display(display_table)
       <th>10</th>
       <td>11</td>
       <td>Rows passing all sanity checks</td>
-      <td>8,136,687</td>
-      <td>29,430</td>
-      <td>3,408,253</td>
-      <td>4,699,004</td>
+      <td>8,214,230</td>
+      <td>29,892</td>
+      <td>3,440,549</td>
+      <td>4,743,789</td>
       <td>From Step 11 column: Rows_passing_all_sanity_c...</td>
     </tr>
     <tr>
       <th>11</th>
       <td>12</td>
       <td>Rows failing any sanity check</td>
-      <td>77,543</td>
-      <td>462</td>
-      <td>32,296</td>
-      <td>44,785</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
       <td>From Step 11 column: Rows_failing_any_sanity_c...</td>
     </tr>
     <tr>
       <th>12</th>
       <td>13</td>
       <td>Final validation rate (%)</td>
-      <td>98.14</td>
-      <td>97.08</td>
-      <td>98.47</td>
-      <td>97.90</td>
+      <td>99.07</td>
+      <td>98.61</td>
+      <td>99.40</td>
+      <td>98.84</td>
       <td>Rows passing translation validation and all sa...</td>
     </tr>
     <tr>
       <th>13</th>
       <td>14</td>
       <td>Non-redundant validated peptide projection rows</td>
-      <td>3,138,903</td>
-      <td>29,430</td>
-      <td>817,787</td>
-      <td>2,811,574</td>
+      <td>3,173,811</td>
+      <td>29,892</td>
+      <td>826,257</td>
+      <td>2,842,246</td>
       <td>Computed from Step 13 all-tissue non-redundant...</td>
     </tr>
     <tr>
       <th>14</th>
       <td>15</td>
       <td>Non-redundant validated within-exon peptide pr...</td>
-      <td>2,775,671</td>
-      <td>26,182</td>
-      <td>703,201</td>
-      <td>2,492,427</td>
+      <td>2,808,552</td>
+      <td>26,630</td>
+      <td>711,151</td>
+      <td>2,521,279</td>
       <td>Within-exon defined as BED_block_count == 1</td>
     </tr>
     <tr>
       <th>15</th>
       <td>16</td>
       <td>Non-redundant validated exon-spanning peptide ...</td>
-      <td>363,232</td>
-      <td>3,248</td>
-      <td>114,586</td>
-      <td>319,147</td>
+      <td>365,259</td>
+      <td>3,262</td>
+      <td>115,106</td>
+      <td>320,967</td>
       <td>Exon-spanning defined as BED_block_count &gt; 1</td>
     </tr>
     <tr>
       <th>16</th>
       <td>17</td>
       <td>Non-redundant validated unique peptide sequences</td>
-      <td>1,089,379</td>
-      <td>9,070</td>
-      <td>230,992</td>
-      <td>971,106</td>
+      <td>1,095,523</td>
+      <td>9,126</td>
+      <td>231,901</td>
+      <td>976,526</td>
       <td>Computed from Step 13 all-tissue non-redundant...</td>
     </tr>
     <tr>
       <th>17</th>
       <td>18</td>
       <td>Non-redundant validated unique protein isoforms</td>
-      <td>267,166</td>
-      <td>16,819</td>
-      <td>167,174</td>
-      <td>263,295</td>
+      <td>272,298</td>
+      <td>17,110</td>
+      <td>169,983</td>
+      <td>268,333</td>
       <td>Computed from Step 13 all-tissue non-redundant...</td>
     </tr>
     <tr>
       <th>18</th>
       <td>19</td>
       <td>Non-redundant validated HC gene models</td>
-      <td>103,095</td>
-      <td>9,017</td>
-      <td>78,729</td>
-      <td>102,471</td>
+      <td>104,417</td>
+      <td>9,126</td>
+      <td>79,627</td>
+      <td>103,770</td>
       <td>Computed from Step 13 all-tissue non-redundant...</td>
     </tr>
     <tr>
       <th>19</th>
       <td>20</td>
       <td>Non-redundant validated LC gene models</td>
-      <td>135,495</td>
-      <td>5,246</td>
-      <td>65,227</td>
-      <td>132,348</td>
+      <td>139,147</td>
+      <td>5,410</td>
+      <td>67,040</td>
+      <td>135,929</td>
       <td>Computed from Step 13 all-tissue non-redundant...</td>
     </tr>
     <tr>
       <th>20</th>
       <td>21</td>
       <td>Non-redundant validated total gene models</td>
-      <td>238,590</td>
-      <td>14,263</td>
-      <td>143,956</td>
-      <td>234,819</td>
+      <td>243,564</td>
+      <td>14,536</td>
+      <td>146,667</td>
+      <td>239,699</td>
       <td>HC + LC non-redundant validated gene models</td>
     </tr>
     <tr>
@@ -26147,884 +28283,31 @@ display(display_table)
       <th>24</th>
       <td>25</td>
       <td>HC gene model validation rate (%)</td>
-      <td>96.43</td>
-      <td>8.43</td>
-      <td>73.64</td>
-      <td>95.84</td>
+      <td>97.66</td>
+      <td>8.54</td>
+      <td>74.48</td>
+      <td>97.06</td>
       <td>Non-redundant validated HC gene models / GFF3-...</td>
     </tr>
     <tr>
       <th>25</th>
       <td>26</td>
       <td>LC gene model validation rate (%)</td>
-      <td>84.77</td>
-      <td>3.28</td>
-      <td>40.81</td>
-      <td>82.80</td>
+      <td>87.06</td>
+      <td>3.38</td>
+      <td>41.94</td>
+      <td>85.04</td>
       <td>Non-redundant validated LC gene models / GFF3-...</td>
     </tr>
     <tr>
       <th>26</th>
       <td>27</td>
       <td>Total gene model validation rate (%)</td>
-      <td>89.44</td>
-      <td>5.35</td>
-      <td>53.97</td>
-      <td>88.03</td>
+      <td>91.31</td>
+      <td>5.45</td>
+      <td>54.98</td>
+      <td>89.86</td>
       <td>Non-redundant validated total gene models / GF...</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-# Step 26 — Compare 2024 tblastn-Based Peptide Alignments with 2026 Annotation-Guided Projections
-
-This step compares the peptide genome coordinates generated in the 2024 `tblastn`-based proteogenomics study with the current 2026 annotation-guided peptide projection workflow.
-
-The purpose is to determine how much of the previously reported peptide-to-genome evidence is recovered by the new exon-aware projection strategy, and to identify differences attributable to the change in mapping approach.
-
----
-
-Only datasets included in the 2024 study are used for this comparison:
-
-- `MSV000090572`
-- `PXD004720`
-
----
-
-The comparison is performed at three levels:
-
-1. **Peptide sequence overlap**  
-   Determines whether the same peptide sequences are present in both the 2024 and 2026 datasets, regardless of genomic position.
-
-2. **Exact coordinate overlap**  
-   Identifies peptide alignments with identical chromosome, start coordinate, end coordinate, strand, and peptide sequence.
-
-3. **Locus-level interval overlap**  
-   Identifies peptide mappings where the same peptide sequence maps to the same chromosome and strand with overlapping genomic intervals, allowing minor coordinate differences between `tblastn` alignments and annotation-guided projections.
-
-The current workflow first combines all BED6 files from the two shared sources into a non-redundant BED6 table. This combined 2026 BED6 table is then compared with the 2024 BED6 file.
-
----
-
-The outputs include:
-
-- a non-redundant 2026 BED6 file restricted to the 2024 source datasets,
-- a comparison summary table,
-- peptide-level overlap tables,
-- a bar plot summarising overlap categories.
-
----
-
-This step provides a direct computational bridge between the previous `tblastn`-based workflow and the current annotation-guided projection workflow.
-
-
-```python
-# # Install Python library
-# !pip install matplotlib-venn
-```
-
-
-```python
-# ============================================================
-# Step 26 — Compare 2024 tblastn BED6 alignments with 2026 GFF3-based BED6 projections
-# Coordinate-based feature comparison only
-# ============================================================
-
-import pandas as pd
-import matplotlib.pyplot as plt
-from pathlib import Path
-from collections import defaultdict
-
-# -----------------------------
-# 1. Input / output paths
-# -----------------------------
-bed_dir = Path("python_outputs/bed_validated")
-tables_dir = Path("python_outputs/tables")
-figures_dir = Path("python_outputs/figures")
-
-tables_dir.mkdir(parents=True, exist_ok=True)
-figures_dir.mkdir(parents=True, exist_ok=True)
-
-bed_2024_file = Path(
-    "tblastn-results/Vincent-Appels_wheat-all-tissues_projected-peptides_tblastn-proteogenomics_20240520.BED"
-)
-
-current_sources = ["MSV000090572", "PXD004720"]
-
-coordinate_tolerance_nt = 4
-
-current_nonredundant_bed_out = bed_dir / (
-    "Vincent_2026_MSV000090572_PXD004720_nonredundant_validated_projected_features_annotation_proteogenomics_step26.bed6"
-)
-
-summary_out = tables_dir / "wheat_2024_vs_2026_genome_feature_comparison_summary_step26.csv"
-feature_match_out = tables_dir / "wheat_2024_vs_2026_tolerant_coordinate_feature_matches_step26.csv"
-feature_cluster_out = tables_dir / "wheat_2024_vs_2026_genome_feature_cluster_classes_step26.csv"
-
-barplot_out = figures_dir / f"step26_2024_vs_2026_genome_feature_barplot_tolerance_{coordinate_tolerance_nt}nt.png"
-venn_out = figures_dir / f"step26_2024_vs_2026_genome_feature_venn_tolerance_{coordinate_tolerance_nt}nt.png"
-
-# -----------------------------
-# 2. Helper functions
-# -----------------------------
-bed_cols = ["Chromosome", "Start", "End", "Name", "Score", "Strand"]
-
-
-def read_bed6(path):
-    """
-    Read a BED6 file safely.
-    """
-    data = pd.read_csv(
-        path,
-        sep="\t",
-        header=None,
-        names=bed_cols,
-        comment="#",
-        low_memory=False
-    )
-
-    data["Start"] = pd.to_numeric(data["Start"], errors="coerce")
-    data["End"] = pd.to_numeric(data["End"], errors="coerce")
-
-    data = data.dropna(
-        subset=["Chromosome", "Start", "End", "Name", "Strand"]
-    ).copy()
-
-    data["Start"] = data["Start"].astype(int)
-    data["End"] = data["End"].astype(int)
-    data["Chromosome"] = data["Chromosome"].astype(str)
-    data["Name"] = data["Name"].astype(str)
-    data["Strand"] = data["Strand"].astype(str)
-
-    return data
-
-
-def find_current_bed6_files(bed_dir, sources):
-    """
-    Find current 2026 validated BED6 files from selected sources only.
-
-    Only individual validated BED6 files are used.
-    Combined all-author/all-source BED6 files and Step 26 outputs are excluded.
-    """
-
-    all_bed_files = list(bed_dir.glob("*_validated_peptides.bed6"))
-
-    selected = []
-
-    for path in all_bed_files:
-
-        name = path.name
-
-        if "step26" in name.lower():
-            continue
-
-        if "allauthors" in name.lower() or "allsources" in name.lower():
-            continue
-
-        if any(source in name for source in sources):
-            selected.append(path)
-
-    return sorted(set(selected))
-
-
-class UnionFind:
-    """
-    Minimal union-find structure used to collapse matched 2024/2026
-    coordinate features into shared genome-aligned feature clusters.
-    """
-    def __init__(self):
-        self.parent = {}
-
-    def find(self, x):
-        if x not in self.parent:
-            self.parent[x] = x
-
-        while self.parent[x] != x:
-            self.parent[x] = self.parent[self.parent[x]]
-            x = self.parent[x]
-
-        return x
-
-    def union(self, a, b):
-        root_a = self.find(a)
-        root_b = self.find(b)
-
-        if root_a != root_b:
-            self.parent[root_b] = root_a
-
-
-# -----------------------------
-# 3. Load 2024 tblastn BED6 file
-# -----------------------------
-if not bed_2024_file.exists():
-    raise FileNotFoundError(
-        f"2024 BED file not found:\n{bed_2024_file}\n\n"
-        "Check that the file is located in the tblastn-results folder."
-    )
-
-bed_2024 = read_bed6(bed_2024_file)
-
-print("2024 tblastn BED loaded")
-print(f"Raw rows: {len(bed_2024):,}")
-
-# -----------------------------
-# 4. Combine current 2026 BED6 files
-# -----------------------------
-current_bed_files = find_current_bed6_files(bed_dir, current_sources)
-
-if len(current_bed_files) == 0:
-    raise FileNotFoundError(
-        "No current BED6/BED files found for MSV000090572 or PXD004720. "
-        "Check filenames in python_outputs/bed."
-    )
-
-print("\nCurrent 2026 BED files selected:")
-for path in current_bed_files:
-    print(f" - {path}")
-
-current_bed_parts = []
-
-for path in current_bed_files:
-    data = read_bed6(path)
-    data["Input_BED_file"] = path.name
-    current_bed_parts.append(data)
-
-bed_2026 = pd.concat(current_bed_parts, ignore_index=True)
-
-bed_2026_nr = (
-    bed_2026
-    .drop_duplicates(subset=["Chromosome", "Start", "End", "Name", "Score", "Strand"])
-    .copy()
-)
-
-bed_2026_nr[bed_cols].to_csv(
-    current_nonredundant_bed_out,
-    sep="\t",
-    header=False,
-    index=False
-)
-
-print("\n2026 GFF3-based BED files combined")
-print(f"Rows before non-redundant filtering: {len(bed_2026):,}")
-print(f"Rows after non-redundant filtering: {len(bed_2026_nr):,}")
-print(f"Saved non-redundant BED6: {current_nonredundant_bed_out}")
-
-# -----------------------------
-# 5. Define unique genome-aligned coordinate features
-# -----------------------------
-# A feature is defined only by:
-# Chromosome, Start, End, Strand
-#
-# Name/peptide labels are intentionally excluded from feature identity.
-
-feature_cols = ["Chromosome", "Start", "End", "Strand"]
-
-bed_2024_features = (
-    bed_2024
-    .drop_duplicates(subset=feature_cols)
-    .copy()
-    .reset_index(drop=True)
-)
-
-bed_2026_features = (
-    bed_2026_nr
-    .drop_duplicates(subset=feature_cols)
-    .copy()
-    .reset_index(drop=True)
-)
-
-bed_2024_features["FeatureID_2024"] = range(len(bed_2024_features))
-bed_2026_features["FeatureID_2026"] = range(len(bed_2026_features))
-
-print("\nUnique genome-aligned coordinate features")
-print(f"2024 unique coordinate features: {len(bed_2024_features):,}")
-print(f"2026 unique coordinate features: {len(bed_2026_features):,}")
-
-# -----------------------------
-# 6. Tolerant Start/End coordinate matching
-# -----------------------------
-# A 2024 feature and a 2026 feature are considered shared if:
-# - same chromosome
-# - same strand
-# - Start differs by no more than ±coordinate_tolerance_nt
-# - End differs by no more than ±coordinate_tolerance_nt
-
-coord_to_2026_id = {}
-
-for row in bed_2026_features[
-    ["FeatureID_2026", "Chromosome", "Start", "End", "Strand"]
-].itertuples(index=False):
-
-    key = (row.Chromosome, row.Strand, row.Start, row.End)
-    coord_to_2026_id[key] = row.FeatureID_2026
-
-match_records = []
-
-for i, row in enumerate(
-    bed_2024_features[
-        ["FeatureID_2024", "Chromosome", "Start", "End", "Strand", "Name", "Score"]
-    ].itertuples(index=False),
-    start=1
-):
-
-    if i % 10000 == 0:
-        print(f"Processed {i:,} / {len(bed_2024_features):,} 2024 features...")
-
-    for start_shift in range(-coordinate_tolerance_nt, coordinate_tolerance_nt + 1):
-        for end_shift in range(-coordinate_tolerance_nt, coordinate_tolerance_nt + 1):
-
-            candidate_key = (
-                row.Chromosome,
-                row.Strand,
-                row.Start + start_shift,
-                row.End + end_shift
-            )
-
-            feature_id_2026 = coord_to_2026_id.get(candidate_key)
-
-            if feature_id_2026 is None:
-                continue
-
-            current_2026 = bed_2026_features.loc[feature_id_2026]
-
-            match_records.append({
-                "FeatureID_2024": row.FeatureID_2024,
-                "FeatureID_2026": feature_id_2026,
-
-                "Chromosome": row.Chromosome,
-                "Strand": row.Strand,
-
-                "Start_2024": row.Start,
-                "End_2024": row.End,
-                "Name_2024": row.Name,
-                "Score_2024": row.Score,
-
-                "Start_2026": int(current_2026["Start"]),
-                "End_2026": int(current_2026["End"]),
-                "Name_2026": current_2026["Name"],
-                "Score_2026": current_2026["Score"],
-
-                "Start_difference_nt": int(current_2026["Start"]) - row.Start,
-                "End_difference_nt": int(current_2026["End"]) - row.End,
-                "Absolute_start_difference_nt": abs(int(current_2026["Start"]) - row.Start),
-                "Absolute_end_difference_nt": abs(int(current_2026["End"]) - row.End),
-
-                "Coordinate_tolerance_nt": coordinate_tolerance_nt
-            })
-
-feature_matches = pd.DataFrame(match_records)
-
-if not feature_matches.empty:
-    feature_matches = feature_matches.drop_duplicates(
-        subset=["FeatureID_2024", "FeatureID_2026"]
-    ).copy()
-
-feature_matches.to_csv(feature_match_out, index=False)
-
-matched_2024_feature_ids = set(feature_matches["FeatureID_2024"]) if not feature_matches.empty else set()
-matched_2026_feature_ids = set(feature_matches["FeatureID_2026"]) if not feature_matches.empty else set()
-
-print("\nTolerant coordinate feature matching completed")
-print(f"Coordinate tolerance used: ±{coordinate_tolerance_nt} nt")
-print(f"Total 2024-vs-2026 feature match pairs: {len(feature_matches):,}")
-print(f"2024 coordinate features with at least one 2026 match: {len(matched_2024_feature_ids):,}")
-print(f"2026 coordinate features with at least one 2024 match: {len(matched_2026_feature_ids):,}")
-
-# -----------------------------
-# 7. Build shared genome-aligned feature clusters
-# -----------------------------
-# Because one 2024 feature can match several 2026 features, and vice versa,
-# the Venn diagram is built from tolerance-based feature clusters.
-#
-# A shared cluster contains at least one 2024 coordinate feature and
-# at least one 2026 coordinate feature.
-
-uf = UnionFind()
-
-for row in feature_matches[["FeatureID_2024", "FeatureID_2026"]].itertuples(index=False):
-    node_2024 = f"2024_{row.FeatureID_2024}"
-    node_2026 = f"2026_{row.FeatureID_2026}"
-    uf.union(node_2024, node_2026)
-
-cluster_members = defaultdict(lambda: {"FeatureIDs_2024": set(), "FeatureIDs_2026": set()})
-
-for feature_id in matched_2024_feature_ids:
-    node = f"2024_{feature_id}"
-    root = uf.find(node)
-    cluster_members[root]["FeatureIDs_2024"].add(feature_id)
-
-for feature_id in matched_2026_feature_ids:
-    node = f"2026_{feature_id}"
-    root = uf.find(node)
-    cluster_members[root]["FeatureIDs_2026"].add(feature_id)
-
-cluster_records = []
-
-for cluster_id, members in enumerate(cluster_members.values(), start=1):
-    n_2024 = len(members["FeatureIDs_2024"])
-    n_2026 = len(members["FeatureIDs_2026"])
-
-    if n_2024 > 0 and n_2026 > 0:
-        cluster_class = "shared"
-    elif n_2024 > 0:
-        cluster_class = "2024_only"
-    else:
-        cluster_class = "2026_only"
-
-    cluster_records.append({
-        "ClusterID": cluster_id,
-        "Cluster_class": cluster_class,
-        "Number_of_2024_features": n_2024,
-        "Number_of_2026_features": n_2026,
-        "FeatureIDs_2024": ";".join(map(str, sorted(members["FeatureIDs_2024"]))),
-        "FeatureIDs_2026": ";".join(map(str, sorted(members["FeatureIDs_2026"])))
-    })
-
-shared_cluster_table = pd.DataFrame(cluster_records)
-
-n_shared_feature_clusters = (
-    shared_cluster_table["Cluster_class"].eq("shared").sum()
-    if not shared_cluster_table.empty else 0
-)
-
-n_2024_only_features = len(bed_2024_features) - len(matched_2024_feature_ids)
-n_2026_only_features = len(bed_2026_features) - len(matched_2026_feature_ids)
-
-cluster_summary = pd.DataFrame({
-    "Feature_class": [
-        "2024_only",
-        "shared",
-        "2026_only"
-    ],
-    "Count": [
-        n_2024_only_features,
-        n_shared_feature_clusters,
-        n_2026_only_features
-    ]
-})
-
-shared_cluster_table.to_csv(feature_cluster_out, index=False)
-
-print("\nGenome-aligned feature classes")
-print(f"2024-only coordinate features: {n_2024_only_features:,}")
-print(f"Shared genome-aligned feature clusters: {n_shared_feature_clusters:,}")
-print(f"2026-only coordinate features: {n_2026_only_features:,}")
-
-# -----------------------------
-# 8. Summary table
-# -----------------------------
-summary_records = [
-    {
-        "Comparison_level": "Input BED rows",
-        "Metric": "2024 tblastn BED rows",
-        "Value": len(bed_2024)
-    },
-    {
-        "Comparison_level": "Input BED rows",
-        "Metric": "2026 validated GFF3-based BED rows, non-redundant",
-        "Value": len(bed_2026_nr)
-    },
-    {
-        "Comparison_level": "Unique coordinate features",
-        "Metric": "2024 unique coordinate features",
-        "Value": len(bed_2024_features)
-    },
-    {
-        "Comparison_level": "Unique coordinate features",
-        "Metric": "2026 unique coordinate features",
-        "Value": len(bed_2026_features)
-    },
-    {
-        "Comparison_level": "Tolerant coordinate matching",
-        "Metric": f"Total 2024-vs-2026 feature match pairs within ±{coordinate_tolerance_nt} nt",
-        "Value": len(feature_matches)
-    },
-    {
-        "Comparison_level": "Tolerant coordinate matching",
-        "Metric": f"2024 coordinate features with at least one 2026 match within ±{coordinate_tolerance_nt} nt",
-        "Value": len(matched_2024_feature_ids)
-    },
-    {
-        "Comparison_level": "Tolerant coordinate matching",
-        "Metric": f"2026 coordinate features with at least one 2024 match within ±{coordinate_tolerance_nt} nt",
-        "Value": len(matched_2026_feature_ids)
-    },
-    {
-        "Comparison_level": "Feature classes for Venn diagram",
-        "Metric": "2024-only coordinate features",
-        "Value": n_2024_only_features
-    },
-    {
-        "Comparison_level": "Feature classes for Venn diagram",
-        "Metric": f"Shared genome-aligned feature clusters within ±{coordinate_tolerance_nt} nt",
-        "Value": n_shared_feature_clusters
-    },
-    {
-        "Comparison_level": "Feature classes for Venn diagram",
-        "Metric": "2026-only coordinate features",
-        "Value": n_2026_only_features
-    }
-]
-
-summary = pd.DataFrame(summary_records)
-summary.to_csv(summary_out, index=False)
-
-# -----------------------------
-# 9. Bar plot: genome-aligned feature classes
-# -----------------------------
-bar_data = cluster_summary.copy()
-
-fig, ax = plt.subplots(figsize=(9, 5))
-
-bars = ax.barh(
-    bar_data["Feature_class"],
-    bar_data["Count"],
-    color="#3F007E"
-)
-
-ax.set_xlabel("Number of genome-aligned features / feature clusters")
-ax.set_ylabel("")
-ax.set_title(
-    f"2024 vs 2026 genome-aligned feature comparison\n"
-    f"Shared features defined by chromosome, strand, Start and End within ±{coordinate_tolerance_nt} nt"
-)
-
-ax.invert_yaxis()
-
-total_for_percent = bar_data["Count"].sum()
-
-for bar in bars:
-    width = bar.get_width()
-    percent = (width / total_for_percent) * 100 if total_for_percent > 0 else 0
-
-    ax.text(
-        width,
-        bar.get_y() + bar.get_height() / 2,
-        f" {int(width):,} ({percent:.1f}%)",
-        va="center",
-        ha="left",
-        fontsize=9
-    )
-
-plt.tight_layout()
-
-plt.savefig(
-    barplot_out,
-    dpi=300,
-    bbox_inches="tight"
-)
-
-plt.show()
-
-print(f"Feature-class bar plot saved: {barplot_out}")
-
-# -----------------------------
-# 10. Venn diagram: genome-aligned feature classes
-# -----------------------------
-try:
-    from matplotlib_venn import venn2
-
-    n_2024_only = n_2024_only_features
-    n_2026_only = n_2026_only_features
-    n_shared = n_shared_feature_clusters
-
-    n_2024_total_for_venn = n_2024_only + n_shared
-    n_2026_total_for_venn = n_2026_only + n_shared
-    n_union = n_2024_only + n_2026_only + n_shared
-
-    pct_2024_only = (n_2024_only / n_union) * 100 if n_union > 0 else 0
-    pct_2026_only = (n_2026_only / n_union) * 100 if n_union > 0 else 0
-    pct_shared = (n_shared / n_union) * 100 if n_union > 0 else 0
-
-    fig, ax = plt.subplots(figsize=(9, 6))
-
-    venn = venn2(
-        subsets=(n_2024_only, n_2026_only, n_shared),
-        set_labels=(
-            f"2024 genome-aligned features\n({n_2024_total_for_venn:,})",
-            f"2026 genome-aligned features\n({n_2026_total_for_venn:,})"
-        ),
-        ax=ax
-    )
-
-    if venn.get_patch_by_id("10") is not None:
-        venn.get_patch_by_id("10").set_color("#FF3399")
-        venn.get_patch_by_id("10").set_alpha(0.65)
-
-    if venn.get_patch_by_id("01") is not None:
-        venn.get_patch_by_id("01").set_color("#3F007E")
-        venn.get_patch_by_id("01").set_alpha(0.65)
-
-    if venn.get_patch_by_id("11") is not None:
-        venn.get_patch_by_id("11").set_color("#E6CDFF")
-        venn.get_patch_by_id("11").set_alpha(0.85)
-
-    if venn.get_label_by_id("10") is not None:
-        venn.get_label_by_id("10").set_text(f"{n_2024_only:,}\n({pct_2024_only:.1f}%)")
-
-    if venn.get_label_by_id("01") is not None:
-        venn.get_label_by_id("01").set_text(f"{n_2026_only:,}\n({pct_2026_only:.1f}%)")
-
-    if venn.get_label_by_id("11") is not None:
-        venn.get_label_by_id("11").set_text(f"{n_shared:,}\n({pct_shared:.1f}%)")
-
-    ax.set_title(
-        f"Genome-aligned feature overlap between 2024 and 2026 workflows\n"
-        f"Feature identity: chromosome, strand, Start and End within ±{coordinate_tolerance_nt} nt",
-        fontsize=15,
-        pad=20
-    )
-
-    plt.tight_layout()
-
-    plt.savefig(
-        venn_out,
-        dpi=300,
-        bbox_inches="tight"
-    )
-
-    plt.show()
-
-    print(f"Genome-feature Venn diagram saved: {venn_out}")
-
-except ImportError:
-    print(
-        "matplotlib-venn is not installed. "
-        "Install it with: pip install matplotlib-venn"
-    )
-
-# -----------------------------
-# 11. Display outputs
-# -----------------------------
-print(f"\nSummary saved: {summary_out}")
-print(f"Tolerant coordinate feature matches saved: {feature_match_out}")
-print(f"Feature cluster classes saved: {feature_cluster_out}")
-print(f"Bar plot saved: {barplot_out}")
-print(f"Venn diagram saved: {venn_out}")
-
-display(summary)
-display(cluster_summary)
-```
-
-    2024 tblastn BED loaded
-    Raw rows: 106,321
-    
-    Current 2026 BED files selected:
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_anther_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_boot_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_coleoptile_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_embryo_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_endosperm_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_glume_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-70_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-71_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-75_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-83_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_grain-zadoks-87_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_leaf-flag-mature_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_leaf-flag-senescing_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_leaf-flag-young_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_lemma_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_node-secretion_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_node_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_palea_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_pericarp_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_pollen_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_rachilla_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_radicle_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-mature_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-secretion_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-tip_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_root-vasculature_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_spike-immature_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Duncan_PXD004720_stem_validated_peptides.bed6
-     - python_outputs\bed_validated\FragPipe_Vincent_MSV000090572_stored-grain_validated_peptides.bed6
-    
-    2026 GFF3-based BED files combined
-    Rows before non-redundant filtering: 3,437,683
-    Rows after non-redundant filtering: 1,975,276
-    Saved non-redundant BED6: python_outputs\bed_validated\Vincent_2026_MSV000090572_PXD004720_nonredundant_validated_projected_features_annotation_proteogenomics_step26.bed6
-    
-    Unique genome-aligned coordinate features
-    2024 unique coordinate features: 103,174
-    2026 unique coordinate features: 635,902
-    Processed 10,000 / 103,174 2024 features...
-    Processed 20,000 / 103,174 2024 features...
-    Processed 30,000 / 103,174 2024 features...
-    Processed 40,000 / 103,174 2024 features...
-    Processed 50,000 / 103,174 2024 features...
-    Processed 60,000 / 103,174 2024 features...
-    Processed 70,000 / 103,174 2024 features...
-    Processed 80,000 / 103,174 2024 features...
-    Processed 90,000 / 103,174 2024 features...
-    Processed 100,000 / 103,174 2024 features...
-    
-    Tolerant coordinate feature matching completed
-    Coordinate tolerance used: ±4 nt
-    Total 2024-vs-2026 feature match pairs: 25,862
-    2024 coordinate features with at least one 2026 match: 22,572
-    2026 coordinate features with at least one 2024 match: 23,053
-    
-    Genome-aligned feature classes
-    2024-only coordinate features: 80,602
-    Shared genome-aligned feature clusters: 21,028
-    2026-only coordinate features: 612,849
-    
-
-
-    
-![png](output_55_1.png)
-    
-
-
-    Feature-class bar plot saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_barplot_tolerance_4nt.png
-    
-
-
-    
-![png](output_55_3.png)
-    
-
-
-    Genome-feature Venn diagram saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_venn_tolerance_4nt.png
-    
-    Summary saved: python_outputs\tables\wheat_2024_vs_2026_genome_feature_comparison_summary_step26.csv
-    Tolerant coordinate feature matches saved: python_outputs\tables\wheat_2024_vs_2026_tolerant_coordinate_feature_matches_step26.csv
-    Feature cluster classes saved: python_outputs\tables\wheat_2024_vs_2026_genome_feature_cluster_classes_step26.csv
-    Bar plot saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_barplot_tolerance_4nt.png
-    Venn diagram saved: python_outputs\figures\step26_2024_vs_2026_genome_feature_venn_tolerance_4nt.png
-    
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Comparison_level</th>
-      <th>Metric</th>
-      <th>Value</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>Input BED rows</td>
-      <td>2024 tblastn BED rows</td>
-      <td>106321</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>Input BED rows</td>
-      <td>2026 validated GFF3-based BED rows, non-redundant</td>
-      <td>1975276</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>Unique coordinate features</td>
-      <td>2024 unique coordinate features</td>
-      <td>103174</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>Unique coordinate features</td>
-      <td>2026 unique coordinate features</td>
-      <td>635902</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>Tolerant coordinate matching</td>
-      <td>Total 2024-vs-2026 feature match pairs within ...</td>
-      <td>25862</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>Tolerant coordinate matching</td>
-      <td>2024 coordinate features with at least one 202...</td>
-      <td>22572</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>Tolerant coordinate matching</td>
-      <td>2026 coordinate features with at least one 202...</td>
-      <td>23053</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>Feature classes for Venn diagram</td>
-      <td>2024-only coordinate features</td>
-      <td>80602</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>Feature classes for Venn diagram</td>
-      <td>Shared genome-aligned feature clusters within ...</td>
-      <td>21028</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>Feature classes for Venn diagram</td>
-      <td>2026-only coordinate features</td>
-      <td>612849</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-
-
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Feature_class</th>
-      <th>Count</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>2024_only</td>
-      <td>80602</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>shared</td>
-      <td>21028</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2026_only</td>
-      <td>612849</td>
     </tr>
   </tbody>
 </table>

@@ -20,6 +20,7 @@ MSV000090572_stored_grain,1,MSV000090572,stored_grain,Chr6D,979,100
 MSV000090572_stored_grain,1,MSV000090572,stored_grain,Chr7A,1488,100
 MSV000090572_stored_grain,1,MSV000090572,stored_grain,Chr7B,1434,100
 MSV000090572_stored_grain,1,MSV000090572,stored_grain,Chr7D,1449,100
+MSV000090572_stored_grain,1,MSV000090572,stored_grain,ChrUnknown,462,100
 PXD004720_anther,2,PXD004720,anther,Chr1A,7081,100
 PXD004720_anther,2,PXD004720,anther,Chr1B,7440,100
 PXD004720_anther,2,PXD004720,anther,Chr1D,7353,100
@@ -41,6 +42,7 @@ PXD004720_anther,2,PXD004720,anther,Chr6D,6461,100
 PXD004720_anther,2,PXD004720,anther,Chr7A,7966,100
 PXD004720_anther,2,PXD004720,anther,Chr7B,7019,100
 PXD004720_anther,2,PXD004720,anther,Chr7D,7934,100
+PXD004720_anther,2,PXD004720,anther,ChrUnknown,1512,100
 PXD004720_boot,3,PXD004720,boot,Chr1A,590,50
 PXD004720_boot,3,PXD004720,boot,Chr1B,598,50
 PXD004720_boot,3,PXD004720,boot,Chr1D,598,50
@@ -62,6 +64,7 @@ PXD004720_boot,3,PXD004720,boot,Chr6D,483,50
 PXD004720_boot,3,PXD004720,boot,Chr7A,613,50
 PXD004720_boot,3,PXD004720,boot,Chr7B,579,50
 PXD004720_boot,3,PXD004720,boot,Chr7D,631,50
+PXD004720_boot,3,PXD004720,boot,ChrUnknown,113,50
 PXD004720_coleoptile,4,PXD004720,coleoptile,Chr1A,9128,150
 PXD004720_coleoptile,4,PXD004720,coleoptile,Chr1B,9246,150
 PXD004720_coleoptile,4,PXD004720,coleoptile,Chr1D,9368,150
@@ -83,6 +86,7 @@ PXD004720_coleoptile,4,PXD004720,coleoptile,Chr6D,8063,150
 PXD004720_coleoptile,4,PXD004720,coleoptile,Chr7A,8900,150
 PXD004720_coleoptile,4,PXD004720,coleoptile,Chr7B,8257,150
 PXD004720_coleoptile,4,PXD004720,coleoptile,Chr7D,9214,150
+PXD004720_coleoptile,4,PXD004720,coleoptile,ChrUnknown,2005,150
 PXD004720_embryo,5,PXD004720,embryo,Chr1A,356,50
 PXD004720_embryo,5,PXD004720,embryo,Chr1B,447,50
 PXD004720_embryo,5,PXD004720,embryo,Chr1D,411,50
@@ -104,6 +108,7 @@ PXD004720_embryo,5,PXD004720,embryo,Chr6D,331,50
 PXD004720_embryo,5,PXD004720,embryo,Chr7A,401,50
 PXD004720_embryo,5,PXD004720,embryo,Chr7B,386,50
 PXD004720_embryo,5,PXD004720,embryo,Chr7D,414,50
+PXD004720_embryo,5,PXD004720,embryo,ChrUnknown,80,50
 PXD004720_endosperm,6,PXD004720,endosperm,Chr1A,4740,100
 PXD004720_endosperm,6,PXD004720,endosperm,Chr1B,4883,100
 PXD004720_endosperm,6,PXD004720,endosperm,Chr1D,4818,100
@@ -125,6 +130,7 @@ PXD004720_endosperm,6,PXD004720,endosperm,Chr6D,3667,100
 PXD004720_endosperm,6,PXD004720,endosperm,Chr7A,4920,100
 PXD004720_endosperm,6,PXD004720,endosperm,Chr7B,4465,100
 PXD004720_endosperm,6,PXD004720,endosperm,Chr7D,5000,100
+PXD004720_endosperm,6,PXD004720,endosperm,ChrUnknown,876,100
 PXD004720_glume,7,PXD004720,glume,Chr1A,6522,150
 PXD004720_glume,7,PXD004720,glume,Chr1B,6535,150
 PXD004720_glume,7,PXD004720,glume,Chr1D,6972,150
@@ -146,6 +152,7 @@ PXD004720_glume,7,PXD004720,glume,Chr6D,5872,150
 PXD004720_glume,7,PXD004720,glume,Chr7A,6681,150
 PXD004720_glume,7,PXD004720,glume,Chr7B,6123,150
 PXD004720_glume,7,PXD004720,glume,Chr7D,6969,150
+PXD004720_glume,7,PXD004720,glume,ChrUnknown,1630,150
 PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr1A,5870,100
 PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr1B,5830,100
 PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr1D,5770,100
@@ -167,6 +174,7 @@ PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr6D,4774,100
 PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr7A,5889,100
 PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr7B,5330,100
 PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,Chr7D,5889,100
+PXD004720_grain_zadoks_70,8,PXD004720,grain_zadoks_70,ChrUnknown,1104,100
 PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr1A,8188,150
 PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr1B,8215,150
 PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr1D,8156,150
@@ -188,6 +196,7 @@ PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr6D,7098,150
 PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr7A,8399,150
 PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr7B,7740,150
 PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,Chr7D,8628,150
+PXD004720_grain_zadoks_71,9,PXD004720,grain_zadoks_71,ChrUnknown,1422,150
 PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr1A,5915,100
 PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr1B,6004,100
 PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr1D,6008,100
@@ -209,6 +218,7 @@ PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr6D,5129,100
 PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr7A,6211,100
 PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr7B,5759,100
 PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,Chr7D,6375,100
+PXD004720_grain_zadoks_75,10,PXD004720,grain_zadoks_75,ChrUnknown,1015,100
 PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr1A,5174,100
 PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr1B,5068,100
 PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr1D,5177,100
@@ -230,6 +240,7 @@ PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr6D,4240,100
 PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr7A,5474,100
 PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr7B,4947,100
 PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,Chr7D,5464,100
+PXD004720_grain_zadoks_83,11,PXD004720,grain_zadoks_83,ChrUnknown,1054,100
 PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr1A,5218,100
 PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr1B,5196,100
 PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr1D,5141,100
@@ -251,6 +262,7 @@ PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr6D,4150,100
 PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr7A,5103,100
 PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr7B,4665,100
 PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,Chr7D,5066,100
+PXD004720_grain_zadoks_87,12,PXD004720,grain_zadoks_87,ChrUnknown,900,100
 PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr1A,6643,150
 PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr1B,6454,150
 PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr1D,6841,150
@@ -272,6 +284,7 @@ PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr6D,5960,150
 PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr7A,6648,150
 PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr7B,6125,150
 PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,Chr7D,6754,150
+PXD004720_leaf_flag_mature,13,PXD004720,leaf_flag_mature,ChrUnknown,1523,146
 PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr1A,2032,50
 PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr1B,2123,50
 PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr1D,2085,50
@@ -293,6 +306,7 @@ PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr6D,1813,50
 PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr7A,2128,50
 PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr7B,2069,50
 PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,Chr7D,2149,50
+PXD004720_leaf_flag_senescing,14,PXD004720,leaf_flag_senescing,ChrUnknown,626,50
 PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr1A,5342,150
 PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr1B,5209,150
 PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr1D,5521,150
@@ -314,6 +328,7 @@ PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr6D,4975,150
 PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr7A,5410,150
 PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr7B,4974,150
 PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,Chr7D,5512,150
+PXD004720_leaf_flag_young,15,PXD004720,leaf_flag_young,ChrUnknown,1321,150
 PXD004720_lemma,16,PXD004720,lemma,Chr1A,6596,100
 PXD004720_lemma,16,PXD004720,lemma,Chr1B,6606,100
 PXD004720_lemma,16,PXD004720,lemma,Chr1D,6948,100
@@ -335,6 +350,7 @@ PXD004720_lemma,16,PXD004720,lemma,Chr6D,5956,100
 PXD004720_lemma,16,PXD004720,lemma,Chr7A,6650,100
 PXD004720_lemma,16,PXD004720,lemma,Chr7B,6078,100
 PXD004720_lemma,16,PXD004720,lemma,Chr7D,6842,100
+PXD004720_lemma,16,PXD004720,lemma,ChrUnknown,1461,100
 PXD004720_node,17,PXD004720,node,Chr1A,4495,100
 PXD004720_node,17,PXD004720,node,Chr1B,4474,100
 PXD004720_node,17,PXD004720,node,Chr1D,4711,100
@@ -356,6 +372,7 @@ PXD004720_node,17,PXD004720,node,Chr6D,3993,100
 PXD004720_node,17,PXD004720,node,Chr7A,4519,100
 PXD004720_node,17,PXD004720,node,Chr7B,4226,100
 PXD004720_node,17,PXD004720,node,Chr7D,4676,100
+PXD004720_node,17,PXD004720,node,ChrUnknown,1178,100
 PXD004720_node_secretion,18,PXD004720,node_secretion,Chr1A,7542,150
 PXD004720_node_secretion,18,PXD004720,node_secretion,Chr1B,7442,150
 PXD004720_node_secretion,18,PXD004720,node_secretion,Chr1D,7809,150
@@ -377,6 +394,7 @@ PXD004720_node_secretion,18,PXD004720,node_secretion,Chr6D,6840,150
 PXD004720_node_secretion,18,PXD004720,node_secretion,Chr7A,7721,150
 PXD004720_node_secretion,18,PXD004720,node_secretion,Chr7B,7176,150
 PXD004720_node_secretion,18,PXD004720,node_secretion,Chr7D,7905,150
+PXD004720_node_secretion,18,PXD004720,node_secretion,ChrUnknown,1668,150
 PXD004720_palea,19,PXD004720,palea,Chr1A,5232,100
 PXD004720_palea,19,PXD004720,palea,Chr1B,5352,100
 PXD004720_palea,19,PXD004720,palea,Chr1D,5609,100
@@ -398,6 +416,7 @@ PXD004720_palea,19,PXD004720,palea,Chr6D,4688,100
 PXD004720_palea,19,PXD004720,palea,Chr7A,5556,100
 PXD004720_palea,19,PXD004720,palea,Chr7B,5046,100
 PXD004720_palea,19,PXD004720,palea,Chr7D,5715,100
+PXD004720_palea,19,PXD004720,palea,ChrUnknown,1238,100
 PXD004720_pericarp,20,PXD004720,pericarp,Chr1A,6464,100
 PXD004720_pericarp,20,PXD004720,pericarp,Chr1B,6613,100
 PXD004720_pericarp,20,PXD004720,pericarp,Chr1D,6320,100
@@ -419,6 +438,7 @@ PXD004720_pericarp,20,PXD004720,pericarp,Chr6D,4790,100
 PXD004720_pericarp,20,PXD004720,pericarp,Chr7A,5963,100
 PXD004720_pericarp,20,PXD004720,pericarp,Chr7B,5433,100
 PXD004720_pericarp,20,PXD004720,pericarp,Chr7D,5816,100
+PXD004720_pericarp,20,PXD004720,pericarp,ChrUnknown,1230,100
 PXD004720_pollen,21,PXD004720,pollen,Chr1A,3544,100
 PXD004720_pollen,21,PXD004720,pollen,Chr1B,3744,100
 PXD004720_pollen,21,PXD004720,pollen,Chr1D,3601,100
@@ -440,6 +460,7 @@ PXD004720_pollen,21,PXD004720,pollen,Chr6D,2990,100
 PXD004720_pollen,21,PXD004720,pollen,Chr7A,3731,100
 PXD004720_pollen,21,PXD004720,pollen,Chr7B,3310,100
 PXD004720_pollen,21,PXD004720,pollen,Chr7D,3821,100
+PXD004720_pollen,21,PXD004720,pollen,ChrUnknown,748,100
 PXD004720_rachilla,22,PXD004720,rachilla,Chr1A,7084,100
 PXD004720_rachilla,22,PXD004720,rachilla,Chr1B,7389,100
 PXD004720_rachilla,22,PXD004720,rachilla,Chr1D,7434,100
@@ -461,6 +482,7 @@ PXD004720_rachilla,22,PXD004720,rachilla,Chr6D,6318,100
 PXD004720_rachilla,22,PXD004720,rachilla,Chr7A,7527,100
 PXD004720_rachilla,22,PXD004720,rachilla,Chr7B,6813,100
 PXD004720_rachilla,22,PXD004720,rachilla,Chr7D,7658,100
+PXD004720_rachilla,22,PXD004720,rachilla,ChrUnknown,1571,100
 PXD004720_radicle,23,PXD004720,radicle,Chr1A,9008,129
 PXD004720_radicle,23,PXD004720,radicle,Chr1B,9349,131
 PXD004720_radicle,23,PXD004720,radicle,Chr1D,9039,134
@@ -482,6 +504,7 @@ PXD004720_radicle,23,PXD004720,radicle,Chr6D,7500,123
 PXD004720_radicle,23,PXD004720,radicle,Chr7A,8905,123
 PXD004720_radicle,23,PXD004720,radicle,Chr7B,8086,127
 PXD004720_radicle,23,PXD004720,radicle,Chr7D,9064,127
+PXD004720_radicle,23,PXD004720,radicle,ChrUnknown,1506,102
 PXD004720_root_mature,24,PXD004720,root_mature,Chr1A,4335,100
 PXD004720_root_mature,24,PXD004720,root_mature,Chr1B,4545,100
 PXD004720_root_mature,24,PXD004720,root_mature,Chr1D,4257,100
@@ -503,6 +526,7 @@ PXD004720_root_mature,24,PXD004720,root_mature,Chr6D,3686,100
 PXD004720_root_mature,24,PXD004720,root_mature,Chr7A,4673,100
 PXD004720_root_mature,24,PXD004720,root_mature,Chr7B,4386,100
 PXD004720_root_mature,24,PXD004720,root_mature,Chr7D,4743,100
+PXD004720_root_mature,24,PXD004720,root_mature,ChrUnknown,1058,100
 PXD004720_root_secretion,25,PXD004720,root_secretion,Chr1A,4579,100
 PXD004720_root_secretion,25,PXD004720,root_secretion,Chr1B,4794,100
 PXD004720_root_secretion,25,PXD004720,root_secretion,Chr1D,4520,100
@@ -524,6 +548,7 @@ PXD004720_root_secretion,25,PXD004720,root_secretion,Chr6D,3933,100
 PXD004720_root_secretion,25,PXD004720,root_secretion,Chr7A,4696,100
 PXD004720_root_secretion,25,PXD004720,root_secretion,Chr7B,4438,100
 PXD004720_root_secretion,25,PXD004720,root_secretion,Chr7D,4781,100
+PXD004720_root_secretion,25,PXD004720,root_secretion,ChrUnknown,958,100
 PXD004720_root_tip,26,PXD004720,root_tip,Chr1A,8990,150
 PXD004720_root_tip,26,PXD004720,root_tip,Chr1B,9269,150
 PXD004720_root_tip,26,PXD004720,root_tip,Chr1D,8847,150
@@ -545,6 +570,7 @@ PXD004720_root_tip,26,PXD004720,root_tip,Chr6D,7442,150
 PXD004720_root_tip,26,PXD004720,root_tip,Chr7A,8599,150
 PXD004720_root_tip,26,PXD004720,root_tip,Chr7B,8017,150
 PXD004720_root_tip,26,PXD004720,root_tip,Chr7D,8720,150
+PXD004720_root_tip,26,PXD004720,root_tip,ChrUnknown,1287,150
 PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr1A,5285,100
 PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr1B,5461,100
 PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr1D,5191,100
@@ -566,6 +592,7 @@ PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr6D,4218,100
 PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr7A,5146,100
 PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr7B,4763,100
 PXD004720_root_vasculature,27,PXD004720,root_vasculature,Chr7D,5067,100
+PXD004720_root_vasculature,27,PXD004720,root_vasculature,ChrUnknown,1008,100
 PXD004720_spike_immature,28,PXD004720,spike_immature,Chr1A,8854,150
 PXD004720_spike_immature,28,PXD004720,spike_immature,Chr1B,9103,150
 PXD004720_spike_immature,28,PXD004720,spike_immature,Chr1D,8986,150
@@ -587,6 +614,7 @@ PXD004720_spike_immature,28,PXD004720,spike_immature,Chr6D,7359,150
 PXD004720_spike_immature,28,PXD004720,spike_immature,Chr7A,9166,150
 PXD004720_spike_immature,28,PXD004720,spike_immature,Chr7B,8403,150
 PXD004720_spike_immature,28,PXD004720,spike_immature,Chr7D,9408,150
+PXD004720_spike_immature,28,PXD004720,spike_immature,ChrUnknown,1646,150
 PXD004720_stem,29,PXD004720,stem,Chr1A,2624,100
 PXD004720_stem,29,PXD004720,stem,Chr1B,2704,100
 PXD004720_stem,29,PXD004720,stem,Chr1D,2683,100
@@ -608,6 +636,7 @@ PXD004720_stem,29,PXD004720,stem,Chr6D,2411,100
 PXD004720_stem,29,PXD004720,stem,Chr7A,2917,100
 PXD004720_stem,29,PXD004720,stem,Chr7B,2654,100
 PXD004720_stem,29,PXD004720,stem,Chr7D,2877,100
+PXD004720_stem,29,PXD004720,stem,ChrUnknown,558,100
 PXD050500_coleoptile,30,PXD050500,coleoptile,Chr1A,78106,400
 PXD050500_coleoptile,30,PXD050500,coleoptile,Chr1B,83843,400
 PXD050500_coleoptile,30,PXD050500,coleoptile,Chr1D,78724,400
@@ -629,6 +658,7 @@ PXD050500_coleoptile,30,PXD050500,coleoptile,Chr6D,67726,400
 PXD050500_coleoptile,30,PXD050500,coleoptile,Chr7A,85964,400
 PXD050500_coleoptile,30,PXD050500,coleoptile,Chr7B,83093,400
 PXD050500_coleoptile,30,PXD050500,coleoptile,Chr7D,86483,400
+PXD050500_coleoptile,30,PXD050500,coleoptile,ChrUnknown,17169,400
 PXD050500_node,31,PXD050500,node,Chr1A,79627,400
 PXD050500_node,31,PXD050500,node,Chr1B,85973,400
 PXD050500_node,31,PXD050500,node,Chr1D,79791,400
@@ -650,6 +680,7 @@ PXD050500_node,31,PXD050500,node,Chr6D,69275,400
 PXD050500_node,31,PXD050500,node,Chr7A,88612,400
 PXD050500_node,31,PXD050500,node,Chr7B,85697,400
 PXD050500_node,31,PXD050500,node,Chr7D,88803,400
+PXD050500_node,31,PXD050500,node,ChrUnknown,17795,400
 PXD050500_radicle,32,PXD050500,radicle,Chr1A,45430,400
 PXD050500_radicle,32,PXD050500,radicle,Chr1B,48738,400
 PXD050500_radicle,32,PXD050500,radicle,Chr1D,44977,400
@@ -671,3 +702,4 @@ PXD050500_radicle,32,PXD050500,radicle,Chr6D,38890,400
 PXD050500_radicle,32,PXD050500,radicle,Chr7A,49504,400
 PXD050500_radicle,32,PXD050500,radicle,Chr7B,48305,400
 PXD050500_radicle,32,PXD050500,radicle,Chr7D,50119,400
+PXD050500_radicle,32,PXD050500,radicle,ChrUnknown,9821,400
